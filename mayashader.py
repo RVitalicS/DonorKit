@@ -50,6 +50,87 @@ def typeEditor (paramdefault, paramtype):
 
 
 
+def treeRunner (function, root, value=None, page=""):
+
+    for child in root:
+        if child.tag == "param":
+
+
+            paramname = keydata(child.attrib, "name")
+            if paramname:
+
+                paramtype = keydata(child.attrib, "type")
+                if paramtype:
+
+                    paramdefault = keydata(child.attrib, "default")
+                    if paramdefault:
+
+                        dynamicArray = keydata(child.attrib, "isDynamicArray")
+                        if not dynamicArray:
+                            paramdefault = typeEditor(paramdefault, paramtype)
+                            value = function(paramname, paramtype, paramdefault)
+                            if not isinstance(value, type(None)):
+                                return value
+
+
+        value = treeRunner(function, child, value=value, page=page)
+        if not isinstance(value, type(None)):
+            return value
+
+
+
+
+
+
+def getDefault (shader, attrname):
+
+    shaderType = shader.typeName().encode(encModel)
+    shaderName = shader.name().encode(encModel)
+
+    RMANTREE = os.getenv("RMANTREE", "")
+
+    ArgsPath = os.path.join(
+        os.path.join(RMANTREE, "lib", "plugins", "Args"),
+        "{}.args".format(shaderType) )
+        
+    OslPath = os.path.join(
+        os.path.join(RMANTREE, "lib", "shaders"),
+        "{}.oso".format(shaderType) )
+
+    if os.path.exists(ArgsPath):
+        tree = ET.ElementTree(file=ArgsPath)
+        root = tree.getroot()
+
+        def match (paramname, paramtype, paramdefault):
+
+            if paramname == attrname:
+                return dict(
+                    type=paramtype,
+                    default=paramdefault )
+
+        return treeRunner(match, root)
+
+
+    elif os.path.exists(OslPath):
+        shader = oslquery.OslQuery()
+        shader.open(OslPath)
+
+        for index in range(shader.nparams()):
+            parameter = shader.getparam(index)
+
+            if parameter["name"] == attrname:
+                if not parameter["isoutput"]:
+                    if not parameter["isstruct"]:
+
+                        return dict(
+                            type=parameter["type"],
+                            default=parameter["default"] )
+
+
+
+
+
+
 def getMPlugAs (MPlug, asValue=False, asType=False, echo=False):
 
 
@@ -143,87 +224,6 @@ def getMPlugAs (MPlug, asValue=False, asType=False, echo=False):
 
 
 
-def treeRunner (function, root, value=None, page=""):
-
-    for child in root:
-        if child.tag == "param":
-
-
-            paramname = keydata(child.attrib, "name")
-            if paramname:
-
-                paramtype = keydata(child.attrib, "type")
-                if paramtype:
-
-                    paramdefault = keydata(child.attrib, "default")
-                    if paramdefault:
-
-                        dynamicArray = keydata(child.attrib, "isDynamicArray")
-                        if not dynamicArray:
-                            paramdefault = typeEditor(paramdefault, paramtype)
-                            value = function(paramname, paramtype, paramdefault)
-                            if not isinstance(value, type(None)):
-                                return value
-
-
-        value = treeRunner(function, child, value=value, page=page)
-        if not isinstance(value, type(None)):
-            return value
-
-
-
-
-
-
-def getDefault (shader, attrname):
-
-    shaderType = shader.typeName().encode(encModel)
-    shaderName = shader.name().encode(encModel)
-
-    RMANTREE = os.getenv("RMANTREE", "")
-
-    ArgsPath = os.path.join(
-        os.path.join(RMANTREE, "lib", "plugins", "Args"),
-        "{}.args".format(shaderType) )
-        
-    OslPath = os.path.join(
-        os.path.join(RMANTREE, "lib", "shaders"),
-        "{}.oso".format(shaderType) )
-
-    if os.path.exists(ArgsPath):
-        tree = ET.ElementTree(file=ArgsPath)
-        root = tree.getroot()
-
-        def match (paramname, paramtype, paramdefault):
-
-            if paramname == attrname:
-                return dict(
-                    type=paramtype,
-                    default=paramdefault )
-
-        return treeRunner(match, root)
-
-
-    elif os.path.exists(OslPath):
-        shader = oslquery.OslQuery()
-        shader.open(OslPath)
-
-        for index in range(shader.nparams()):
-            parameter = shader.getparam(index)
-
-            if parameter["name"] == attrname:
-                if not parameter["isoutput"]:
-                    if not parameter["isstruct"]:
-
-                        return dict(
-                            type=parameter["type"],
-                            default=parameter["default"] )
-
-
-
-
-
-
 def getNetwork (shader, prman=True, collector={}):
 
     shaderType = shader.typeName().encode(encModel)
@@ -274,15 +274,17 @@ def getNetwork (shader, prman=True, collector={}):
                     sourceNode = OpenMaya.MFnDependencyNode(
                         MPlugSource.node() )
 
-                    inputs[attrName] = dict(
-                        value=MPlugSource.name().encode(encModel),
-                        type=valueType,
-                        connection=True )
+                    if MPlugSource.info():
 
-                    collector = getNetwork(
-                        sourceNode,
-                        prman=prman,
-                        collector=collector )
+                        inputs[attrName] = dict(
+                            value=MPlugSource.name().encode(encModel),
+                            type=valueType,
+                            connection=True )
+                        
+                        collector = getNetwork(
+                            sourceNode,
+                            prman=prman,
+                            collector=collector )
 
                 elif prman:
                     data = getDefault(shader, attrName)
