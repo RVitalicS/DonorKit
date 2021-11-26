@@ -1,19 +1,13 @@
 
 
+import re
 import os
-import pymel.core as PyMELcore
-
-
-from pymel.core import select as PyMelSelect
-from pymel.core import selected as PyMelSelected
-from pymel.core import getAttr as PyMelGetAttr
+encModel = os.getenv("PYTHONIOENCODING")
 
 
 import mayashader
-reload(mayashader)
+import maya.OpenMaya as OpenMaya
 
-
-encModel = os.getenv("PYTHONIOENCODING")
 
 
 
@@ -31,36 +25,110 @@ def keydata (dictionary, keyname):
 
 
 
-def getCildRoot(child):
+def getCildRoot (MDagPath):
 
-    parentNode = child.getParent()
+    MFnDagNode = OpenMaya.MFnDagNode(MDagPath)
+    if MFnDagNode.parentCount() > 0:
 
-    if parentNode:
-        return getCildRoot(parentNode)
-    else:
-        return child
+        parentMFnDagNode = OpenMaya.MFnDagNode(
+            MFnDagNode.parent(0))
+        parentPath = parentMFnDagNode.fullPathName()
+
+        if len(parentPath) > 0:
+
+            MSelectionList = OpenMaya.MSelectionList()
+            OpenMaya.MGlobal.getSelectionListByName(
+                parentPath,
+                MSelectionList)
+
+            if not MSelectionList.isEmpty():
+
+                MDagPath = OpenMaya.MDagPath()
+                MSelectionList.getDagPath(0, MDagPath)
+
+                return getCildRoot( MDagPath )
+
+        else:
+            return MDagPath
 
 
 def getRootList ():
-    
+
     rootList = []
 
-    nodeList = PyMelSelected()
-    if nodeList:
-        nodeList = [nodeList[0]]
-    PyMelSelect(nodeList)
+    MSelectionList = OpenMaya.MSelectionList()
+    OpenMaya.MGlobal.getActiveSelectionList(MSelectionList)
 
-    for child in PyMelSelected():
-        root = getCildRoot(child)
-        
-        if root not in rootList:
-            rootList.append(root)
-    
+    for index in xrange( MSelectionList.length() ):
+        MObject = OpenMaya.MObject()
+        MSelectionList.getDependNode(index, MObject)
+
+        if MObject.apiType() in [
+            OpenMaya.MFn.kMesh,
+            OpenMaya.MFn.kTransform ]:
+
+            MDagPath = OpenMaya.MDagPath()
+            MSelectionList.getDagPath(index, MDagPath, MObject)
+
+            OpenMaya.MGlobal.selectByName(
+                MDagPath.fullPathName(),
+                OpenMaya.MGlobal.kReplaceList )
+
+            root = getCildRoot(MDagPath)
+            if root not in rootList:
+                rootList.append(root)
+
+            break
+
     return rootList
 
 
 
 
+
+def getChildren (MDagPath):
+
+    childrenList = []
+
+    MFnDagNode = OpenMaya.MFnDagNode(MDagPath)
+    for index in xrange(MFnDagNode.childCount()):
+
+        childMFnDagNode = OpenMaya.MFnDagNode(
+            MFnDagNode.child(index))
+        childPath = childMFnDagNode.fullPathName()
+
+        MSelectionList = OpenMaya.MSelectionList()
+        OpenMaya.MGlobal.getSelectionListByName(
+            childPath,
+            MSelectionList)
+
+        if not MSelectionList.isEmpty():
+
+            MDagPath = OpenMaya.MDagPath()
+            MSelectionList.getDagPath(0, MDagPath)
+
+            childrenList.append(MDagPath)
+    
+    return childrenList
+
+
+
+
+
+def isDagSelected (MDagPath):
+
+    MSelectionList = OpenMaya.MSelectionList()
+    OpenMaya.MGlobal.getActiveSelectionList(MSelectionList)
+
+    for index in xrange(MSelectionList.length()):
+      
+        matchMDagPath = OpenMaya.MDagPath()
+        MSelectionList.getDagPath(index, matchMDagPath)
+
+        if matchMDagPath == MDagPath:
+            return True
+
+    return False
 
 
 
@@ -69,63 +137,78 @@ def getRootList ():
 def scan (tree=getRootList(), collector=[], selected=False):
 
 
-    for treeItem in tree:
+    for treeDag in tree:
 
-        flag = False
-        if not selected:
-
-            for item in PyMelSelected():
-                if item == treeItem:
-                    flag = True
-        else:
-            flag = True
-
+        treeObject = treeDag.node()
 
         attributes={}
         material = None
 
 
-        visibility = PyMelGetAttr( "{}.visibility".format(treeItem.name()) )
+        # get visibility attribute
+        visibility =  OpenMaya.MFnDependencyNode(
+            treeObject ).findPlug(
+                "visibility").asBool()
         attr = {"visibility": visibility}
         attributes.update(attr)
 
 
-        if treeItem.type().encode(encModel)=="mesh":
+
+        treeName = treeDag.partialPathName().encode(encModel)
+        treeType = treeObject.apiTypeStr().encode(encModel)
+        
+        if treeType == "kMesh":
+            
+            MFnMesh = OpenMaya.MFnMesh(treeDag)
 
 
-            vertex = treeItem.verts[0]
-            color = vertex.getColor()
-            color = list(color)
+            # get display color
+            if MFnMesh.hasColorChannels(
+                MFnMesh.currentColorSetName() ):
 
-            hasColor = True
-            for index in range(len(color)):
-                value = color[index]
-                if value < 0.0: hasColor = False
-                color[index] = round(value, 4)
+                MColorArray = OpenMaya.MColorArray()
+                MFnMesh.getColors(
+                    MColorArray,
+                    MFnMesh.currentColorSetName(),
+                    OpenMaya.MColor(0,0,0,1))
 
-            if hasColor:
-                if len(color) > 3: color = color[:3]
+                color = list( MColorArray[0] )[:3]
+                for index in xrange(len(color)):
+                    value = color[index]
+                    color[index] = round(value, 4)
+
                 attr = {"displayColor": color}
                 attributes.update(attr)
 
 
-            shGroups = treeItem.shadingGroups()
-            for shGroup in shGroups:
+            # get displacement bound
+            shaders = OpenMaya.MObjectArray()
+            MFnMesh.getConnectedShaders(0,
+                shaders, OpenMaya.MIntArray() )
 
-                material = shGroup.getName().encode(encModel)
+            if shaders.length() > 0:
 
-                prmanDisplacement = shGroup.attr("rman__displacement")
-                if prmanDisplacement.inputs():
-                    
-                    boundValue = PyMelGetAttr( "{}.rman_displacementBound".format(treeItem.name()) )
+                material = OpenMaya.MFnDependencyNode(shaders[0])
+
+                shaderPlug = material.findPlug("rman__displacement")
+                if shaderPlug.isConnected():
+
+                    boundValue =  OpenMaya.MFnDependencyNode(
+                        treeObject ).findPlug(
+                            "rman_displacementBound").asFloat()
                     attr = {"rman_displacementBound": boundValue}
                     attributes.update(attr)
 
 
+            # get subdivision scheme
             subdivScheme = "none"
-                    
-            mayaSubd = PyMelGetAttr( "{}.displaySmoothMesh".format(treeItem.name()) )
-            rmanSubd = PyMelGetAttr( "{}.rman_subdivScheme".format(treeItem.name()) )
+               
+            mayaSubd = OpenMaya.MFnDependencyNode(
+                treeObject ).findPlug(
+                    "displaySmoothMesh").asInt()
+            rmanSubd = OpenMaya.MFnDependencyNode(
+                treeObject ).findPlug(
+                    "rman_subdivScheme").asInt()
 
             if rmanSubd==1:
                 subdivScheme = "catmullClark"
@@ -140,11 +223,20 @@ def scan (tree=getRootList(), collector=[], selected=False):
             attributes.update(attr)
 
 
+        # mark selected tree
+        selectedFlag = False
+        if not selected:
+            selectedFlag = isDagSelected(treeDag)
 
+        else:
+            selectedFlag = True
+        
+
+        # item description
         sItem = {
-            "name": treeItem.name().encode(encModel),
-            "type": treeItem.type().encode(encModel),
-            "selected": flag,
+            "name": treeName,
+            "type": re.sub(r"^k", "", treeType),
+            "selected": selectedFlag,
             "attributes": attributes,
             "material": material,
             "children": []
@@ -152,17 +244,16 @@ def scan (tree=getRootList(), collector=[], selected=False):
 
         collector.append(sItem)
 
+
+        # next
         scan(
-            tree=treeItem.getChildren(),
+            tree=getChildren(treeDag),
             collector=sItem["children"],
-            selected=flag)
+            selected=selectedFlag )
+
 
 
     return collector
-
-
-
-
 
 
 
@@ -192,66 +283,6 @@ def clean (tree):
 
 
 
-def cut (tree):
-
-    treeCut=list()
-
-    for item in tree:
-
-        treeCut = cut(item["children"])
-
-        if item["selected"] :
-            return [item]
-
-    return treeCut
-
-
-
-
-
-
-
-def mergeshapes (tree):
-
-    for item in tree:
-
-        name = item["name"]
-        selected = item["selected"]
-        children = item["children"]
-
-        buffer = []
-        for child in children:
-
-            if child["type"] == "mesh":
-
-                item["type"]       = child["type"]
-                item["material"]   = child["material"]
-
-                visibility = keydata(
-                    item["attributes"],
-                    "visibility")
-
-                if isinstance(visibility, type(True)):
-                    if not visibility:
-                        child["attributes"]["visibility"] = False
-
-                item["attributes"] = child["attributes"]
-
-            else:
-                buffer.append(child)
-        
-        item["children"] = mergeshapes(buffer)
-
-    return tree
-
-
-
-
-
-
-
-
-
 def collectshaders (tree, collector={}):
 
     for item in tree:
@@ -259,22 +290,19 @@ def collectshaders (tree, collector={}):
         material = item["material"]
         if material:
 
-            engine = mayashader.getShadingEngine(material)
+            render  = mayashader.getPrmanNetwork(material)
+            preview = mayashader.getPreviewNetwork(material)
 
-            render  = mayashader.getPrmanNetwork(engine)
-            preview = mayashader.getPreviewNetwork(engine)
-
-            collector[material] = dict(
+            materialName = material.name().encode(encModel)
+            collector[materialName] = dict(
                 render=render,
                 preview=preview )
-        
+
         collectshaders(
             item["children"],
-            collector)
+            collector )
 
     return collector
-
-
 
 
 
@@ -306,28 +334,37 @@ def getroot (tree, scope=[], path=None):
 
 
 
+def cut (tree):
+
+    treeCut=list()
+
+    for item in tree:
+
+        treeCut = cut(item["children"])
+
+        if item["selected"] :
+            return [item]
+
+    return treeCut
 
 
-def get (merge=False):
+
+
+
+def get ():
 
     data = scan()
     data = clean(data)
 
-    if merge:
-        data = mergeshapes(data)
-
-    shaders = collectshaders(data)
-    root = getroot(data)
+    shaders=collectshaders(data)
+    root=getroot(data)
 
     data = cut(data)
 
     return dict(
         data=data,
-        root=root,
-        shaders=shaders)
-
-
-
+        shaders=shaders,
+        root=root )
 
 
 
@@ -350,16 +387,18 @@ def show (treeItem, iteration=0):
 
         print("{}name: {}".format(ident, name) )
         print("{}type: {}".format(ident, typename) )
-        print("{}selected: {}".format(ident, selected) )
 
         print("{}attributes:".format(ident) )
         if attributes:
             for key, value in attributes.items():
-                print("{}  {} >> {}".format(ident, key, value))
+                print("{}  {}: {}".format(ident, key, value))
 
-        print("{}material: {}".format(ident, material) )
+        print("{}selected: {}".format(ident, selected) )
+
+        if material:
+            materialName = material.name().encode(encModel)
+            print("{}material: {}".format(ident, materialName) )
         print("\n")
 
 
         show(children, iteration=iteration+1)
-

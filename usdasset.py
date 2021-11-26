@@ -1,9 +1,22 @@
 
 
-import os
 import re
+import os
+encModel = os.getenv("PYTHONIOENCODING")
 
-from pxr import Usd, UsdGeom, UsdShade, Gf, Vt, Sdf
+
+import ostree
+import mayatree
+
+
+from pxr import (
+    Usd,
+    UsdGeom,
+    UsdShade,
+    Gf,
+    Vt,
+    Sdf )
+
 
 
 
@@ -20,19 +33,112 @@ def makeRelative (path, assetpath):
 
 
 
+def getMaterialList (stage, name):
+
+    materialList = []
+
+    usdFile = stage.GetRootLayer().realPath
+    usdDirectory = os.path.dirname(usdFile)
+
+    searchpath = os.path.join(
+        usdDirectory,
+        ostree.SUBDIR_SURFACING )
+
+    for item in os.listdir(searchpath):
+        if re.match(r"{}\..+".format(name), item):
+            RelPath = "./{}/{}".format(
+                ostree.SUBDIR_SURFACING, item)
+            materialList.append(RelPath)
+
+    return materialList
+
+
+
+
+
+
+def bind (
+        source,
+        target,
+        tree,
+        path="/" ):
+
+
+    for item in tree:
+
+
+        name = item["name"]
+        itempath = os.path.join(path, name)
+
+        PrimPath = Sdf.Path(itempath)
+        Prim = source.GetPrimAtPath(PrimPath)
+
+        OverPrim = target.OverridePrim(PrimPath)
+
+
+
+        Material = item["material"]
+        if Material:
+            MaterialName = Material.name().encode(encModel)
+
+
+            ParentPath = Sdf.Path( os.path.dirname(itempath) )
+
+            ParentPrim = target.GetPrimAtPath(ParentPath)
+            Usd.ModelAPI(ParentPrim).SetKind("component")
+
+
+            MaterialPrim = target.GetPrimAtPath(PrimPath)
+            MaterialPrim.ApplyAPI(UsdShade.MaterialBindingAPI)
+
+
+            DefaultMaterialPath = ParentPath.AppendChild(MaterialName)
+            DefaultMaterial = UsdShade.Material.Define(target, DefaultMaterialPath)
+
+            MaterialList = getMaterialList(target, MaterialName)
+            for RelPath in MaterialList:
+
+                OverMaterial = target.OverridePrim(DefaultMaterialPath)
+                OverMaterial.GetPayloads().AddPayload(RelPath)
+
+
+            UsdShade.MaterialBindingAPI(OverPrim).Bind(DefaultMaterial)
+
+            attributes = item["attributes"]
+            for key, value in attributes.items():
+
+                if key == "displayColor":
+                    Schema  = UsdGeom.PrimvarsAPI(OverPrim)
+                    Primvar = Schema.CreatePrimvar(
+                        "primvars:displayColor",
+                        Sdf.ValueTypeNames.Color3fArray )
+                    Primvar.Set([Gf.Vec3f(value)])
+                    break
+
+
+        bind(
+            source,
+            target,
+            item["children"],
+            path=itempath )
+
+
+
+
+
 
 def make (
+        modelPath,
         assetPath,
-        render   = None,
-        proxy    = None,
-        name     = None,
-        root     = None,
-        instance = True ):
+        tree,
+        name = None ):
 
 
-    stage = Usd.Stage.CreateNew(assetPath)
+    modelStage = Usd.Stage.Open(modelPath)
+    assetStage = Usd.Stage.CreateNew(assetPath)
 
-    if not root: root = "root"
+    root = mayatree.getroot(tree)
+    rootName = os.path.basename(root)
 
     if not name:
         name = os.path.basename(assetPath)
@@ -40,14 +146,14 @@ def make (
 
 
     RootPath = Sdf.Path( "/{}".format(name) )
-    Xform = UsdGeom.Xform.Define(stage, RootPath)
+    Xform = UsdGeom.Xform.Define(assetStage, RootPath)
 
     ModelAPI = Usd.ModelAPI(Xform)
     ModelAPI.SetKind("assembly")
     ModelAPI.SetAssetName( name )
 
 
-    RootPrim = stage.GetPrimAtPath(RootPath)
+    RootPrim = assetStage.GetPrimAtPath(RootPath)
     VariantSet = RootPrim.GetVariantSets().AddVariantSet("geo")
 
     for variant in ["proxy", "render"]:
@@ -55,22 +161,18 @@ def make (
         VariantSet.SetVariantSelection(variant)
 
         with VariantSet.GetVariantEditContext():
-            TreeRootPath = RootPath.AppendChild(root)
-            overroot = stage.OverridePrim(TreeRootPath)
+            TreeRootPath = RootPath.AppendChild(rootName)
+            overroot = assetStage.OverridePrim(TreeRootPath)
 
-            if proxy and variant == "proxy":
-                proxy = makeRelative(proxy, assetPath)
-                overroot.GetPayloads().AddPayload(proxy)
+            if variant == "render":
+                modelPath = makeRelative(modelPath, assetPath)
+                overroot.GetPayloads().AddPayload(modelPath)
 
-            elif render and variant == "render":
-                render = makeRelative(render, assetPath)
-                overroot.GetPayloads().AddPayload(render)
-
-
-    if instance:
-        RootPrim.SetInstanceable(True)
+                bind( modelStage, assetStage,
+                    tree,
+                    path=RootPath.pathString )
 
 
-    layer = stage.GetRootLayer()
+    layer = assetStage.GetRootLayer()
     layer.defaultPrim = name
     layer.Save()

@@ -3,7 +3,14 @@
 import os
 import re
 
-from pxr import Usd, UsdGeom, UsdShade, Gf, Vt, Sdf
+
+from pxr import (
+    Usd,
+    UsdGeom,
+    UsdShade,
+    Gf,
+    Vt,
+    Sdf )
 
 
 
@@ -62,14 +69,21 @@ def nameditor (outputName, prman=True):
 
 def patheditor (path):
 
-    MSLIB = os.getenv("MSLIB", "")
-    if MSLIB:
-        MSLIB = MSLIB.split(":")
-        for scope in MSLIB:
+    ENVIRONMENT_VARIABLES = os.getenv(
+        "VFX_GLOBALS", "").split(":")
 
-            if re.match( "^{}.+".format(scope), path):
-                path = re.sub("^{}".format(scope), r"${MSLIB}", path)
-                break
+    for VARIABLE in ENVIRONMENT_VARIABLES:
+        
+        value = os.getenv(VARIABLE, "")
+        if value:
+
+            for scope in value.split(":"):
+
+                if re.match( "^{}.+".format(scope), path):
+                    return re.sub(
+                        "^{}".format(scope),
+                        "${"+VARIABLE+"}",
+                        path )
 
     return path
 
@@ -91,7 +105,7 @@ def CreateInput (shader, name, data):
     if inputType == "int":
         sdfType = Sdf.ValueTypeNames.Int
 
-    elif inputType == "float":
+    elif inputType in ["float", "double"]:
         sdfType = Sdf.ValueTypeNames.Float
 
     elif inputType == "string":
@@ -101,7 +115,7 @@ def CreateInput (shader, name, data):
         else:
             sdfType = Sdf.ValueTypeNames.String
 
-    elif inputType == "color":
+    elif inputType in ["color", "color3f"]:
         sdfType = Sdf.ValueTypeNames.Color3f
 
     elif inputType == "float2":
@@ -160,7 +174,6 @@ def make (
     MaterialShaders      = keydata(data, "shaders")
 
 
-
     if MaterialName:
         defaultPrim = MaterialName
 
@@ -194,8 +207,8 @@ def make (
             Shader = UsdShade.Shader.Define(stage, ShaderPath)
 
             ShaderInputs = keydata(ShaderData, "inputs")
-
             ShaderID = keydata(ShaderData, "id")
+
             if not prman:
                 if ShaderID == "file":
                     ShaderID = "UsdUVTexture"
@@ -207,16 +220,19 @@ def make (
                         connection=False, 
                         type="token", 
                         value="repeat")
+
                 elif ShaderID == "place2dTexture":
                     ShaderID = "UsdPrimvarReader_float2"
                     ShaderInputs["varname"] = dict(
                         connection=False, 
                         type="token", 
                         value="st")
+
                 elif ShaderID in  [
                     "pxrUsdPreviewSurface",
                     "usdPreviewSurface"]:
                     ShaderID = "UsdPreviewSurface"
+
             Shader.CreateIdAttr(ShaderID)
 
 
