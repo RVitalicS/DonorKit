@@ -7,7 +7,7 @@ encModel = "utf8"
 os.environ["PYTHONIOENCODING"] = encModel
 
 
-from pxr import Usd, Sdf
+from pxr import Usd
 
 from PySide2.QtWidgets import QFileDialog
 

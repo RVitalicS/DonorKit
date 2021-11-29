@@ -13,9 +13,7 @@ from pxr import (
     Usd,
     UsdGeom,
     UsdShade,
-    Gf,
-    Vt,
-    Sdf )
+    Gf, Sdf )
 
 
 
