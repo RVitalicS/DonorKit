@@ -141,86 +141,11 @@ def scan (tree=getRootList(), collector=[], selected=False):
 
         treeObject = treeDag.node()
 
-        attributes={}
-        material = None
-
-
-        # get visibility attribute
-        visibility =  OpenMaya.MFnDependencyNode(
-            treeObject ).findPlug(
-                "visibility").asBool()
-        attr = {"visibility": visibility}
-        attributes.update(attr)
-
-
-
         treeName = treeDag.partialPathName().encode(encModel)
         treeType = treeObject.apiTypeStr().encode(encModel)
-        
-        if treeType == "kMesh":
-            
-            MFnMesh = OpenMaya.MFnMesh(treeDag)
 
-
-            # get display color
-            if MFnMesh.hasColorChannels(
-                MFnMesh.currentColorSetName() ):
-
-                MColorArray = OpenMaya.MColorArray()
-                MFnMesh.getColors(
-                    MColorArray,
-                    MFnMesh.currentColorSetName(),
-                    OpenMaya.MColor(0,0,0,1))
-
-                color = list( MColorArray[0] )[:3]
-                for index in xrange(len(color)):
-                    value = color[index]
-                    color[index] = round(value, 4)
-
-                attr = {"displayColor": color}
-                attributes.update(attr)
-
-
-            # get displacement bound
-            shaders = OpenMaya.MObjectArray()
-            MFnMesh.getConnectedShaders(0,
-                shaders, OpenMaya.MIntArray() )
-
-            if shaders.length() > 0:
-
-                material = OpenMaya.MFnDependencyNode(shaders[0])
-
-                shaderPlug = material.findPlug("rman__displacement")
-                if shaderPlug.isConnected():
-
-                    boundValue =  OpenMaya.MFnDependencyNode(
-                        treeObject ).findPlug(
-                            "rman_displacementBound").asFloat()
-                    attr = {"rman_displacementBound": boundValue}
-                    attributes.update(attr)
-
-
-            # get subdivision scheme
-            subdivScheme = "none"
-               
-            mayaSubd = OpenMaya.MFnDependencyNode(
-                treeObject ).findPlug(
-                    "displaySmoothMesh").asInt()
-            rmanSubd = OpenMaya.MFnDependencyNode(
-                treeObject ).findPlug(
-                    "rman_subdivScheme").asInt()
-
-            if rmanSubd==1:
-                subdivScheme = "catmullClark"
-            elif rmanSubd==2:
-                subdivScheme = "loop"
-            elif rmanSubd==3:
-                subdivScheme = "bilinear"
-            elif mayaSubd>=1:
-                subdivScheme = "catmullClark"
-
-            attr = {"subdivScheme": subdivScheme}
-            attributes.update(attr)
+        attributes={}
+        material = None
 
 
         # mark selected tree
@@ -230,6 +155,84 @@ def scan (tree=getRootList(), collector=[], selected=False):
 
         else:
             selectedFlag = True
+
+
+        if selectedFlag:
+
+            # get visibility attribute
+            visibility =  OpenMaya.MFnDependencyNode(
+                treeObject ).findPlug(
+                    "visibility").asBool()
+            attr = {"visibility": visibility}
+            attributes.update(attr)
+
+
+            
+            if treeType == "kMesh":
+                
+                MFnMesh = OpenMaya.MFnMesh(treeDag)
+
+
+                # get display color
+                if MFnMesh.hasColorChannels(
+                    MFnMesh.currentColorSetName() ):
+
+                    MColorArray = OpenMaya.MColorArray()
+                    MFnMesh.getColors(
+                        MColorArray,
+                        MFnMesh.currentColorSetName(),
+                        OpenMaya.MColor(0,0,0,1))
+
+                    color = list( MColorArray[0] )[:3]
+                    for index in xrange(len(color)):
+                        value = color[index]
+                        color[index] = round(value, 4)
+
+                    attr = {"displayColor": color}
+                    attributes.update(attr)
+
+
+                # get displacement bound
+                shaders = OpenMaya.MObjectArray()
+                MFnMesh.getConnectedShaders(0,
+                    shaders, OpenMaya.MIntArray() )
+
+                if shaders.length() > 0:
+
+                    material = OpenMaya.MFnDependencyNode(shaders[0])
+
+                    shaderPlug = material.findPlug("rman__displacement")
+                    if shaderPlug.isConnected():
+
+                        boundValue =  OpenMaya.MFnDependencyNode(
+                            treeObject ).findPlug(
+                                "rman_displacementBound").asFloat()
+                        attr = {"rman_displacementBound": boundValue}
+                        attributes.update(attr)
+
+
+                # get subdivision scheme
+                subdivScheme = "none"
+                   
+                mayaSubd = OpenMaya.MFnDependencyNode(
+                    treeObject ).findPlug(
+                        "displaySmoothMesh").asInt()
+                rmanSubd = OpenMaya.MFnDependencyNode(
+                    treeObject ).findPlug(
+                        "rman_subdivScheme").asInt()
+
+                if rmanSubd==1:
+                    subdivScheme = "catmullClark"
+                elif rmanSubd==2:
+                    subdivScheme = "loop"
+                elif rmanSubd==3:
+                    subdivScheme = "bilinear"
+                elif mayaSubd>=1:
+                    subdivScheme = "catmullClark"
+
+                attr = {"subdivScheme": subdivScheme}
+                attributes.update(attr)
+
         
 
         # item description
