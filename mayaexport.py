@@ -157,7 +157,7 @@ def main ():
             for name, data in shaders.items():
                 for key in ["render", "preview"]:
 
-                    ShaderData = mayatree.keydata(data, key)
+                    ShaderData = data[key]
 
                     if key == "render":
                         prman=True

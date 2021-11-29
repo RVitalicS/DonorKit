@@ -13,18 +13,6 @@ import maya.OpenMaya as OpenMaya
 
 
 
-def keydata (dictionary, keyname):
-    if isinstance(dictionary, dict):
-
-        for key, value in dictionary.items():
-            
-            if key == keyname:
-                return value
-
-
-
-
-
 def getCildRoot (MDagPath):
 
     MFnDagNode = OpenMaya.MFnDagNode(MDagPath)
@@ -86,6 +74,7 @@ def getRootList ():
 
 
 
+
 def getChildren (MDagPath):
 
     childrenList = []
@@ -115,6 +104,7 @@ def getChildren (MDagPath):
 
 
 
+
 def isDagSelected (MDagPath):
 
     MSelectionList = OpenMaya.MSelectionList()
@@ -129,6 +119,7 @@ def isDagSelected (MDagPath):
             return True
 
     return False
+
 
 
 
@@ -262,6 +253,7 @@ def scan (tree=getRootList(), collector=[], selected=False):
 
 
 
+
 def clean (tree):
 
     treeClean=list()
@@ -281,6 +273,7 @@ def clean (tree):
             treeClean.append(item)
 
     return treeClean
+
 
 
 
@@ -306,6 +299,7 @@ def collectshaders (tree, collector={}):
             collector )
 
     return collector
+
 
 
 
@@ -337,6 +331,7 @@ def getroot (tree, scope=[], path=None):
 
 
 
+
 def cut (tree):
 
     treeCut=list()
@@ -349,6 +344,7 @@ def cut (tree):
             return [item]
 
     return treeCut
+
 
 
 
@@ -368,6 +364,7 @@ def get ():
         data=data,
         shaders=shaders,
         root=root )
+
 
 
 

@@ -17,19 +17,6 @@ import maya.OpenMaya as OpenMaya
 
 
 
-def keydata (dictionary, keyname):
-    if isinstance(dictionary, dict):
-
-        for key, value in dictionary.items():
-            
-            if key == keyname:
-                return value
-
-
-
-
-
-
 def typeEditor (paramdefault, paramtype):
 
     if paramtype in ["color", "normal"]:
@@ -56,21 +43,24 @@ def treeRunner (function, root, value=None, page=""):
         if child.tag == "param":
 
 
-            paramname = keydata(child.attrib, "name")
-            if paramname:
+            paramname = child.attrib["name"]
+            paramtype = child.attrib["type"]
 
-                paramtype = keydata(child.attrib, "type")
-                if paramtype:
+            paramdefault = None
+            isDynamicArray = False
 
-                    paramdefault = keydata(child.attrib, "default")
-                    if paramdefault:
+            for key in child.attrib:
+                if key == "isDynamicArray":
+                    isDynamicArray = True
+                elif key == "default":
+                    paramdefault = child.attrib["default"]
 
-                        dynamicArray = keydata(child.attrib, "isDynamicArray")
-                        if not dynamicArray:
-                            paramdefault = typeEditor(paramdefault, paramtype)
-                            value = function(paramname, paramtype, paramdefault)
-                            if not isinstance(value, type(None)):
-                                return value
+            if paramdefault and not isDynamicArray:
+                paramdefault = typeEditor(paramdefault, paramtype)
+
+                value = function(paramname, paramtype, paramdefault)
+                if not isinstance(value, type(None)):
+                    return value
 
 
         value = treeRunner(function, child, value=value, page=page)
@@ -266,9 +256,8 @@ def getNetwork (shader, prman=True, collector={}):
 
                     if prman:
                         data = getDefault(shader, attrName)
-                        dataType = keydata(data, "type")
-                        if dataType:
-                            valueType = dataType
+                        if data:
+                            valueType = data["type"]
 
                     MPlugSource = MPlug.source()
                     sourceNode = OpenMaya.MFnDependencyNode(
@@ -288,13 +277,13 @@ def getNetwork (shader, prman=True, collector={}):
 
                 elif prman:
                     data = getDefault(shader, attrName)
-                    valueDefault = keydata(data, "default")
-                    valueType    = keydata(data, "type")
-                    
                     value = getMPlugAs( MPlug, asValue=True )
 
-                    if ( not isinstance(valueDefault, type(None)) and
+                    if ( not isinstance(data, type(None)) and
                          not isinstance(value, type(None)) ):
+
+                        valueDefault = data["default"]
+                        valueType    = data["type"]
 
                         isDefault = True
 

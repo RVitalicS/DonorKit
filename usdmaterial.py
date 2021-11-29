@@ -18,20 +18,6 @@ from pxr import (
 
 
 
-def keydata (dictionary, keyname):
-    if isinstance(dictionary, dict):
-
-        for key, value in dictionary.items():
-            
-            if key == keyname:
-                return value
-
-
-
-
-
-
-
 def nameditor (outputName, prman=True):
 
     if not prman:
@@ -94,10 +80,10 @@ def patheditor (path):
 def CreateInput (shader, name, data):
 
 
-    inputType  = keydata(data, "type")
-    inputValue = keydata(data, "value")
+    inputType  = data["type"]
+    inputValue = data["value"]
 
-    connection = keydata(data, "connection")
+    connection = data["connection"]
 
     sdfType = None
     if inputType == "int":
@@ -156,164 +142,166 @@ def CreateInput (shader, name, data):
 
 
 
-def make (
-        pathusd,
-        data,
-        root="/",
-        scope="",
-        comment="",
-        documentation="",
-        prman=True ):
+def make (pathusd, data,
+          root="/",
+          scope="",
+          comment="",
+          documentation="",
+          prman=True):
 
 
-    MaterialName         = keydata(data, "name")
-    MaterialSurface      = keydata(data, "surface")
-    MaterialDisplacement = keydata(data, "displacement")
-    MaterialShaders      = keydata(data, "shaders")
+    MaterialName         = data["name"]
+    MaterialSurface      = None
+    MaterialDisplacement = None
+    MaterialShaders      = data["shaders"]
 
-
-    if MaterialName:
-        defaultPrim = MaterialName
-
-        stage = Usd.Stage.CreateNew(pathusd)
-
-
-        pathitems = root.split("/")
-        pathitems = [ i for i in pathitems if i]
-
-        root = Sdf.Path("/")
-        for item in pathitems:
-            if not defaultPrim: defaultPrim = item
-            root = root.AppendChild(item)
-
-
-        if scope:
-            if not defaultPrim: defaultPrim = scope
-            root = root.AppendChild(scope)
-            UsdGeom.Scope.Define(stage, root)
-
-
-        MaterialPath = root.AppendChild(MaterialName)
-        ShadingGroup = UsdShade.Material.Define(stage, MaterialPath)
-
-
-        for ShaderName in MaterialShaders:
-            ShaderData = MaterialShaders[ShaderName]
-
-
-            ShaderPath = MaterialPath.AppendChild(ShaderName)
-            Shader = UsdShade.Shader.Define(stage, ShaderPath)
-
-            ShaderInputs = keydata(ShaderData, "inputs")
-            ShaderID = keydata(ShaderData, "id")
-
-            if not prman:
-                if ShaderID == "file":
-                    ShaderID = "UsdUVTexture"
-                    ShaderInputs["wrapS"] = dict(
-                        connection=False, 
-                        type="token", 
-                        value="repeat")
-                    ShaderInputs["wrapT"] = dict(
-                        connection=False, 
-                        type="token", 
-                        value="repeat")
-
-                elif ShaderID == "place2dTexture":
-                    ShaderID = "UsdPrimvarReader_float2"
-                    ShaderInputs["varname"] = dict(
-                        connection=False, 
-                        type="token", 
-                        value="st")
-
-                elif ShaderID in  [
-                    "pxrUsdPreviewSurface",
-                    "usdPreviewSurface"]:
-                    ShaderID = "UsdPreviewSurface"
-
-            Shader.CreateIdAttr(ShaderID)
-
-
-            for inputName in ShaderInputs:
-                inputData = ShaderInputs[inputName]
-                inputName = nameditor(inputName, prman=prman)
-                CreateInput(Shader, inputName, inputData)
-
-
-        for ShaderName in MaterialShaders:
-            ShaderData = MaterialShaders[ShaderName]
-
-            inputPath = MaterialPath.AppendChild(ShaderName)
-            ShaderIn = UsdShade.NodeGraph.Get(stage, inputPath)
-
-
-            ShaderInputs = keydata(ShaderData, "inputs")
-            for inputName in ShaderInputs:
-                inputData = ShaderInputs[inputName]
-                inputName = nameditor(inputName, prman=prman)
-
-                connection = keydata(inputData, "connection")
-                if connection:
-
-
-                    ShaderInput = ShaderIn.GetInput(inputName)
-                    if ShaderInput:
-
-                        Source  = keydata(inputData, "value")
-                        SourceConnection  = Source.split(".")
-
-                        outputName = SourceConnection[1]
-                        outputName = nameditor(outputName, prman=prman)
-
-                        outputPath = MaterialPath.AppendChild(SourceConnection[0])
-                        ShaderOut = UsdShade.NodeGraph.Get(stage, outputPath)
-
-                        ShaderInput.ConnectToSource(
-                            ShaderOut.ConnectableAPI(), outputName)
+    for key in data:
+        if key == "surface":
+            MaterialSurface = data[key]
+        elif key == "displacement":
+            MaterialDisplacement = data[key]
 
 
 
-        def makeOutputConnection (Source, materialOutputName):
+    defaultPrim = MaterialName
 
-            SourceConnection = Source.split(".")
-
-            outputName = SourceConnection[1]
-            if prman:
-                outputName = nameditor(outputName, prman=prman)
-            else:
-                outputName = "surface"
-
-            outputPath = MaterialPath.AppendChild(SourceConnection[0])
-            ShaderOutput = UsdShade.NodeGraph.Get(stage, outputPath)
-
-            SurfaceOutput = ShadingGroup.CreateOutput(
-                materialOutputName,
-                Sdf.ValueTypeNames.Token)
-
-            SurfaceOutput.ConnectToSource(
-                ShaderOutput.ConnectableAPI(), outputName)
+    stage = Usd.Stage.CreateNew(pathusd)
 
 
-        if MaterialSurface:
-            makeOutputConnection(
-                MaterialSurface,
-                "{}surface".format("ri:" if prman else "") )
+    pathitems = root.split("/")
+    pathitems = [ i for i in pathitems if i]
 
-        if MaterialDisplacement:
-            makeOutputConnection(
-                MaterialDisplacement,
-                "{}displacement".format("ri:" if prman else "") )
+    root = Sdf.Path("/")
+    for item in pathitems:
+        if not defaultPrim: defaultPrim = item
+        root = root.AppendChild(item)
 
 
+    if scope:
+        if not defaultPrim: defaultPrim = scope
+        root = root.AppendChild(scope)
+        UsdGeom.Scope.Define(stage, root)
 
-        layer = stage.GetRootLayer()
 
-        if comment:
-            layer.comment = comment
-        if documentation:
-            layer.documentation = documentation
-        if defaultPrim:
-            layer.defaultPrim = defaultPrim
+    MaterialPath = root.AppendChild(MaterialName)
+    ShadingGroup = UsdShade.Material.Define(stage, MaterialPath)
 
-        layer.Save()
 
+    for ShaderName in MaterialShaders:
+        ShaderData = MaterialShaders[ShaderName]
+
+
+        ShaderPath = MaterialPath.AppendChild(ShaderName)
+        Shader = UsdShade.Shader.Define(stage, ShaderPath)
+
+        ShaderInputs = ShaderData["inputs"]
+        ShaderID     = ShaderData["id"]
+
+        if not prman:
+            if ShaderID == "file":
+                ShaderID = "UsdUVTexture"
+                ShaderInputs["wrapS"] = dict(
+                    connection=False, 
+                    type="token", 
+                    value="repeat")
+                ShaderInputs["wrapT"] = dict(
+                    connection=False, 
+                    type="token", 
+                    value="repeat")
+
+            elif ShaderID == "place2dTexture":
+                ShaderID = "UsdPrimvarReader_float2"
+                ShaderInputs["varname"] = dict(
+                    connection=False, 
+                    type="token", 
+                    value="st")
+
+            elif ShaderID in  [
+                "pxrUsdPreviewSurface",
+                "usdPreviewSurface"]:
+                ShaderID = "UsdPreviewSurface"
+
+        Shader.CreateIdAttr(ShaderID)
+
+
+        for inputName in ShaderInputs:
+            inputData = ShaderInputs[inputName]
+            inputName = nameditor(inputName, prman=prman)
+            CreateInput(Shader, inputName, inputData)
+
+
+    for ShaderName in MaterialShaders:
+        ShaderData = MaterialShaders[ShaderName]
+
+        inputPath = MaterialPath.AppendChild(ShaderName)
+        ShaderIn = UsdShade.NodeGraph.Get(stage, inputPath)
+
+
+        ShaderInputs = ShaderData["inputs"]
+        for inputName in ShaderInputs:
+            inputData = ShaderInputs[inputName]
+            inputName = nameditor(inputName, prman=prman)
+
+            if inputData["connection"]:
+
+
+                ShaderInput = ShaderIn.GetInput(inputName)
+                if ShaderInput:
+
+                    Source  = inputData["value"]
+                    SourceConnection  = Source.split(".")
+
+                    outputName = SourceConnection[1]
+                    outputName = nameditor(outputName, prman=prman)
+
+                    outputPath = MaterialPath.AppendChild(SourceConnection[0])
+                    ShaderOut = UsdShade.NodeGraph.Get(stage, outputPath)
+
+                    ShaderInput.ConnectToSource(
+                        ShaderOut.ConnectableAPI(), outputName)
+
+
+
+    def makeOutputConnection (Source, materialOutputName):
+
+        SourceConnection = Source.split(".")
+
+        outputName = SourceConnection[1]
+        if prman:
+            outputName = nameditor(outputName, prman=prman)
+        else:
+            outputName = "surface"
+
+        outputPath = MaterialPath.AppendChild(SourceConnection[0])
+        ShaderOutput = UsdShade.NodeGraph.Get(stage, outputPath)
+
+        SurfaceOutput = ShadingGroup.CreateOutput(
+            materialOutputName,
+            Sdf.ValueTypeNames.Token)
+
+        SurfaceOutput.ConnectToSource(
+            ShaderOutput.ConnectableAPI(), outputName)
+
+
+    if MaterialSurface:
+        makeOutputConnection(
+            MaterialSurface,
+            "{}surface".format("ri:" if prman else "") )
+
+    if MaterialDisplacement:
+        makeOutputConnection(
+            MaterialDisplacement,
+            "{}displacement".format("ri:" if prman else "") )
+
+
+
+    layer = stage.GetRootLayer()
+
+    if comment:
+        layer.comment = comment
+    if documentation:
+        layer.documentation = documentation
+    if defaultPrim:
+        layer.defaultPrim = defaultPrim
+
+    layer.Save()

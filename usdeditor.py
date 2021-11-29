@@ -61,12 +61,10 @@ def copyAttrubutes (source, target, units=1.0):
 
 
 
-def copyStage (
-    source,
-    target,
-    root="/",
-    units=None,
-    children=None):
+def copyStage (source, target,
+               root="/",
+               units=None,
+               children=None):
     
 
     if not units:
@@ -104,12 +102,10 @@ def copyStage (
         copyAttrubutes(ChildPrim, NewPrim, units=units)
 
 
-        copyStage(
-            source,
-            target,
-            root=root,
-            units=units,
-            children=ChildPrim.GetAllChildren())
+        copyStage(source, target,
+                  root=root,
+                  units=units,
+                  children=ChildPrim.GetAllChildren())
 
 
 
@@ -158,7 +154,4 @@ def addMayaAttributes (stage, tree, path="/"):
                 Primvar.Set(value)
 
 
-        addMayaAttributes(
-            stage,
-            item["children"],
-            path=itempath)
+        addMayaAttributes(stage, item["children"], path=itempath)
