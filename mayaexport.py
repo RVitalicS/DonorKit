@@ -101,6 +101,12 @@ def main ():
         root    = scene["root"]
 
 
+        if not treedata:
+            OpenMaya.MGlobal.displayWarning(
+                "Wrong Selection")
+            return
+
+
         widget = QFileDialog()
         path = widget.getExistingDirectory(
             widget,
