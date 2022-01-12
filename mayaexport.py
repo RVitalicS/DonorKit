@@ -1,5 +1,5 @@
 
-
+import time
 import re
 import os
 
@@ -94,32 +94,65 @@ def main ():
 
     if not MSelectionList.isEmpty():
 
-        scene = mayatree.get()
 
-        treedata  = scene["data"]
-        shaders = scene["shaders"]
-        root    = scene["root"]
-
-
-        if not treedata:
-            OpenMaya.MGlobal.displayWarning(
-                "Wrong Selection")
-            return
-
-
+        # Export Widget
         widget = QFileDialog()
-        path = widget.getExistingDirectory(
+        ExportPath = widget.getExistingDirectory(
             widget,
             "Save Asset", "",
             QFileDialog.ShowDirsOnly ).encode(encModel)
+        
+
+        version = 1                     # combobox
+        version = "v{:02d}".format(version)
+
+        variant = None                  # combobox
+        final = False                   # checkbox
 
 
-        if path:
-            AssetName = os.path.basename(path)
+        modelling = True                # checkbox
+        modellingOverride = False       # checkbox
+
+        animation = True                # checkbox
+        animationOverride = True        # checkbox
+
+        timeRange  = False              # checkbox
+        startFrame = 1                  # spinbox
+        endFrame   = 150                # spinbox
+        fps        = 30                 # combobox
+
+        AnimationName = "Animation"     # combobox
+
+        surfacing = False               # checkbox
+
+        unitsMultiplier = 1.0           # combobox
+        units = 0.01 * unitsMultiplier
+
+
+
+        if ExportPath:
+
+
+            start = time.time()
+            scene = mayatree.get(getshaders=surfacing)
+            end = time.time()
+            print("\nGot Scene Data for {} sec.\n".format(end - start) )
+
+            treedata  = scene["data"]
+            shaders = scene["shaders"]
+            root    = scene["root"]
+
+
+            if not treedata:
+                OpenMaya.MGlobal.displayWarning(
+                    "Wrong Selection")
+                return
+
+
+            AssetName = os.path.basename(ExportPath)
             AssetName = re.sub(r"\..*$", "", AssetName)
+            AssetDirectory = os.path.dirname(ExportPath)
 
-            AssetDirectory = os.path.dirname(path)
-            ostree.build(AssetDirectory, AssetName)
 
 
             SourceModelPath = os.path.join(
@@ -128,74 +161,172 @@ def main ():
                 ostree.SUBDIR_MODELLING,
                 "source.geo.usd" )
 
-            UsdExport(SourceModelPath)
-
-
-
-            ModelName = "{}.usd".format(
-                os.path.basename(root))
+            ModelFileName = "{}.{}.usd".format(
+                os.path.basename(root), version )
 
             ModelPath = os.path.join(
                 AssetDirectory,
                 AssetName,
                 ostree.SUBDIR_MODELLING,
-                ModelName )
+                ModelFileName )
 
-            OldStage = Usd.Stage.Open(SourceModelPath)
-            NewStage = Usd.Stage.CreateNew(ModelPath)
-            usdeditor.copyStage(
-                OldStage,
-                NewStage, root=root)
+            AnimationFileName = "{}.{}.usd".format(
+                AnimationName, version)
 
-            usdeditor.addMayaAttributes(NewStage, treedata)
-            NewStage.GetRootLayer().Save(force=True)
-
-            os.remove(SourceModelPath)
-
-
-
-            for name, data in shaders.items():
-                for key in ["render", "preview"]:
-
-                    ShaderData = data[key]
-
-                    if key == "render":
-                        prman=True
-                        ShaderName = "{}.RenderMan.usda".format(name)
-
-                    else:
-                        prman=False
-                        ShaderName = "{}.usda".format(name)
-
-                    ShaderPath = os.path.join(
-                        AssetDirectory,
-                        AssetName,
-                        ostree.SUBDIR_SURFACING,
-                        ShaderName )
-
-
-                    if ShaderData:
-                        ShaderData["name"] = name
-                        usdmaterial.make(
-                            ShaderPath,
-                            ShaderData,
-                            prman=prman)
-
-
-
-            AssetPath = os.path.join(
+            AnimationPath = os.path.join(
                 AssetDirectory,
                 AssetName,
-                "{}.usda".format(AssetName) )
-
-            usdasset.make (
-                ModelPath,
-                AssetPath,
-                treedata )
+                ostree.SUBDIR_ANIMATION,
+                AnimationFileName )
 
 
-            OpenMaya.MGlobal.displayInfo(
-                "Asset Saved: {}".format(AssetName) )
+
+            export = False
+            extractModel = False
+            extractAnimatioin = False
+
+            if modelling:
+                if not os.path.exists(ModelPath):
+                    export = True
+                    extractModel = True
+                elif modellingOverride:
+                    export = True
+                    extractModel = True
+
+            if animation:
+                if not os.path.exists(AnimationPath):
+                    export = True
+                    extractAnimatioin = True
+                elif animationOverride:
+                    export = True
+                    extractAnimatioin = True
+
+
+
+            if export:
+                ostree.build(ExportPath, modelling=True)
+                UsdExport(
+                    SourceModelPath,
+                    animation= 1 if animation else 0,
+                    startTime=startFrame,
+                    endTime=endFrame )
+
+
+
+            if extractModel:
+                if os.path.exists(ModelPath):
+                    message = "Model Overwritten: "
+                else:
+                    message = "Model Saved: "
+
+                OldStage = Usd.Stage.Open(SourceModelPath)
+                NewStage = Usd.Stage.CreateNew(ModelPath)
+                usdeditor.copyStage(
+                    OldStage,
+                    NewStage,
+                    root=root, units=units)
+
+                usdeditor.addMayaAttributes(NewStage, treedata)
+                NewStage.GetRootLayer().Save(force=True)
+
+                OpenMaya.MGlobal.displayInfo(message + ModelFileName)
+
+
+
+            if extractAnimatioin:
+                ostree.build(ExportPath, animation=True)
+
+                if os.path.exists(AnimationPath):
+                    message = "Animation Overwritten: "
+                else:
+                    message = "Animation Saved: "
+
+                OldStage = Usd.Stage.Open(SourceModelPath)
+                NewStage = Usd.Stage.CreateNew(AnimationPath)
+                usdeditor.copyAnimation(
+                    OldStage,
+                    NewStage,
+                    root=root, reference=ModelPath, units=units )
+
+                NewStage.GetRootLayer().Save(force=True)
+
+                OpenMaya.MGlobal.displayInfo(message + AnimationFileName)
+
+
+            if os.path.exists(SourceModelPath):
+                os.remove(SourceModelPath)
+
+
+
+            if surfacing and shaders:
+                ostree.build(ExportPath, surfacing=True)
+
+                for name, data in shaders.items():
+                    for key in ["render", "preview"]:
+
+                        ShaderData = data[key]
+
+                        if key == "render":
+                            prman=True
+                            ShaderFileName = "{}.RenderMan.{}.usda".format(
+                                name, version )
+
+                        else:
+                            prman=False
+                            ShaderFileName = "{}.{}.usda".format(
+                                name, version )
+
+                        ShaderPath = os.path.join(
+                            AssetDirectory,
+                            AssetName,
+                            ostree.SUBDIR_SURFACING,
+                            ShaderFileName )
+
+                        if os.path.exists(ShaderPath):
+                            message = "Shader Overwritten: "
+                        else:
+                            message = "Shader Saved: "
+
+                        if ShaderData:
+                            ShaderData["name"] = name
+                            usdmaterial.make(
+                                ShaderPath,
+                                ShaderData,
+                                prman=prman)
+
+                            OpenMaya.MGlobal.displayInfo(message + ShaderFileName)
+
+
+
+            ReferencePath = AnimationPath if animation else ModelPath
+            if os.path.exists(ReferencePath):
+
+                if variant:
+                    version = "{}-{}".format(variant, version)
+                if final:
+                    version = "{}.final".format(version)
+
+                AssetFileName = "{}{}.{}.usda".format(
+                        AssetName,
+                        "." + AnimationName if animation else "",
+                        version)
+
+                AssetPath = os.path.join(
+                    AssetDirectory,
+                    AssetName,
+                    AssetFileName )
+
+                if os.path.exists(AssetPath):
+                    message = "Asset Overwritten: "
+                else:
+                    message = "Asset Saved: "
+
+                usdasset.make (
+                    ReferencePath,
+                    AssetPath,
+                    treedata )
+
+                OpenMaya.MGlobal.displayInfo(message + AssetFileName)
 
 
 

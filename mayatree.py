@@ -1,7 +1,9 @@
 
 
+import time
 import re
 import os
+
 encModel = os.getenv("PYTHONIOENCODING")
 
 
@@ -350,15 +352,35 @@ def cut (tree):
 
 
 
-def get ():
+def get ( getshaders=True ):
 
+    start = time.time()
     data = scan()
+    end = time.time()
+    print("\nmayatree.scan for {} sec.".format(end - start) )
+
+    start = time.time()
     data = clean(data)
+    end = time.time()
+    print("mayatree.clean for {} sec.".format(end - start) )
 
-    shaders=collectshaders(data)
+    if getshaders:
+        start = time.time()
+        shaders=collectshaders(data)
+        end = time.time()
+        print("mayatree.collectshaders for {} sec.".format(end - start) )
+    else:
+        shaders = {}
+
+    start = time.time()
     root=getroot(data)
+    end = time.time()
+    print("mayatree.getroot for {} sec.".format(end - start) )
 
+    start = time.time()
     data = cut(data)
+    end = time.time()
+    print("mayatree.cut for {} sec.".format(end - start) )
 
     return dict(
         data=data,
