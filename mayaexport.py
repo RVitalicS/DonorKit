@@ -1,4 +1,10 @@
 
+
+# import mayaexport
+# mayaexport.main()
+
+
+
 import time
 import re
 import os
@@ -33,7 +39,7 @@ def UsdExport (
     exportSkin="none",
     exportBlendShapes=0,
     exportColorSets=1,
-    defaultMeshScheme="catmullClark",
+    defaultMeshScheme="none",
     defaultUSDFormat="usdc",
     animation=0,
     eulerFilter=0,
@@ -50,7 +56,7 @@ def UsdExport (
     mergeTransformAndShape=0,
     stripNamespaces=1 ):
 
-    options=';'.join([
+    options = ';'.join([
         "exportUVs={}".format( exportUVs ),
         "exportSkels={}".format( exportSkels ),
         "exportSkin={}".format( exportSkin ),

@@ -2,21 +2,21 @@
 
 # Naming Convention
 #    
-#    Name.VariantName-v01.usdc
-#    Name.AnimationName.v01.usd
-#    Name.v01.final.usda
+#    Name.v01-VariantName.usdc
+#    Name.v01.AnimationName.usd
+#    Name.final.usda [link]
 #    
 #    name
 #        "AssetName."
+#    variant & version
+#        ".v01."
+#        ".v01-VariantName."
+#    final tag option
+#        ".final." [ reserved ]
 #    tag
 #        ".Proxy." [ reserved ]
 #        ".RenderMan." [ reserved ]
 #        ".AnimationName-01."
-#    variant & version
-#        ".v01."
-#        ".VariantName-v01."
-#    final tag option
-#        ".final." [ reserved ]
 #    extension 
 #        ".usd"
 
@@ -39,8 +39,8 @@
 #         Fire.v01.usd
 # 
 #     [modelling]
+#         ModelName.v01.Proxy.usdc
 #         ModelName.v01.usdc
-#         ModelName.Proxy.v01.usdc
 # 
 #     [animation]
 #         AnimationName.v01.usdc
@@ -49,10 +49,11 @@
 #         [textures]
 #             ...
 # 
-#         SurfaceName.RenderMan.v01.usda
+#         SurfaceName.v01.RenderMan.usda
 #         SurfaceName.v01.usda
 # 
-#     AssetName.AnimationName.VariantName-v01.final.usda
+#     AssetName.final.AnimationName.usda [AssetName.v01-VariantName.AnimationName.usda]
+#     AssetName.v01-VariantName.AnimationName.usda
 #     .metadata.json
 
 
