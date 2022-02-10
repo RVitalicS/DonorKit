@@ -1,19 +1,15 @@
-#!/bin/python
+#!/usr/bin/env python
+
 
 
 import os
+from . import stylesheet
 
-from Qt import (
-    QtWidgets,
-    QtCore,
-    QtGui
-)
 
+from Qt import QtCore, QtGui
 
 from . import Settings
 UIsettings = Settings.UIsettings
-
-from . import stylesheet
 
 
 
@@ -46,7 +42,7 @@ class Icon (object):
 
 
     def paint (self, painter, option, index, editing=False):
-
+        
         self.painter = painter
         self.option  = option
         self.index   = index
@@ -189,7 +185,7 @@ class Icon (object):
         # ITEMS
         self.painter.setPen(
             QtGui.QPen(
-                QtGui.QBrush( QtGui.QColor(stylesheet.textgrey) ),
+                QtGui.QBrush( QtGui.QColor(stylesheet.textlock) ),
                 0,
                 QtCore.Qt.SolidLine,
                 QtCore.Qt.RoundCap,
@@ -239,18 +235,15 @@ class Icon (object):
         with Settings.UIManager(update=False) as uiSettings:
             iconSize = uiSettings["iconSize"]
 
-        previewBase = self.index.data(QtCore.Qt.EditRole)["data"]["preview"]
-
         IconSettings = UIsettings.AssetBrowser.Icon
 
-        previewPath = previewBase + ".min.png"
         labelHeight = IconSettings.Asset.min.label
         if iconSize == 2:
             labelHeight = IconSettings.Asset.mid.label
-            previewPath = previewBase + ".mid.png"
         elif iconSize == 3:
             labelHeight = IconSettings.Asset.max.label
-            previewPath = previewBase + ".max.png"
+
+        previewHeight = self.height - labelHeight
 
 
         labelArea = QtCore.QRect(
@@ -260,51 +253,65 @@ class Icon (object):
             self.height - self.space*3 - (self.height - labelHeight) )
 
 
-        offsetStatus = 4
-        statusArea = QtCore.QRect(
-            labelArea.x()                                                 ,
-            labelArea.y()      + int(labelArea.height()/2) + offsetStatus ,
-            labelArea.width()                                             ,
-            labelArea.height() - int(labelArea.height()/2) - offsetStatus )
-
-
-
-        # BACKGROUND
-        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-        if self.iconRect.contains(self.pointer):
-            color = QtGui.QColor(stylesheet.iconHilight)
-        else:
-            color = QtGui.QColor(stylesheet.iconBackground)
-        self.painter.fillRect(self.iconRect, color)
-
-
 
         # PREVIEW
+        previewPath = self.index.data(QtCore.Qt.EditRole)["data"]["preview"]
         if os.path.exists(previewPath):
             previewImage = QtGui.QImage(previewPath)
+
+            scaledImage = previewImage.scaledToWidth(
+                self.width,
+                QtCore.Qt.SmoothTransformation )
+
+            previewY  = (previewHeight - scaledImage.height())/2
+            previewY  = int(round(previewY))
+            previewY += self.pointY
+
             self.painter.drawImage(
-                QtCore.QPoint(self.pointX, self.pointY),
-                previewImage )
-            
+                QtCore.QPoint(self.pointX, previewY),
+                scaledImage )
+
         else:
             previewArea = QtCore.QRect(
                 self.pointX,
                 self.pointY,
                 self.width,
-                self.height - labelHeight )
+                previewHeight )
 
             previewColor = QtGui.QColor(stylesheet.iconHilight)
             self.painter.fillRect(previewArea, previewColor)
 
 
 
+        # BACKGROUND
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+        labelBackground = QtCore.QRect(
+            self.pointX                 ,
+            self.pointY + previewHeight ,
+            self.width                  ,
+            labelHeight                 )
+
+        if self.iconRect.contains(self.pointer):
+            color = QtGui.QColor(stylesheet.iconHilight)
+        else:
+            color = QtGui.QColor(stylesheet.iconBackground)
+        self.painter.fillRect(labelBackground, color)
+
+
+
         # ICON
         typeImage = QtGui.QImage(":/icons/typeusd.png")
 
-        offsetIcon = 4
-        iconPosition = QtCore.QPoint(
-                labelArea.x() + labelArea.width() - typeImage.width(),
-                labelArea.y() + offsetIcon )
+        offsetIcon = 0
+        if iconSize == 1:
+            iconPosition = QtCore.QPoint(
+                    labelArea.x() + labelArea.width() - typeImage.width(),
+                    labelArea.y() + offsetIcon )
+        else:
+            iconPosition = QtCore.QPoint(
+                    labelArea.x()              ,
+                    labelArea.y() + offsetIcon )
 
         self.painter.drawImage(iconPosition, typeImage)
 
@@ -321,12 +328,20 @@ class Icon (object):
         self.painter.setPen( QtGui.QColor(stylesheet.text) )
         self.painter.setFont( UIsettings.IconDelegate.fontAssetName )
 
-        offsetName = 2
-        nameArea = QtCore.QRect(
-            labelArea.x()                   ,
-            labelArea.y()      + offsetName ,
-            labelArea.width()               ,
-            labelArea.height() - offsetName )
+        offsetName = -2
+
+        if iconSize == 1:
+            nameArea = QtCore.QRect(
+                labelArea.x()                   ,
+                labelArea.y()      + offsetName ,
+                labelArea.width()               ,
+                labelArea.height() - offsetName )
+        else:
+            nameArea = QtCore.QRect(
+                labelArea.x() + typeImage.width() + self.space*2 ,
+                labelArea.y()      + offsetName                ,
+                int(labelArea.width()/2)                       ,
+                labelArea.height() - offsetName                )
 
         text = self.index.data(QtCore.Qt.EditRole)["data"]["name"]
 
@@ -341,15 +356,15 @@ class Icon (object):
         self.painter.setPen( statusColor )
         self.painter.setFont( UIsettings.IconDelegate.fontAssetVersion )
 
-        offsetVersion = offsetName + 14
+        offsetVersion = 13
         nameArea = QtCore.QRect(
-            labelArea.x()                      ,
-            labelArea.y()      + offsetVersion ,
-            labelArea.width()                  ,
-            labelArea.height() - offsetVersion )
+            nameArea.x()                      ,
+            nameArea.y()      + offsetVersion ,
+            nameArea.width()                  ,
+            nameArea.height() - offsetVersion )
 
         text = self.index.data(QtCore.Qt.EditRole)["data"]["version"]
-        text = "Version {}".format(text)
+        text = "version {}".format(text)
 
         self.painter.drawText(
             QtCore.QRectF(nameArea),
@@ -359,23 +374,48 @@ class Icon (object):
 
 
         # PUBLISHED & STATUS LABELS
-        self.painter.setPen( QtGui.QColor(stylesheet.textgrey) )
+        self.painter.setPen( QtGui.QColor(stylesheet.textlock) )
         self.painter.setFont( UIsettings.IconDelegate.fontAssetLabel )
 
+        if iconSize == 1:
+            offsetStatus = 2
+            publishedWidth = int(labelArea.width()/2)
+            publishedArea  = QtCore.QRect(
+                labelArea.x()                                                 ,
+                labelArea.y()      + int(labelArea.height()/2) + offsetStatus ,
+                publishedWidth                                             ,
+                labelArea.height() - int(labelArea.height()/2) - offsetStatus )
+        elif iconSize == 2:
+            offsetStatus = -2
+            publishedWidth = int(((labelArea.width() - self.space*4)/2 )/2)
+            publishedArea = QtCore.QRect(
+                labelArea.x() + labelArea.width() - publishedWidth*2 ,
+                labelArea.y()                         + offsetStatus ,
+                publishedWidth                                       ,
+                labelArea.height()                    - offsetStatus )
+        else:
+            offsetStatus = -2
+            publishedWidth = int(((labelArea.width() - self.space*8)/3 )/2)
+            publishedArea = QtCore.QRect(
+                labelArea.x() + labelArea.width() - publishedWidth*2 ,
+                labelArea.y()                         + offsetStatus ,
+                publishedWidth                                       ,
+                labelArea.height()                    - offsetStatus )
+
         self.painter.drawText(
-            QtCore.QRectF(statusArea),
+            QtCore.QRectF(publishedArea),
             "Published",
             textOption)
 
 
-        nameArea = QtCore.QRect(
-            statusArea.x()     + int(statusArea.width()/2) ,
-            statusArea.y()                             ,
-            statusArea.width() - int(statusArea.width()/2) ,
-            statusArea.height()                        )
+        statusArea = QtCore.QRect(
+            publishedArea.x() + publishedWidth ,
+            publishedArea.y()                  ,
+            publishedArea.width()              ,
+            publishedArea.height()             )
 
         self.painter.drawText(
-            QtCore.QRectF(nameArea),
+            QtCore.QRectF(statusArea),
             "STATUS",
             textOption)
 
@@ -386,28 +426,28 @@ class Icon (object):
         self.painter.setFont( UIsettings.IconDelegate.fontAssetLabel )
 
         offsetPublished = 10
-        nameArea = QtCore.QRect(
-            statusArea.x()                        ,
-            statusArea.y()      + offsetPublished ,
-            statusArea.width()                    ,
-            statusArea.height() - offsetPublished )
+        dateArea = QtCore.QRect(
+            publishedArea.x()                        ,
+            publishedArea.y()      + offsetPublished ,
+            publishedArea.width()                    ,
+            publishedArea.height() - offsetPublished )
 
         text = self.index.data(QtCore.Qt.EditRole)["data"]["published"]
 
         self.painter.drawText(
-            QtCore.QRectF(nameArea),
+            QtCore.QRectF(dateArea),
             text,
             textOption)
 
-
+        
 
         # STATUS BUTTON
         offsetButton = offsetPublished + 2
         buttonArea = QtCore.QRect(
-            statusArea.x()      + int(statusArea.width()/2) ,
-            statusArea.y()      + offsetButton              ,
-            statusArea.width()  - int(statusArea.width()/2) ,
-            statusArea.height() - offsetButton              )
+            statusArea.x()                     ,
+            statusArea.y()      + offsetButton ,
+            statusArea.width()                 ,
+            statusArea.height() - offsetButton )
 
         path = QtGui.QPainterPath()
         path.addRoundedRect(
@@ -418,7 +458,7 @@ class Icon (object):
         brush = QtGui.QBrush(statusColor)
         self.painter.fillPath(path, brush)
 
-
+        
 
         # STATUS TEXT
         self.painter.setPen( QtGui.QColor(stylesheet.white) )

@@ -1,10 +1,10 @@
+#!/usr/bin/env python
+
 
 
 import time
 import re
 import os
-
-encModel = os.getenv("PYTHONIOENCODING")
 
 
 import mayashader
@@ -49,7 +49,7 @@ def getRootList ():
     MSelectionList = OpenMaya.MSelectionList()
     OpenMaya.MGlobal.getActiveSelectionList(MSelectionList)
 
-    for index in xrange( MSelectionList.length() ):
+    for index in range( MSelectionList.length() ):
         MObject = OpenMaya.MObject()
         MSelectionList.getDependNode(index, MObject)
 
@@ -82,7 +82,7 @@ def getChildren (MDagPath):
     childrenList = []
 
     MFnDagNode = OpenMaya.MFnDagNode(MDagPath)
-    for index in xrange(MFnDagNode.childCount()):
+    for index in range(MFnDagNode.childCount()):
 
         childMFnDagNode = OpenMaya.MFnDagNode(
             MFnDagNode.child(index))
@@ -112,7 +112,7 @@ def isDagSelected (MDagPath):
     MSelectionList = OpenMaya.MSelectionList()
     OpenMaya.MGlobal.getActiveSelectionList(MSelectionList)
 
-    for index in xrange(MSelectionList.length()):
+    for index in range(MSelectionList.length()):
       
         matchMDagPath = OpenMaya.MDagPath()
         MSelectionList.getDagPath(index, matchMDagPath)
@@ -134,11 +134,20 @@ def scan (tree=getRootList(), collector=[], selected=False):
 
         treeObject = treeDag.node()
 
-        treeName = treeDag.partialPathName().encode(encModel)
-        treeType = treeObject.apiTypeStr().encode(encModel)
+        treeName = str(treeDag.partialPathName())
+        treeType = str(treeObject.apiTypeStr())
 
         attributes={}
         material = None
+
+
+        # get visibility attribute
+        historyObject =  OpenMaya.MFnDependencyNode(
+            treeObject ).findPlug(
+                "intermediateObject").asBool()
+            
+        if historyObject:
+            continue
 
 
         # mark selected tree
@@ -177,7 +186,7 @@ def scan (tree=getRootList(), collector=[], selected=False):
                         OpenMaya.MColor(0,0,0,1))
 
                     color = list( MColorArray[0] )[:3]
-                    for index in xrange(len(color)):
+                    for index in range(len(color)):
                         value = color[index]
                         color[index] = round(value, 4)
 
@@ -285,13 +294,13 @@ def collectshaders (tree, collector={}):
 
     for item in tree:
 
-        material = item["material"]
-        if material:
+        Material = item["material"]
+        if Material:
 
-            render  = mayashader.getPrmanNetwork(material)
-            preview = mayashader.getPreviewNetwork(material)
+            render  = mayashader.getPrmanNetwork(Material)
+            preview = mayashader.getPreviewNetwork(Material)
 
-            materialName = material.name().encode(encModel)
+            materialName = str(Material.name())
             collector[materialName] = dict(
                 render=render,
                 preview=preview )
@@ -325,6 +334,7 @@ def getroot (tree, scope=[], path=None):
             return os.path.join(root, name)
 
         path = getroot(children, scope=_scope)
+        path = str(path)
 
 
     return path
@@ -407,6 +417,7 @@ def show (treeItem, iteration=0):
         if iteration:
             ident = "    " * iteration
 
+        print("\n")
         print("{}name: {}".format(ident, name) )
         print("{}type: {}".format(ident, typename) )
 
@@ -418,9 +429,8 @@ def show (treeItem, iteration=0):
         print("{}selected: {}".format(ident, selected) )
 
         if material:
-            materialName = material.name().encode(encModel)
+            materialName = str(material.name())
             print("{}material: {}".format(ident, materialName) )
-        print("\n")
 
 
         show(children, iteration=iteration+1)

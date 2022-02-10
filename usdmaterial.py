@@ -1,14 +1,12 @@
+#!/usr/bin/env python
+
 
 
 import os
 import re
 
 
-from pxr import (
-    Usd,
-    UsdGeom,
-    UsdShade,
-    Sdf )
+from pxr import Usd, UsdGeom, UsdShade, Sdf
 
 
 

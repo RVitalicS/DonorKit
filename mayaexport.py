@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 
 # import mayaexport
 # mayaexport.main()
@@ -8,15 +8,28 @@
 import time
 import re
 import os
+import ctypes
 
-encModel = "utf8"
-os.environ["PYTHONIOENCODING"] = encModel
+
+
+if not os.getenv("ASSETLIBS", ""):
+    os.environ["ASSETLIBS"] = os.path.join(
+        os.path.dirname(__file__),
+        "examples", "library" )
+
+os.environ["FONT_FAMILY"] = "Cantarell"
+
+
 
 
 from pxr import Usd
 
-from PySide2.QtWidgets import QFileDialog
+from Qt import QtGui, QtCore
 
+from widgets import ExportWidget
+from widgets import Metadata
+from widgets import Settings
+from widgets import tools
 
 import ostree
 import mayatree
@@ -26,6 +39,7 @@ import usdeditor
 import usdasset
 
 
+import maya.OpenMayaUI as OpenMayaUI
 import maya.OpenMaya as OpenMaya
 
 
@@ -93,6 +107,51 @@ def UsdExport (
 
 
 
+def viewportShot (path, width, height):
+    
+    
+    view = OpenMayaUI.M3dView.active3dView()
+    view.refresh()
+
+    viewWidth = view.portWidth()
+    viewHeight = view.portHeight()
+
+    buffer = OpenMaya.MImage()
+    view.readColorBuffer(buffer, False)
+
+
+    pointer = ctypes.cast( int(buffer.pixels()), ctypes.POINTER(ctypes.c_char) )
+    pointerAsString = ctypes.string_at(pointer, viewWidth * viewHeight * 4)
+
+    image = QtGui.QImage(
+        pointerAsString,
+        viewWidth, viewHeight,
+        QtGui.QImage.Format_RGB32 )
+
+    image = image.mirrored(horizontal=False, vertical=True)
+
+
+    if image.width() > width:
+        scaledImage = image.scaledToHeight(
+            height, QtCore.Qt.SmoothTransformation)
+
+        x = int((scaledImage.width() - width)/2)
+        scaledImage = scaledImage.copy(x, 0, width, height)
+        scaledImage.save(path)
+
+
+    elif image.height() > height:
+        scaledImage = image.scaledToWidth(
+            width, QtCore.Qt.SmoothTransformation)
+
+        y = int((scaledImage.height() - height)/2)
+        scaledImage = scaledImage.copy(0, y, width, height)
+        scaledImage.save(path)
+
+
+
+
+
 def main ():
 
     MSelectionList = OpenMaya.MSelectionList()
@@ -101,46 +160,26 @@ def main ():
     if not MSelectionList.isEmpty():
 
 
-        # Export Widget
-        widget = QFileDialog()
-        ExportPath = widget.getExistingDirectory(
-            widget,
-            "Save Asset", "",
-            QFileDialog.ShowDirsOnly ).encode(encModel)
-        
 
-        version = 1                     # combobox
-        version = "v{:02d}".format(version)
+        widget = ExportWidget.ExportWidget()
 
-        variant = None                  # combobox
-        final = False                   # checkbox
+        # FATAL ERROR ON SECOND RUN
+        widget.exec()
+
+        options = widget.getOptions()
+        widget = None
 
 
-        modelling = True                # checkbox
-        modellingOverride = False       # checkbox
+        if options:
 
-        animation = True                # checkbox
-        animationOverride = True        # checkbox
-
-        timeRange  = False              # checkbox
-        startFrame = 1                  # spinbox
-        endFrame   = 150                # spinbox
-        fps        = 30                 # combobox
-
-        AnimationName = "Animation"     # combobox
-
-        surfacing = False               # checkbox
-
-        unitsMultiplier = 1.0           # combobox
-        units = 0.01 * unitsMultiplier
+            version = "v{:02d}".format(options.version)
+            units = 0.01 * options.unitsMultiplier
 
 
 
-        if ExportPath:
-
-
+            # ALARM ALARM ALARM
             start = time.time()
-            scene = mayatree.get(getshaders=surfacing)
+            scene = mayatree.get(getshaders=options.surfacing)
             end = time.time()
             print("\nGot Scene Data for {} sec.\n".format(end - start) )
 
@@ -148,40 +187,37 @@ def main ():
             shaders = scene["shaders"]
             root    = scene["root"]
 
-
             if not treedata:
                 OpenMaya.MGlobal.displayWarning(
                     "Wrong Selection")
                 return
 
 
-            AssetName = os.path.basename(ExportPath)
-            AssetName = re.sub(r"\..*$", "", AssetName)
-            AssetDirectory = os.path.dirname(ExportPath)
+
+            if not os.path.exists(options.assetPath):
+                os.mkdir(options.assetPath)
+            os.chdir(options.assetPath)
 
 
 
             SourceModelPath = os.path.join(
-                AssetDirectory,
-                AssetName,
+                options.assetPath,
                 ostree.SUBDIR_MODELLING,
                 "source.geo.usd" )
 
-            ModelFileName = "{}.{}.usd".format(
+            ModelFileName = "{}.{}.usdc".format(
                 os.path.basename(root), version )
 
             ModelPath = os.path.join(
-                AssetDirectory,
-                AssetName,
+                options.assetPath,
                 ostree.SUBDIR_MODELLING,
                 ModelFileName )
 
-            AnimationFileName = "{}.{}.usd".format(
-                AnimationName, version)
+            AnimationFileName = "{}.{}.usdc".format(
+                options.animationName, version)
 
             AnimationPath = os.path.join(
-                AssetDirectory,
-                AssetName,
+                options.assetPath,
                 ostree.SUBDIR_ANIMATION,
                 AnimationFileName )
 
@@ -191,31 +227,31 @@ def main ():
             extractModel = False
             extractAnimatioin = False
 
-            if modelling:
+            if options.modelling:
                 if not os.path.exists(ModelPath):
                     export = True
                     extractModel = True
-                elif modellingOverride:
+                elif options.modellingOverride:
                     export = True
                     extractModel = True
 
-            if animation:
+            if options.animation:
                 if not os.path.exists(AnimationPath):
                     export = True
                     extractAnimatioin = True
-                elif animationOverride:
+                elif options.animationOverride:
                     export = True
                     extractAnimatioin = True
 
 
 
             if export:
-                ostree.build(ExportPath, modelling=True)
+                ostree.build(options.assetPath, modelling=True)
                 UsdExport(
                     SourceModelPath,
-                    animation= 1 if animation else 0,
-                    startTime=startFrame,
-                    endTime=endFrame )
+                    animation= 1 if options.animation else 0,
+                    startTime=options.startFrame,
+                    endTime=options.endFrame )
 
 
 
@@ -233,14 +269,15 @@ def main ():
                     root=root, units=units)
 
                 usdeditor.addMayaAttributes(NewStage, treedata)
-                NewStage.GetRootLayer().Save(force=True)
+                NewStage.GetRootLayer().Export(
+                    ModelPath, args=dict(format="usdc") )
 
                 OpenMaya.MGlobal.displayInfo(message + ModelFileName)
 
 
 
             if extractAnimatioin:
-                ostree.build(ExportPath, animation=True)
+                ostree.build(options.assetPath, animation=True)
 
                 if os.path.exists(AnimationPath):
                     message = "Animation Overwritten: "
@@ -254,7 +291,8 @@ def main ():
                     NewStage,
                     root=root, reference=ModelPath, units=units )
 
-                NewStage.GetRootLayer().Save(force=True)
+                NewStage.GetRootLayer().Export(
+                    AnimationPath, args=dict(format="usdc") )
 
                 OpenMaya.MGlobal.displayInfo(message + AnimationFileName)
 
@@ -264,8 +302,8 @@ def main ():
 
 
 
-            if surfacing and shaders:
-                ostree.build(ExportPath, surfacing=True)
+            if options.surfacing and shaders:
+                ostree.build(options.assetPath, surfacing=True)
 
                 for name, data in shaders.items():
                     for key in ["render", "preview"]:
@@ -283,8 +321,7 @@ def main ():
                                 name, version )
 
                         ShaderPath = os.path.join(
-                            AssetDirectory,
-                            AssetName,
+                            options.assetPath,
                             ostree.SUBDIR_SURFACING,
                             ShaderFileName )
 
@@ -304,23 +341,12 @@ def main ():
 
 
 
-            ReferencePath = AnimationPath if animation else ModelPath
+            ReferencePath = AnimationPath if options.animation else ModelPath
             if os.path.exists(ReferencePath):
 
-                if variant:
-                    version = "{}-{}".format(variant, version)
-                if final:
-                    version = "{}.final".format(version)
-
-                AssetFileName = "{}{}.{}.usda".format(
-                        AssetName,
-                        "." + AnimationName if animation else "",
-                        version)
-
                 AssetPath = os.path.join(
-                    AssetDirectory,
-                    AssetName,
-                    AssetFileName )
+                    options.assetPath,
+                    options.assetName )
 
                 if os.path.exists(AssetPath):
                     message = "Asset Overwritten: "
@@ -332,7 +358,46 @@ def main ():
                     AssetPath,
                     treedata )
 
-                OpenMaya.MGlobal.displayInfo(message + AssetFileName)
+
+                # Create/Update Symbolic Link
+                if options.final:
+
+                    if os.path.exists(options.assetFinal):
+                        os.remove(options.assetFinal)
+
+                    os.symlink(
+                        options.assetName,
+                        options.assetFinal )
+
+
+                # Create Preview Image
+                if os.path.exists(AssetPath):
+
+                    command = 'displayPref -wsa "none";'
+                    OpenMaya.MGlobal.executeCommand(command)
+
+                    ostree.build(options.assetPath, previews=True)
+
+                    PreviewPath = os.path.join(
+                        options.assetPath,
+                        ostree.SUBDIR_PREVIEWS,
+                        options.assetPreview )
+
+                    viewportShot(PreviewPath,
+                        Settings.UIsettings.AssetBrowser.Icon.Asset.max.width,
+                        Settings.UIsettings.AssetBrowser.Icon.Asset.max.height )
+
+                    command = 'displayPref -wsa "full";'
+                    OpenMaya.MGlobal.executeCommand(command)
+
+
+                # Create/Update .metadata.json
+                with Metadata.MetadataManager(options.assetPath, "usdasset") as data:
+                    data["published"] = tools.getTimeCode()
+
+
+
+                OpenMaya.MGlobal.displayInfo(message + options.assetName)
 
 
 

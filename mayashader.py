@@ -1,7 +1,8 @@
+#!/usr/bin/env python
+
 
 
 import os
-encModel = os.getenv("PYTHONIOENCODING")
 
 
 import xml.etree.ElementTree as ET
@@ -74,8 +75,8 @@ def treeRunner (function, root, value=None, page=""):
 
 def getDefault (shader, attrname):
 
-    shaderType = shader.typeName().encode(encModel)
-    shaderName = shader.name().encode(encModel)
+    shaderType = shader.typeName()
+    shaderName = shader.name()
 
     RMANTREE = os.getenv("RMANTREE", "")
 
@@ -178,7 +179,7 @@ def getMPlugAs (MPlug, asValue=False, asType=False, echo=False):
         if attrType == OpenMaya.MFnData.kString:
             if echo: print( "{}: string".format(attrName) )
             if asType: return "string"
-            if asValue: return MPlug.asString().encode(encModel)
+            if asValue: return MPlug.asString()
 
         elif attrType == OpenMaya.MFnData.kMatrix:
             MFnMatrixData = OpenMaya.MFnMatrixData( MPlug.asMObject() )
@@ -194,7 +195,7 @@ def getMPlugAs (MPlug, asValue=False, asType=False, echo=False):
         OpenMaya.MFn.kCompoundAttribute ]:
 
         result = []
-        for index in xrange( MPlug.numChildren() ):
+        for index in range( MPlug.numChildren() ):
 
             value = getMPlugAs( MPlug.child(index),
                    asValue=True )
@@ -216,8 +217,8 @@ def getMPlugAs (MPlug, asValue=False, asType=False, echo=False):
 
 def getNetwork (shader, prman=True, collector={}):
 
-    shaderType = shader.typeName().encode(encModel)
-    shaderName = shader.name().encode(encModel)
+    shaderType = shader.typeName()
+    shaderName = shader.name()
 
     if not prman and shaderType not in [
         "usdPreviewSurface",
@@ -239,7 +240,7 @@ def getNetwork (shader, prman=True, collector={}):
             MObject = shader.attribute(index)
             attribute = OpenMaya.MFnAttribute(MObject)
 
-            attrName = attribute.name().encode(encModel)
+            attrName = attribute.name()
 
             MPlug = shader.findPlug(attrName)
 
@@ -266,7 +267,7 @@ def getNetwork (shader, prman=True, collector={}):
                     if MPlugSource.info():
 
                         inputs[attrName] = dict(
-                            value=MPlugSource.name().encode(encModel),
+                            value=MPlugSource.name(),
                             type=valueType,
                             connection=True )
                         
@@ -346,7 +347,7 @@ def getNetwork (shader, prman=True, collector={}):
 
 def getPrmanNetwork (shaderGroup):
 
-    shGroupName = shaderGroup.name().encode(encModel)
+    shGroupName = shaderGroup.name()
 
     material = dict(
         surface=None,
@@ -362,7 +363,7 @@ def getPrmanNetwork (shaderGroup):
         if shaderPlug.isConnected():
             connectionSource = shaderPlug.source()
 
-            material[connection] = connectionSource.name().encode(encModel)
+            material[connection] = connectionSource.name()
                 
             shader = OpenMaya.MFnDependencyNode(
                 connectionSource.node() )
@@ -381,7 +382,7 @@ def getPrmanNetwork (shaderGroup):
 
 def getPreviewNetwork (shaderGroup):
 
-    shGroupName = shaderGroup.name().encode(encModel)
+    shGroupName = shaderGroup.name()
     
     material = dict(
         surface=None,
@@ -393,7 +394,7 @@ def getPreviewNetwork (shaderGroup):
     if shaderPlug.isConnected():
         connectionSource = shaderPlug.source()
 
-        material["surface"] = connectionSource.name().encode(encModel)
+        material["surface"] = connectionSource.name()
 
         shader = OpenMaya.MFnDependencyNode(
             connectionSource.node() )

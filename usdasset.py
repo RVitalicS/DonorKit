@@ -1,8 +1,9 @@
+#!/usr/bin/env python
+
 
 
 import re
 import os
-encModel = os.getenv("PYTHONIOENCODING")
 
 
 import ostree
@@ -10,11 +11,7 @@ import mayatree
 import usdeditor
 
 
-from pxr import (
-    Usd,
-    UsdGeom,
-    UsdShade,
-    Gf, Sdf )
+from pxr import Usd, UsdGeom, UsdShade, Gf, Sdf
 
 
 
@@ -74,7 +71,7 @@ def bind (
 
             Material = item["material"]
             if Material:
-                MaterialName = Material.name().encode(encModel)
+                MaterialName = str(Material.name())
                 MaterialList = getMaterialList(target, MaterialName)
                 if MaterialList:
 

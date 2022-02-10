@@ -1,16 +1,11 @@
-#!/bin/python
+#!/usr/bin/env python
 
 
-from Qt import (
-    QtWidgets,
-    QtCore,
-    QtGui
-)
 
+from Qt import QtWidgets, QtCore
 
 from . import Settings
 UIsettings = Settings.UIsettings
-
 
 
 
@@ -50,7 +45,7 @@ class AssetBrowser (QtWidgets.QListView):
 
 
     def setGrid (self):
-               
+        
 
         margin = UIsettings.AssetBrowser.margin
         scrollWidth = UIsettings.AssetBrowser.scrollWidth
@@ -63,20 +58,17 @@ class AssetBrowser (QtWidgets.QListView):
 
         IconSettings = UIsettings.AssetBrowser.Icon
 
-        folderWidth  = IconSettings.Folder.min.width
-        folderHeight = IconSettings.Folder.min.height
+        folderWidth  = IconSettings.Folder.width
+        folderHeight = IconSettings.Folder.height
+
         assetWidth   = IconSettings.Asset.min.width
         assetHeight  = IconSettings.Asset.min.height
 
         if iconSize == 2:
-            folderWidth  = IconSettings.Folder.mid.width
-            folderHeight = IconSettings.Folder.mid.height
             assetWidth   = IconSettings.Asset.mid.width
             assetHeight  = IconSettings.Asset.mid.height
 
         if iconSize == 3:
-            folderWidth  = IconSettings.Folder.max.width
-            folderHeight = IconSettings.Folder.max.height
             assetWidth   = IconSettings.Asset.max.width
             assetHeight  = IconSettings.Asset.max.height
 
@@ -87,9 +79,14 @@ class AssetBrowser (QtWidgets.QListView):
 
         widgetWidth = self.width() - scrollWidth - margin
 
-        columns     = int(widgetWidth/assetWidth)
-        offsetWidth = int(widgetWidth / columns )
-        offset      = int( (offsetWidth-assetWidth)/2 )
+        columnsAsset     = int(widgetWidth/assetWidth)
+        offsetWidthAsset = int(widgetWidth / columnsAsset )
+        offsetAsset      = int( (offsetWidthAsset-assetWidth)/2 )
+
+
+        columnsFolder     = int(widgetWidth/folderWidth)
+        offsetWidthFolder = int(widgetWidth / columnsFolder )
+        offsetFolder      = int( (offsetWidthFolder-folderWidth)/2 )
 
 
         model = self.model()
@@ -102,10 +99,14 @@ class AssetBrowser (QtWidgets.QListView):
             data = item.data(QtCore.Qt.EditRole)
 
             if   data["type"] == "folder": folderCount += 1
-            elif data["type"] == "asset":  assetCount  += 1
+            elif data["type"] == "asset" : assetCount  += 1
 
-        if folderCount <= columns and assetCount <= columns:
-            offset = 0
+
+        if folderCount <= columnsFolder:
+            offsetFolder = 0
+
+        if assetCount <= columnsAsset:
+            offsetAsset = 0
 
 
         # folders label
@@ -142,7 +143,8 @@ class AssetBrowser (QtWidgets.QListView):
                 data = item.data(QtCore.Qt.EditRole)
 
                 if data["type"] == "folder":
-                    if positionX + folderWidth + offset*2 > widgetWidth + margin:
+                    
+                    if positionX + folderWidth + offsetFolder*2 > widgetWidth + margin:
                         positionX  = margin
                         positionY += folderHeight
 
@@ -155,7 +157,7 @@ class AssetBrowser (QtWidgets.QListView):
                         QtCore.QPoint(positionX, positionY), 
                         model.index(index, 0) )
 
-                    positionX += folderWidth + offset
+                    positionX += folderWidth + offsetFolder
 
             positionX  = margin
             positionY += margin + folderHeight
@@ -193,7 +195,7 @@ class AssetBrowser (QtWidgets.QListView):
                 data = item.data(QtCore.Qt.EditRole)
 
                 if data["type"] == "asset":
-                    if positionX + assetWidth + offset*2 > widgetWidth + margin:
+                    if positionX + assetWidth + offsetAsset*2 > widgetWidth + margin:
                         positionX  = margin
                         positionY += assetHeight
 
@@ -206,7 +208,7 @@ class AssetBrowser (QtWidgets.QListView):
                         QtCore.QPoint(positionX, positionY), 
                         model.index(index, 0) )
 
-                    positionX += assetWidth + offset
+                    positionX += assetWidth + offsetAsset
 
 
         with Settings.UIManager(update=False) as uiSettings:
@@ -215,12 +217,22 @@ class AssetBrowser (QtWidgets.QListView):
             self.verticalScrollBar().setValue(
                 self.intScrollPosition(scrollPosition) )
 
+        self.repaint()
+
+
 
 
     def enterEvent (self, event):
 
         super(AssetBrowser, self).enterEvent(event)
         self.setFocus(QtCore.Qt.MouseFocusReason)
+
+
+
+    def mouseReleaseEvent (self, event):
+
+        super(AssetBrowser, self).mouseReleaseEvent(event)
+        self.iconClickedSignal(QtCore.QModelIndex())
 
 
 
@@ -268,35 +280,4 @@ class AssetBrowser (QtWidgets.QListView):
 
     def iconClickedSignal (self, index):
 
-        iconType = index.data(QtCore.Qt.EditRole)["type"]
-
-        model = index.model()
-        for raw in range(model.rowCount()):
-            item = model.item(raw)
-
-            if raw == index.row() and iconType == "asset":
-
-                if index.data(QtCore.Qt.StatusTipRole) == 1:
-                    item.setData(0, QtCore.Qt.StatusTipRole)
-                else:
-                    item.setData(1, QtCore.Qt.StatusTipRole)
-
-            else:
-                item.setData(0, QtCore.Qt.StatusTipRole)
-
-
         self.iconClicked.emit(index)
-
-
-
-
-
-
-
-
-if __name__ == "__main__":
-
-    application = QtWidgets.QApplication([])
-    widget = AssetBrowser()
-    widget.show()
-    application.exec_()

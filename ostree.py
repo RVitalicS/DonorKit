@@ -1,21 +1,23 @@
+#!/usr/bin/env python
+
 
 
 # Naming Convention
 #    
 #    Name.v01-VariantName.usdc
 #    Name.v01.AnimationName.usd
-#    Name.final.usda [link]
+#    Name.final.usda [ symbolic link ]
 #    
 #    name
 #        "AssetName."
-#    variant & version
+#    variant & version (final)
 #        ".v01."
 #        ".v01-VariantName."
-#    final tag option
-#        ".final." [ reserved ]
-#    tag
-#        ".Proxy." [ reserved ]
-#        ".RenderMan." [ reserved ]
+#        ".final."
+#        ".final-VariantName.."
+#    tag & animation
+#        ".Proxy."            [ reserved ]
+#        ".RenderMan."        [ reserved ]
 #        ".AnimationName-01."
 #    extension 
 #        ".usd"

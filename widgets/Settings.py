@@ -1,12 +1,11 @@
-#!/bin/python
+#!/usr/bin/env python
 
 
 import os
 from . import tools
 
+
 from Qt import QtGui
-
-
 
 
 
@@ -23,6 +22,17 @@ class UI (object):
             iconSize=1,
             focusLibrary="",
             subdirLibrary="",
+            modelling=True,
+            surfacing=True,
+            animation=False,
+            modellingOverwrite=False,
+            surfacingOverwrite=False,
+            animationOverwrite=False,
+            rangeStart=1,
+            rangeEnd=1,
+            fps=30,
+            final=True,
+            unitsMultiplier=1.0,
             scrollPosition=0.0 )
 
         self.path = os.path.join(
@@ -30,6 +40,9 @@ class UI (object):
             "UIsettings.json")
 
         if not os.path.exists(self.path):
+            self.default_settings(self.path)
+
+        elif not tools.validJSON(self.path):
             self.default_settings(self.path)
 
 
@@ -43,9 +56,6 @@ class UI (object):
 
     def save (self, data):
         tools.datawrite(self.path, data)
-
-
-
 
 
 
@@ -117,6 +127,12 @@ UIsettings.Path.height   = 32
 UIsettings.Path.fontRoot = makeFont( size=9, bold=False, weight=50 )
 UIsettings.Path.fontPath = makeFont( size=9, bold=False, weight=50 )
 
+
+UIsettings.Bar = DataClass()
+UIsettings.Bar.height   = 32
+UIsettings.Bar.fontPreview = makeFont( size=7, bold=False, weight=50 )
+
+
 UIsettings.AssetBrowser = DataClass()
 UIsettings.AssetBrowser.margin = 16
 UIsettings.AssetBrowser.path   = 32
@@ -124,19 +140,10 @@ UIsettings.AssetBrowser.scrollWidth = 14
 
 
 UIsettings.AssetBrowser.Icon = DataClass()
+
 UIsettings.AssetBrowser.Icon.Folder = DataClass()
-
-UIsettings.AssetBrowser.Icon.Folder.min = DataClass()
-UIsettings.AssetBrowser.Icon.Folder.min.width  = 130
-UIsettings.AssetBrowser.Icon.Folder.min.height = 50
-
-UIsettings.AssetBrowser.Icon.Folder.mid = DataClass()
-UIsettings.AssetBrowser.Icon.Folder.mid.width  = 130
-UIsettings.AssetBrowser.Icon.Folder.mid.height = 50
-
-UIsettings.AssetBrowser.Icon.Folder.max = DataClass()
-UIsettings.AssetBrowser.Icon.Folder.max.width  = 130
-UIsettings.AssetBrowser.Icon.Folder.max.height = 50
+UIsettings.AssetBrowser.Icon.Folder.width  = 130
+UIsettings.AssetBrowser.Icon.Folder.height = 50
 
 
 UIsettings.AssetBrowser.Icon.Asset = DataClass()
@@ -147,14 +154,14 @@ UIsettings.AssetBrowser.Icon.Asset.min.height = 150
 UIsettings.AssetBrowser.Icon.Asset.min.label = 70
 
 UIsettings.AssetBrowser.Icon.Asset.mid = DataClass()
-UIsettings.AssetBrowser.Icon.Asset.mid.width = 130
+UIsettings.AssetBrowser.Icon.Asset.mid.width = 260
 UIsettings.AssetBrowser.Icon.Asset.mid.height = 150
-UIsettings.AssetBrowser.Icon.Asset.mid.label = 70
+UIsettings.AssetBrowser.Icon.Asset.mid.label = 40
 
 UIsettings.AssetBrowser.Icon.Asset.max = DataClass()
-UIsettings.AssetBrowser.Icon.Asset.max.width = 130
-UIsettings.AssetBrowser.Icon.Asset.max.height = 150
-UIsettings.AssetBrowser.Icon.Asset.max.label = 70
+UIsettings.AssetBrowser.Icon.Asset.max.width = 390
+UIsettings.AssetBrowser.Icon.Asset.max.height = 300
+UIsettings.AssetBrowser.Icon.Asset.max.label = 40
 
 
 UIsettings.IconDelegate = DataClass()
@@ -171,3 +178,12 @@ UIsettings.IconDelegate.fontAssetVersion = makeFont( size=7, bold=False, weight=
 UIsettings.IconDelegate.fontAssetLabel   = makeFont( size=6, bold=False, weight=50 )
 UIsettings.IconDelegate.fontAssetStatus  = makeFont( size=7, bold=False, weight=50 )
 
+
+UIsettings.Options = DataClass()
+
+UIsettings.Options.fontLabel = makeFont( size=9, bold=False, weight=50 )
+UIsettings.Options.fontOverwrite = makeFont( size=7, bold=False, weight=50 )
+
+UIsettings.Options.Export = DataClass()
+UIsettings.Options.Export.patternThickness = 11
+UIsettings.Options.Export.font = makeFont( size=9, bold=False, weight=50 )

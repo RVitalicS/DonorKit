@@ -1,32 +1,28 @@
-#!/bin/python
+#!/usr/bin/env python
 
 
 import os
+from . import stylesheet
 
-from Qt import (
-    QtWidgets,
-    QtCore,
-    QtGui
-)
 
+from Qt import QtWidgets, QtCore, QtGui
 
 from . import Settings
 UIsettings = Settings.UIsettings
 
-from . import stylesheet
 
 
 
 
 
 
-class PathWidget (QtWidgets.QWidget):
+class PathBar (QtWidgets.QWidget):
 
     pathChanged  = QtCore.Signal( type(str) )
 
 
     def __init__ (self):
-        super(PathWidget, self).__init__()
+        super(PathBar, self).__init__()
 
         self.root = str()
 
@@ -43,7 +39,7 @@ class PathWidget (QtWidgets.QWidget):
         palette = QtGui.QPalette()
         palette.setColor(
             QtGui.QPalette.Background,
-            stylesheet.blackBrowser )
+            stylesheet.browserBackground )
         self.setPalette(palette)
 
 
@@ -174,3 +170,11 @@ class PathWidget (QtWidgets.QWidget):
                     else:
                         self.pathLine.setText(subdir)
                         uiSettings["subdirLibrary"] = subdir
+
+
+
+    def get (self):
+
+        return os.path.join(
+            self.root,
+            self.pathLine.text() )

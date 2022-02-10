@@ -1,14 +1,11 @@
-#!/bin/python
+#!/usr/bin/env python
+
 
 
 import os
 
-from Qt import (
-    QtWidgets,
-    QtCore,
-    QtGui
-)
 
+from Qt import QtWidgets, QtCore
 
 from . import IconPainter
 from . import IconEditor

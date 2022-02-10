@@ -1,16 +1,20 @@
+#!/usr/bin/env python
 
 
 
 # globals
 
-white = "#ffffff"
-black = "#060a0c"
+white  = "#ffffff"
+black  = "#060a0c"
+violet = "#a37acc"
+red    = "#f07171"
 
 text      = "#bbbbbb"
-textoff   = "#505050"
-textgrey  = "#8a9199"
+textoff   = "#656667"
+textlock  = "#8b8b8b"
 
-blackBrowser = "#444444"
+browserBackground = "#444444"
+browserSocket     = "#373737"
 
 iconBackground = "#4e5052"
 iconHilight    = "#545759"
@@ -37,6 +41,9 @@ statusWIP       = "#979996"
 radiusScrollBar = 3
 radiusButton    = 4
 
+sliderWidth = 12
+sliderRadius = int(sliderWidth/2)
+
 
 
 
@@ -44,7 +51,7 @@ radiusButton    = 4
 # stylesheet
 
 properties = '''
-*[background="browser"] { background: $BLACK_BROWSER; }
+*[background="browser"] { background: $BROWSER_BACKGROUND; }
 *[background="black"] { background: $BLACK_COLOR; }
 
 *[background="options"] { background: $OPTION_BACKGROUND; }
@@ -54,14 +61,35 @@ properties = '''
 *[border="none"] { border: none; }
 *[border="round"] { border-radius: $RADIUS_BUTTONpx; }
 
-*[textcolor="light"] { color: $TEXT; }
+*[textcolor="light"] { color: $TEXT_ON; }
+*[textcolor="off"] { color: $TEXT_OFF; }
+*[textcolor="lock"] { color: $TEXT_LOCK; }
+*[textcolor="violet"] { color: $VIOLET_COLOR; }
 '''
 
 
 slider = '''
+QSlider::groove:horizontal {
+    border: none;
+    height: $SLIDER_WIDTHpx;
+    background: $BROWSER_SOCKET;
+    margin: 0px 0;
+    border-radius: $SLIDER_RADIUSpx;
+    }
+QSlider::handle:horizontal {
+    background: $GREY_HANDLE;
+    border: none;
+    width: $SLIDER_WIDTHpx;
+    margin: 0px 0;
+    border-radius: $SLIDER_RADIUSpx;
+    }
+'''
+
+
+scrollbar = '''
 
 QScrollBar:horizontal, QScrollBar:vertical {
-    background: $BLACK_BROWSER;
+    background: $BROWSER_BACKGROUND;
     border: none;
     border-radius: $RADIUS_BARpx;
 }
@@ -116,7 +144,7 @@ QPushButton::pressed[objectName~="backButton"] {
     background-position: center left;
     }
 QPushButton[objectName~="pathRoot"] {
-    color: $TEXT;
+    color: $TEXT_ON;
     }
 QPushButton::pressed[objectName~="pathRoot"] {
     color: $WHITE_COLOR;
@@ -125,32 +153,15 @@ QPushButton::pressed[objectName~="pathRoot"] {
 
 
 
-exportbutton = '''
-QPushButton[objectName~="exportButton"] {
-    color: $TEXT;
-    background: $OPTION_BUTTON;
-    border-radius: $RADIUS_BUTTONpx;
-    border: none;
-    }
-QPushButton::pressed[objectName~="exportButton"] {
-    color: $TEXT;
-    background: $BLACK_COLOR;
-    border-radius: $RADIUS_BUTTONpx;
-    border: none;
-    }
-'''
-
-
-
 rangebutton = '''
 QPushButton[objectName~="rangeButton"] {
-    color: $TEXT;
+    color: $TEXT_ON;
     background: $OPTION_BUTTON;
     border-radius: $RADIUS_BUTTONpx;
     border: none;
     }
 QPushButton::pressed[objectName~="rangeButton"] {
-    color: $TEXT;
+    color: $TEXT_ON;
     background: $BLACK_COLOR;
     border-radius: $RADIUS_BUTTONpx;
     border: none;
@@ -161,18 +172,20 @@ QPushButton::pressed[objectName~="rangeButton"] {
 
 finalbutton = '''
 QPushButton[objectName~="finalButton"] {
-    color: $TEXT;
+    color: $TEXT_ON;
     background: $OPTION_BUTTON;
     border: none;
     }
-QPushButton:hover[objectName~="finalButton"] {
-    color: $TEXT;
+
+QPushButton:checked[objectName~="finalButton"] {
+    color: $TEXT_ON;
     background: $BLACK_COLOR;
     border: none;
     }
-QPushButton:checked[objectName~="finalButton"] {
-    color: $TEXT;
-    background: $BLACK_COLOR;
+
+QPushButton:checked[objectName~="finalButton"][overwrite="true"] {
+    color: $WHITE_COLOR;
+    background: $VIOLET_COLOR;
     border: none;
     }
 '''
@@ -211,7 +224,10 @@ QPushButton:checked[objectName~="animationOverwrite"] {
     }
 QPushButton[objectName~="modelingOverwrite"],
 QPushButton[objectName~="surfacingOverwrite"],
-QPushButton[objectName~="animationOverwrite"] {
+QPushButton[objectName~="animationOverwrite"],
+QPushButton:disabled[objectName~="modelingOverwrite"],
+QPushButton:disabled[objectName~="surfacingOverwrite"],
+QPushButton:disabled[objectName~="animationOverwrite"] {
     color: $OPTION_BUTTON;
     background: $OPTION_DISABLE;
     border-radius: 8px;
@@ -222,8 +238,15 @@ QPushButton[objectName~="animationOverwrite"] {
 
 
 versionCombobox = '''
+QComboBox:editable[textcolor="violet"] {
+    color: $VIOLET_COLOR;
+    background: $OPTION_INPUT;
+    border-radius: $RADIUS_BUTTONpx;
+    border: none;
+    font-size: 9pt;
+}
 QComboBox:editable {
-    color: $TEXT;
+    color: $TEXT_ON;
     background: $OPTION_INPUT;
     border-radius: $RADIUS_BUTTONpx;
     border: none;
@@ -238,7 +261,7 @@ QComboBox::down-arrow {
 }
 QComboBox QAbstractItemView {
     border: none;
-    color: $TEXT;
+    color: $TEXT_ON;
     background: $OPTION_INPUT;
     selection-background-color: $BLACK_COLOR;
 }
@@ -247,7 +270,7 @@ QComboBox QAbstractItemView {
 
 pathline = '''
 QLineEdit[objectName~="pathLine"] {
-    color: $TEXT;
+    color: $TEXT_ON;
     }
 '''
 
@@ -260,8 +283,8 @@ QLineEdit[objectName~="pathLine"] {
 UI = "".join([
     properties,
     slider,
+    scrollbar,
     backbutton,
-    exportbutton,
     rangebutton,
     finalbutton,
     checkbutton,
@@ -272,7 +295,12 @@ UI = "".join([
 
 UI = UI.replace("$WHITE_COLOR", white)
 UI = UI.replace("$BLACK_COLOR", black)
-UI = UI.replace("$TEXT", text)
+UI = UI.replace("$VIOLET_COLOR", violet)
+UI = UI.replace("$RED_COLOR", red)
+
+UI = UI.replace("$TEXT_ON", text)
+UI = UI.replace("$TEXT_OFF", textoff)
+UI = UI.replace("$TEXT_LOCK", textlock)
 
 UI = UI.replace("$OPTION_BACKGROUND", optionBackground)
 UI = UI.replace("$OPTION_INPUT", optionInput)
@@ -281,8 +309,13 @@ UI = UI.replace("$OPTION_DISABLE", optionDisable)
 
 UI = UI.replace("$HILIGHT_CHECKED", checkedHilight)
 
-UI = UI.replace("$BLACK_BROWSER", blackBrowser)
+UI = UI.replace("$BROWSER_BACKGROUND", browserBackground)
+UI = UI.replace("$BROWSER_SOCKET", browserSocket)
+
 UI = UI.replace("$GREY_HANDLE", greyHandle)
+
+UI = UI.replace("$SLIDER_WIDTH", str(sliderWidth) )
+UI = UI.replace("$SLIDER_RADIUS", str(sliderRadius) )
 
 UI = UI.replace("$RADIUS_BAR",    str(radiusScrollBar) )
 UI = UI.replace("$RADIUS_BUTTON", str(radiusButton) )

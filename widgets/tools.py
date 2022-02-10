@@ -1,9 +1,16 @@
-#!/bin/python
+#!/usr/bin/env python
+
 
 
 import os, re
 import sys, json
 import time, datetime
+
+
+
+RESERVED_TAGS = [
+    "Proxy",
+    "RenderMan" ]
 
 
 
@@ -21,6 +28,18 @@ def datawrite (path, data):
 
     with open(path, "w") as file:
         json.dump(data, file, indent=4, ensure_ascii=False)
+
+
+def validJSON (path):
+
+    try: 
+        data = dataread(path)
+        if not data:
+            return False
+    except:
+        return False
+    
+    return True
 
 
 
@@ -97,11 +116,11 @@ def getTimeDifference (timeString):
     days    = timeDelta.days
     seconds = timeDelta.seconds
 
-    years  = int(round( days/365 ))
-    months = int(round( days/30 ))
+    years  = int( days/365 )
+    months = int( days/30 )
 
-    hours   = int(round( seconds/3600 ))
-    minutes = int(round( seconds/60 ))
+    hours   = int( seconds/3600 )
+    minutes = int( seconds/60 )
 
 
     if years == 1:
@@ -109,27 +128,23 @@ def getTimeDifference (timeString):
     elif years > 1:
         return "{} years ago".format(years)
 
-    if months == 1:
-        return "1 month ago"
-    elif months > 1:
-        return "{} months ago".format(months)
+    if 12 > months > 0:
+        return "{} mon. ago".format(months)
 
     if days == 1:
         return "1 day ago"
-    elif days > 1:
+    elif 30 > days > 1:
         return "{} days ago".format(days)
 
     if hours == 1:
         return "1 hour ago"
-    elif hours > 1:
+    elif 24 > hours > 1:
         return "{} hours ago".format(hours)
 
-    if minutes == 1:
-        return "1 minute ago"
-    elif minutes > 1:
-        return "{} minutes ago".format(minutes)
+    if 60 > minutes > 0:
+        return "{} min. ago".format(minutes)
 
-    return "a moment ago"
+    return "a sec. ago"
 
 
 
@@ -139,7 +154,7 @@ def getTimeDifference (timeString):
 def isFinalVersion (path, name):
 
     for item in os.listdir(path):
-        if re.search(r"\.final\.", item):
+        if re.search(r"\.final", item):
 
             itempath = os.path.join(path, item)
             realpath = os.path.realpath(itempath)
@@ -156,6 +171,9 @@ def isFinalVersion (path, name):
 def getVariantName (name):
 
     variantTag = re.search(r"\.v\d+-*[A-Za-z]*\.", name)
+    if not variantTag:
+        variantTag = re.search(r"\.final-*[A-Za-z]*\.", name)
+
     if variantTag:
         variantTag = variantTag.group()
 
@@ -221,8 +239,10 @@ def getAssetName (name):
     if assetTag:
         assetName = assetTag.group()
 
-        assetName = re.sub(r"\.", "", assetName)
-        return assetName
+        if assetName not in RESERVED_TAGS:
+
+            assetName = re.sub(r"\.", "", assetName)
+            return assetName
 
     return ""
 
@@ -231,17 +251,100 @@ def getAssetName (name):
 
 
 
+def getAnimationList (path, version=None):
+
+    animationList = []
+
+    if os.path.exists(path):
+        for name in os.listdir(path):
+            if re.search(r"\.usd[ac]*$", name):
+
+                if version:
+                    if version != getVersion(name):
+                        continue
+
+                animation = getAnimationName(name)
+                if not animation:
+                    continue
+
+                if animation in animationList:
+                    continue
+                
+                animationList.append(animation)
+
+    return animationList
+
+
+
+
+
+
+def getVariantList (path, version=None):
+
+    variantList = []
+
+    if os.path.exists(path):
+        for name in os.listdir(path):
+            if re.search(r"\.usd[ac]*$", name):
+
+                if version:
+                    if version != getVersion(name):
+                        continue
+
+                variant = getVariantName(name)
+                if not variant:
+                    continue
+
+                if variant in variantList:
+                    continue
+                
+                variantList.append(variant)
+
+    return variantList
+
+
+
+
+
+
+def getVersionList (path):
+
+    versionList = []
+
+    if os.path.exists(path):
+        for name in os.listdir(path):
+            if re.search(r"\.usd[ac]*$", name):
+
+                version = getVersion(name)
+                if not version:
+                    continue
+
+                if version in versionList:
+                    continue
+                
+                versionList.append(version)
+
+    return versionList
+
+
+
+
+
+
 def getUsdPreview (root, name):
 
-    basename = re.sub( r"\.usd[ac]*$", "", name)
+    basename = re.sub(r"\.usd[ac]*$", "", name)
 
     path = os.path.join(root, "previews")
+    if not os.path.exists(path):
+        return ""
+
     for item in os.listdir(path):
         if re.search(r"^"+basename, item):
 
-            return os.path.join(path, basename)
+            return os.path.join(path, item)
 
-    return str()
+    return ""
 
 
 
@@ -258,17 +361,14 @@ def getUsdLeadItem (path):
             continue
         if re.search(r"\.usd[ac]*$", item):
 
-            animation = getAnimationName(item)
-            if not animation:
+            if isFinalVersion(path, item):
+                assetItem = item
+                break
 
-                if isFinalVersion(path, item):
-                    assetItem = item
-                    break
-
-                itemVersion = getVersion(item)
-                if maxVersion < itemVersion:
-                    maxVersion = itemVersion
-                    assetItem  = item
+            itemVersion = getVersion(item)
+            if maxVersion < itemVersion:
+                maxVersion = itemVersion
+                assetItem  = item
 
     return assetItem
 
@@ -287,3 +387,33 @@ def getItemsCount (path):
         count += 1
 
     return count
+
+
+
+
+
+
+def createAssetName (
+        name, version,
+        variant=None,
+        animation=None,
+        final=False,
+        extension="usda" ):
+    
+
+    assetName = [name]
+
+    version = "v{:02d}".format(version)
+    if final:
+        version = "final"
+    if variant:
+        version = "{}-{}".format(version, variant)
+    assetName.append(version)
+
+    if animation:
+        assetName.append(animation)
+
+    assetName.append(extension)
+
+
+    return ".".join(assetName)

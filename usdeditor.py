@@ -1,10 +1,12 @@
+#!/usr/bin/env python
+
 
 
 import os
 import re
 
 
-from pxr import ( UsdGeom, Sdf, Work )
+from pxr import UsdGeom, Sdf, Work
 
 Work.SetMaximumConcurrencyLimit()
 
@@ -132,6 +134,7 @@ def copyStage (source, target,
 
 
 
+
 def copyTimeSamples (source, target, units=1.0):
 
 
@@ -140,23 +143,23 @@ def copyTimeSamples (source, target, units=1.0):
         timeSamples = Attribute.GetTimeSamples()
         if len(timeSamples) > 1:
             attrName  = Attribute.GetBaseName()
+            if attrName in ["points"]:
 
-            OverPrim = target.OverridePrim(source.GetPath())
+                OverPrim = target.OverridePrim(source.GetPath())
 
-            newAttribute = OverPrim.CreateAttribute(
-                Attribute.GetBaseName(),
-                Attribute.GetTypeName(),
-                custom=Attribute.IsCustom() )
+                newAttribute = OverPrim.CreateAttribute(
+                    Attribute.GetBaseName(),
+                    Attribute.GetTypeName(),
+                    custom=Attribute.IsCustom() )
 
-            for sample in timeSamples:
+                for sample in timeSamples:
 
-                attrValue = Attribute.Get(time=sample)
+                    attrValue = Attribute.Get(time=sample)
 
-                if attrName in ["points"]:
                     for index in range( len(attrValue) ):
                         attrValue[index] *= float(units)
 
-                newAttribute.Set(value=attrValue, time=sample)
+                    newAttribute.Set(value=attrValue, time=sample)
 
 
 
@@ -232,7 +235,7 @@ def addMayaAttributes (stage, tree, path="/"):
                         Prim.SetActive(False)
 
 
-                elif key == "subdivScheme" and value != "catmullClark":
+                elif key == "subdivScheme":
                     
                     if not Prim.HasAttribute("subdivisionScheme"):
                         subdivisionScheme = Prim.CreateAttribute(
