@@ -38,6 +38,9 @@ class Metadata (object):
         if not os.path.exists(self.path):
             self.default_settings(self.path)
 
+        elif not tools.validJSON(self.path):
+            self.default_settings(self.path)
+
 
     def default_settings (self, path):
         tools.datawrite(path, self.default_data)
