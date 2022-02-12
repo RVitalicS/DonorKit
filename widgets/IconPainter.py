@@ -202,7 +202,9 @@ class Icon (object):
 
 
         count = self.index.data(QtCore.Qt.EditRole)["data"]["items"]
-        if count > 0:
+        if count == 1:
+            text = "1 item"
+        elif count > 1:
             text = "{} items".format(count)
         else:
             text = "empty"

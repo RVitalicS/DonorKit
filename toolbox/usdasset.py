@@ -6,9 +6,9 @@ import re
 import os
 
 
-import ostree
-import mayatree
-import usdeditor
+from . import ostree
+from . import mayatree
+from . import usdeditor
 
 
 from pxr import Usd, UsdGeom, UsdShade, Gf, Sdf

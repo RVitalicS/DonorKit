@@ -102,9 +102,14 @@ class PathBar (QtWidgets.QWidget):
         self.pathRoot.setText(name)
         self.root = path
 
-        with Settings.UIManager(update=False) as uiSettings:
+        with Settings.UIManager(update=True) as uiSettings:
             subdirLibrary = uiSettings["subdirLibrary"]
-            self.pathLine.setText(subdirLibrary)
+
+            if os.path.exists(os.path.join(path, subdirLibrary)):
+                self.pathLine.setText(subdirLibrary)
+            else:
+                uiSettings["subdirLibrary"] = ""
+                self.pathLine.setText("")
 
         path = os.path.join(self.root, self.pathLine.text())
         self.pathChanged.emit(path)

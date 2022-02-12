@@ -154,7 +154,7 @@ def getTimeDifference (timeString):
 def isFinalVersion (path, name):
 
     for item in os.listdir(path):
-        if re.search(r"\.final", item):
+        if re.search(r"\.Final", item):
 
             itempath = os.path.join(path, item)
             realpath = os.path.realpath(itempath)
@@ -172,7 +172,7 @@ def getVariantName (name):
 
     variantTag = re.search(r"\.v\d+-*[A-Za-z]*\.", name)
     if not variantTag:
-        variantTag = re.search(r"\.final-*[A-Za-z]*\.", name)
+        variantTag = re.search(r"\.Final-*[A-Za-z]*\.", name)
 
     if variantTag:
         variantTag = variantTag.group()
@@ -223,7 +223,7 @@ def getAnimationName (name):
         animationName = re.sub(r"\.usd", "", animationName)
         animationName = re.sub(r"\.", "", animationName)
 
-        if animationName != "final":
+        if animationName != "Final":
             return animationName
 
     return ""
@@ -357,7 +357,7 @@ def getUsdLeadItem (path):
     maxVersion = int()
 
     for item in os.listdir(path):
-        if re.search(r"\.final\.", item):
+        if re.search(r"\.Final\.", item):
             continue
         if re.search(r"\.usd[ac]*$", item):
 
@@ -405,7 +405,7 @@ def createAssetName (
 
     version = "v{:02d}".format(version)
     if final:
-        version = "final"
+        version = "Final"
     if variant:
         version = "{}-{}".format(version, variant)
     assetName.append(version)

@@ -7,7 +7,7 @@ import re
 import os
 
 
-import mayashader
+from . import mayashader
 import maya.OpenMaya as OpenMaya
 
 

@@ -6,15 +6,15 @@
 #    
 #    Name.v01-VariantName.usdc
 #    Name.v01.AnimationName.usd
-#    Name.final.usda [ symbolic link ]
+#    Name.Final.usda [ symbolic link ]
 #    
 #    name
 #        "AssetName."
-#    variant & version (final)
+#    variant & version (Final)
 #        ".v01."
 #        ".v01-VariantName."
-#        ".final."
-#        ".final-VariantName.."
+#        ".Final."
+#        ".Final-VariantName."
 #    tag & animation
 #        ".Proxy."            [ reserved ]
 #        ".RenderMan."        [ reserved ]
@@ -54,7 +54,7 @@
 #         SurfaceName.v01.RenderMan.usda
 #         SurfaceName.v01.usda
 # 
-#     AssetName.final.AnimationName.usda [AssetName.v01-VariantName.AnimationName.usda]
+#     AssetName.Final.AnimationName.usda [AssetName.v01-VariantName.AnimationName.usda]
 #     AssetName.v01-VariantName.AnimationName.usda
 #     .metadata.json
 

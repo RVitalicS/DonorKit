@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-# import mayaexport
-# mayaexport.main()
-
 
 
 import time
@@ -14,7 +11,8 @@ import ctypes
 
 if not os.getenv("ASSETLIBS", ""):
     os.environ["ASSETLIBS"] = os.path.join(
-        os.path.dirname(__file__),
+        os.path.dirname(
+            os.path.dirname(__file__)),
         "examples", "library" )
 
 os.environ["FONT_FAMILY"] = "Cantarell"
@@ -31,12 +29,13 @@ from widgets import Metadata
 from widgets import Settings
 from widgets import tools
 
-import ostree
-import mayatree
 
-import usdmaterial
-import usdeditor
-import usdasset
+from . import ostree
+from . import mayatree
+
+from . import usdmaterial
+from . import usdeditor
+from . import usdasset
 
 
 import maya.OpenMayaUI as OpenMayaUI
@@ -107,7 +106,7 @@ def UsdExport (
 
 
 
-def viewportShot (path, width, height):
+def ViewportShot (path, width, height):
     
     
     view = OpenMayaUI.M3dView.active3dView()
@@ -152,7 +151,8 @@ def viewportShot (path, width, height):
 
 
 
-def main ():
+def Export ():
+
 
     MSelectionList = OpenMaya.MSelectionList()
     OpenMaya.MGlobal.getActiveSelectionList(MSelectionList)
@@ -163,7 +163,7 @@ def main ():
 
         widget = ExportWidget.ExportWidget()
 
-        # FATAL ERROR ON SECOND RUN
+        # CAN CAUSE FATAL ERROR ON SECOND RUN
         widget.exec()
 
         options = widget.getOptions()
@@ -383,7 +383,7 @@ def main ():
                         ostree.SUBDIR_PREVIEWS,
                         options.assetPreview )
 
-                    viewportShot(PreviewPath,
+                    ViewportShot(PreviewPath,
                         Settings.UIsettings.AssetBrowser.Icon.Asset.max.width,
                         Settings.UIsettings.AssetBrowser.Icon.Asset.max.height )
 
