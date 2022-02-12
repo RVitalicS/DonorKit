@@ -1,22 +1,24 @@
 
-#### AssetName
 
-+ **previews**
-        *AssetName.v01.png*
 
-+ **modelling**
-        *ModelName.v01.Proxy.usdc*
-        *ModelName.v01.usdc*
-
-+ **animation**
-        *AnimationName.v01.usdc*
-
-+ **surfacing**
-        *SurfaceName.v01.RenderMan.usda*
-        *SurfaceName.v01.usda*
-
-    AssetName.v01.AnimationName.usda
-    AssetName.Final.AnimationName.usda (symlink)
+> #### AssetName
+> 
+> &nbsp;&nbsp;&nbsp;&nbsp;**previews**
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*AssetName.v01.png*
+> 
+> &nbsp;&nbsp;&nbsp;&nbsp;**modelling**
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*ModelName.v01.Proxy.usdc*
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*ModelName.v01.usdc*
+> 
+> &nbsp;&nbsp;&nbsp;&nbsp;**animation**
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*AnimationName.v01.usdc*
+> 
+> &nbsp;&nbsp;&nbsp;&nbsp;**surfacing**
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*SurfaceName.v01.RenderMan.usda*
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*SurfaceName.v01.usda*
+> 
+> &nbsp;&nbsp;&nbsp;&nbsp;AssetName.v01.AnimationName.usda
+> &nbsp;&nbsp;&nbsp;&nbsp;AssetName.Final.AnimationName.usda (symlink)
 
 
 
