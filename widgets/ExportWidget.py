@@ -510,7 +510,6 @@ class ExportWidget ( QtWidgets.QDialog ,
             options.assetPath    = self.getAssetPath()
             options.assetName    = self.getAssetName(final=False)
             options.assetFinal   = self.getAssetName(final=True )
-            options.assetPreview = self.getAssetName(final=False, extension="png")
 
             options.version = int(self.mainOpions.versionCombobox.currentText())
             options.final = self.mainOpions.finalButton.isChecked()

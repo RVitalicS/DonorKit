@@ -393,10 +393,13 @@ def Export ():
 
                     ostree.build(options.assetPath, previews=True)
 
+                    PreviewName = re.sub(r"\.usd[ac]*$", "", options.assetName)
+                    PreviewName = "{}.f001.png".format(PreviewName)
+
                     PreviewPath = os.path.join(
                         options.assetPath,
                         ostree.SUBDIR_PREVIEWS,
-                        options.assetPreview )
+                        PreviewName )
 
                     ViewportShot(PreviewPath,
                         Settings.UIsettings.AssetBrowser.Icon.Asset.max.width,
