@@ -28,6 +28,12 @@ class Delegate (QtWidgets.QStyledItemDelegate):
 
     def paint (self, painter, option, index):
 
+        iconArea = self.parent().rectForIndex(index)
+
+        self.Icon.pointer = QtCore.QPoint(
+            iconArea.x() ,
+            iconArea.y() )
+
         self.Icon.paint(painter, option, index)
 
 

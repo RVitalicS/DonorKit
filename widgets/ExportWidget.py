@@ -606,7 +606,7 @@ class ExportWidget ( QtWidgets.QDialog ,
                     library.append(
                         dict(type="asset",  data=dict(
                             name=name,
-                            preview=tools.getUsdPreview(folderPath, leadItem),
+                            previews=tools.getUsdPreviews(folderPath, leadItem),
                             type=dataType,
                             version=tools.getVersion(leadItem),
                             published=publishedTime,

@@ -257,8 +257,21 @@ class Icon (object):
 
 
         # PREVIEW
-        previewPath = self.index.data(QtCore.Qt.EditRole)["data"]["preview"]
-        if os.path.exists(previewPath):
+        previewList = self.index.data(QtCore.Qt.EditRole)["data"]["previews"]
+        previewCount = len(previewList)
+        if previewCount > 0:
+
+            previewX = float(self.iconRect.x())
+            pointerX = float(self.pointer.x())
+            rightX = float(self.iconRect.x() + self.iconRect.width())
+            step = self.iconRect.width()/previewCount
+
+            index = 0
+            while pointerX > previewX+step < rightX:
+                previewX += step
+                index += 1
+
+            previewPath = previewList[index]
             previewImage = QtGui.QImage(previewPath)
 
             scaledImage = previewImage.scaledToWidth(

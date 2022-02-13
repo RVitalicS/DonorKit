@@ -5,7 +5,7 @@
 > 
 > &nbsp;&nbsp;&nbsp;&nbsp;**previews**
 > 
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*AssetName.v01.png*
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*AssetName.v01.f001.png*
 > 
 > 
 > &nbsp;&nbsp;&nbsp;&nbsp;**modelling**

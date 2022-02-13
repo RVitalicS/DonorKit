@@ -331,20 +331,37 @@ def getVersionList (path):
 
 
 
-def getUsdPreview (root, name):
+def getUsdPreviews (root, name):
 
+    previews = []
     basename = re.sub(r"\.usd[ac]*$", "", name)
 
     path = os.path.join(root, "previews")
     if not os.path.exists(path):
-        return ""
+        return previews
 
     for item in os.listdir(path):
         if re.search(r"^"+basename, item):
 
-            return os.path.join(path, item)
+            if re.search(r"\.png$", item):
+                previews.append(
+                    os.path.join(path, item) )
 
-    return ""
+
+    def sorter (path):
+
+        match = re.search( r"\.f\d*\.", 
+            os.path.basename(path) )
+
+        if match:
+            tag = re.sub(r"\.", "", match.group())
+            return float(re.sub(r"f", "", tag))
+
+        return float()
+
+
+    previews.sort(key=sorter)
+    return previews
 
 
 
