@@ -9,12 +9,14 @@ import ctypes
 
 
 
+# define libraries in env. variable
 if not os.getenv("ASSETLIBS", ""):
     os.environ["ASSETLIBS"] = os.path.join(
         os.path.dirname(
             os.path.dirname(__file__)),
         "examples", "library" )
 
+# use this font in UI
 os.environ["FONT_FAMILY"] = "Cantarell"
 
 
@@ -46,29 +48,35 @@ import maya.OpenMaya as OpenMaya
 
 
 def UsdExport (
-    file,
-    exportUVs=1,
-    exportSkels="none",
-    exportSkin="none",
-    exportBlendShapes=0,
-    exportColorSets=1,
-    defaultMeshScheme="none",
-    defaultUSDFormat="usdc",
-    animation=0,
-    eulerFilter=0,
-    staticSingleSample=0,
-    startTime=1,
-    endTime=1,
-    frameStride=1,
-    frameSample=0.0,
-    parentScope="",
-    exportDisplayColor=0,
-    shadingMode="none",
-    exportInstances=1,
-    exportVisibility=0,
-    mergeTransformAndShape=0,
-    stripNamespaces=1 ):
+        file,
+        exportUVs=1,
+        exportSkels="none",
+        exportSkin="none",
+        exportBlendShapes=0,
+        exportColorSets=1,
+        defaultMeshScheme="none",
+        defaultUSDFormat="usdc",
+        animation=0,
+        eulerFilter=0,
+        staticSingleSample=0,
+        startTime=1,
+        endTime=1,
+        frameStride=1,
+        frameSample=0.0,
+        parentScope="",
+        exportDisplayColor=0,
+        shadingMode="none",
+        exportInstances=1,
+        exportVisibility=0,
+        mergeTransformAndShape=0,
+        stripNamespaces=1 ):
 
+    '''
+        Runs MEL command to export selected objects to "usd" file
+    '''
+
+
+    # create export options
     options = ';'.join([
         "exportUVs={}".format( exportUVs ),
         "exportSkels={}".format( exportSkels ),
@@ -92,6 +100,7 @@ def UsdExport (
         "mergeTransformAndShape={}".format( mergeTransformAndShape ),
         "stripNamespaces={}".format( stripNamespaces ) ])
 
+    # create export command
     command = ' '.join([
         'file',
         '-force',
@@ -100,6 +109,7 @@ def UsdExport (
         '-pr',
         '-es "{}"'.format( file ) ])
 
+    # run export command
     OpenMaya.MGlobal.executeCommand(command)
 
 
@@ -107,6 +117,11 @@ def UsdExport (
 
 
 def ViewportShot (path, width, height):
+
+    '''
+        Creates viewport preview with defined width and height
+        and save it to file
+    '''
     
     
     view = OpenMayaUI.M3dView.active3dView()
