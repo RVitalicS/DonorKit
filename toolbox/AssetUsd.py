@@ -177,8 +177,6 @@ def Export ():
 
 
         widget = ExportWidget.ExportWidget()
-
-        # CAN CAUSE FATAL ERROR ON SECOND RUN
         widget.exec()
 
         options = widget.getOptions()

@@ -28,8 +28,8 @@ UIsettings = Settings.UIsettings
 
 
 
-class ExportWidget ( QtWidgets.QDialog ,
-                     ExportUI.Window   ):
+
+class ExportWidget (QtWidgets.QDialog):
 
 
     def __init__(self, parent=None):
@@ -50,7 +50,7 @@ class ExportWidget ( QtWidgets.QDialog ,
         self.BottomBar = BottomBar.BottomBar()
         self.browserLayout.addWidget(self.BottomBar)
 
-        self.setupUi(self, self.browserLayout)
+        ExportUI.setupUi(self, self.browserLayout)
         self.connectUi()
         self.applySettings()
 
@@ -76,7 +76,6 @@ class ExportWidget ( QtWidgets.QDialog ,
         self.BottomBar.previewSlider.valueChanged.connect(self.sliderAction)
 
         self.nameLineEdit.textChanged.connect(self.setName)
-        self.nameLineEdit.mousePressEvent = self.namePressEvent
 
         self.modelingSwitch.released.connect(self.partitionExport)
         self.surfacingSwitch.released.connect(self.partitionExport)
@@ -107,14 +106,6 @@ class ExportWidget ( QtWidgets.QDialog ,
         self.mainOpions.finalButton.released.connect(self.finalWrap)
 
         self.exportButton.released.connect(self.exportAction)
-
-
-
-    def namePressEvent (self, event):
-
-        super(QtWidgets.QLineEdit, self.nameLineEdit).mousePressEvent(event)
-        if self.nameLineEdit.text() == self.defaultName:
-            self.nameLineEdit.setText("")
 
 
 
