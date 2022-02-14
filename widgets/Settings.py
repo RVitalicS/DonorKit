@@ -164,6 +164,11 @@ UIsettings.AssetBrowser.Icon.Asset.max.height = 300
 UIsettings.AssetBrowser.Icon.Asset.max.label = 40
 
 
+UIsettings.AssetBrowser.Icon.Preview = DataClass()
+UIsettings.AssetBrowser.Icon.Preview.width  = 390
+UIsettings.AssetBrowser.Icon.Preview.height = 300
+
+
 UIsettings.IconDelegate = DataClass()
 UIsettings.IconDelegate.space  = 6
 UIsettings.IconDelegate.radius = 6

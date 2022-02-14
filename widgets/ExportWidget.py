@@ -492,8 +492,8 @@ class ExportWidget (QtWidgets.QDialog):
 
             options.animationName = self.animationOpions.animationNameCombobox.currentText()
 
-            options.startFrame = self.animationOpions.rangeStartSpinbox.value()
-            options.endFrame = self.animationOpions.rangeEndSpinbox.value()
+            options.minTime = self.animationOpions.rangeStartSpinbox.value()
+            options.maxTime = self.animationOpions.rangeEndSpinbox.value()
             options.fps = self.animationOpions.fpsSpinbox.value()
 
             options.unitsMultiplier = self.mainOpions.unitSpinbox.value()

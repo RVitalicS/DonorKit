@@ -270,7 +270,10 @@ class Icon (object):
             index = 0
             while pointerX > previewX+step < rightX:
                 previewX += step
+
                 index += 1
+                if index == previewCount-1:
+                    break
 
             previewPath = previewList[index]
             previewImage = QtGui.QImage(previewPath)

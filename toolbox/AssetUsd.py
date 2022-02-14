@@ -41,6 +41,7 @@ from . import usdasset
 
 
 import maya.OpenMayaUI as OpenMayaUI
+import maya.OpenMayaAnim as OpenMayaAnim
 import maya.OpenMaya as OpenMaya
 
 
@@ -116,51 +117,103 @@ def UsdExport (
 
 
 
-def ViewportShot (path, width, height):
+def ViewportShot (
+        path, name,
+        minTime, maxTime ):
 
     '''
         Creates viewport preview with defined width and height
         and save it to file
     '''
-    
-    
-    view = OpenMayaUI.M3dView.active3dView()
-    view.refresh()
-
-    viewWidth = view.portWidth()
-    viewHeight = view.portHeight()
-
-    buffer = OpenMaya.MImage()
-    view.readColorBuffer(buffer, False)
 
 
-    pointer = ctypes.cast( int(buffer.pixels()), ctypes.POINTER(ctypes.c_char) )
-    pointerAsString = ctypes.string_at(pointer, viewWidth * viewHeight * 4)
+    command = 'displayPref -wsa "none";'
+    OpenMaya.MGlobal.executeCommand(command)
 
-    image = QtGui.QImage(
-        pointerAsString,
-        viewWidth, viewHeight,
-        QtGui.QImage.Format_RGB32 )
+    width  = Settings.UIsettings.AssetBrowser.Icon.Preview.width
+    height = Settings.UIsettings.AssetBrowser.Icon.Preview.height
 
-    image = image.mirrored(horizontal=False, vertical=True)
+    Time = OpenMayaAnim.MAnimControl().currentTime()
+    timeBefore = Time.value()
 
-
-    if image.width() > width:
-        scaledImage = image.scaledToHeight(
-            height, QtCore.Qt.SmoothTransformation)
-
-        x = int((scaledImage.width() - width)/2)
-        scaledImage = scaledImage.copy(x, 0, width, height)
-        scaledImage.save(path)
+    View = OpenMayaUI.M3dView.active3dView()
+    viewWidth = View.portWidth()
+    viewHeight = View.portHeight()
 
 
-    elif image.height() > height:
-        scaledImage = image.scaledToWidth(
-            width, QtCore.Qt.SmoothTransformation)
+    if minTime is None:
+        minTime = timeBefore
+    if maxTime is None:
+        maxTime = timeBefore
 
-        y = int((scaledImage.height() - height)/2)
-        scaledImage = scaledImage.copy(0, y, width, height)
-        scaledImage.save(path)
+
+    baseName = re.sub(r"\.usd[ac]*$", "", name)
+    previewRoot = os.path.join(
+        path,
+        ostree.SUBDIR_PREVIEWS )
+
+    for assetName in os.listdir(previewRoot):
+        if baseName in assetName:
+
+            previewRemove = os.path.join(
+                previewRoot, assetName )
+            os.remove(previewRemove)
+
+
+    timeCurrent = minTime
+    while timeCurrent <= maxTime:
+        
+        Time.setValue(timeCurrent)
+        OpenMayaAnim.MAnimControl.setCurrentTime(Time)
+        previewName = "{}.f{:03d}.png".format(
+            baseName, int(timeCurrent) )
+
+        PreviewPath = os.path.join(
+            previewRoot ,
+            previewName )
+
+
+        Buffer = OpenMaya.MImage()
+        View.refresh()
+        View.readColorBuffer(Buffer, False)
+
+
+        pointer = ctypes.cast( int(Buffer.pixels()), ctypes.POINTER(ctypes.c_char) )
+        pointerAsString = ctypes.string_at(pointer, viewWidth * viewHeight * 4)
+
+        Image = QtGui.QImage(
+            pointerAsString,
+            viewWidth, viewHeight,
+            QtGui.QImage.Format_RGB32 )
+
+        Image = Image.mirrored(horizontal=False, vertical=True)
+
+
+        if Image.width() > width:
+            ScaledImage = Image.scaledToHeight(
+                height, QtCore.Qt.SmoothTransformation)
+
+            x = int((ScaledImage.width() - width)/2)
+            ScaledImage = ScaledImage.copy(x, 0, width, height)
+            ScaledImage.save(PreviewPath)
+
+        elif Image.height() > height:
+            ScaledImage = Image.scaledToWidth(
+                width, QtCore.Qt.SmoothTransformation)
+
+            y = int((ScaledImage.height() - height)/2)
+            ScaledImage = ScaledImage.copy(0, y, width, height)
+            ScaledImage.save(PreviewPath)
+
+
+        timeCurrent += 1.0
+
+
+    Time.setValue(timeBefore)
+    OpenMayaAnim.MAnimControl.setCurrentTime(Time)
+
+    command = 'displayPref -wsa "full";'
+    OpenMaya.MGlobal.executeCommand(command)
 
 
 
@@ -263,8 +316,8 @@ def Export ():
                 UsdExport(
                     SourceModelPath,
                     animation= 1 if options.animation else 0,
-                    startTime=options.startFrame,
-                    endTime=options.endFrame )
+                    startTime=options.minTime,
+                    endTime=options.maxTime )
 
 
 
@@ -385,26 +438,18 @@ def Export ():
 
                 # Create Preview Image
                 if os.path.exists(AssetPath):
-
-                    command = 'displayPref -wsa "none";'
-                    OpenMaya.MGlobal.executeCommand(command)
-
                     ostree.build(options.assetPath, previews=True)
 
-                    PreviewName = re.sub(r"\.usd[ac]*$", "", options.assetName)
-                    PreviewName = "{}.f001.png".format(PreviewName)
+                    minTime = None
+                    maxTime = None
+                    if options.animation:
+                        minTime = options.minTime
+                        maxTime = options.maxTime
 
-                    PreviewPath = os.path.join(
+                    ViewportShot(
                         options.assetPath,
-                        ostree.SUBDIR_PREVIEWS,
-                        PreviewName )
-
-                    ViewportShot(PreviewPath,
-                        Settings.UIsettings.AssetBrowser.Icon.Asset.max.width,
-                        Settings.UIsettings.AssetBrowser.Icon.Asset.max.height )
-
-                    command = 'displayPref -wsa "full";'
-                    OpenMaya.MGlobal.executeCommand(command)
+                        options.assetName,
+                        minTime, maxTime )
 
 
                 # Create/Update .metadata.json
@@ -418,5 +463,5 @@ def Export ():
 
 
     else:
-            OpenMaya.MGlobal.displayWarning(
-                "Select Any Object")
+        OpenMaya.MGlobal.displayWarning(
+            "Select Any Object")
