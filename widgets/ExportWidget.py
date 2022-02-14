@@ -599,15 +599,20 @@ class ExportWidget ( QtWidgets.QDialog ,
                 dataTime = data["published"]
 
                 publishedTime = tools.getTimeDifference(dataTime)
-                leadItem = tools.getUsdLeadItem(folderPath)
+                chosenItem = tools.chooseAssetItem(folderPath)
+
+                versionCount = tools.getVersionList(folderPath)
+                versionCount = len(versionCount)
 
                 if dataType == "usdasset":
                     library.append(
                         dict(type="asset",  data=dict(
                             name=name,
-                            previews=tools.getUsdPreviews(folderPath, leadItem),
+                            previews=tools.getUsdPreviews(folderPath, chosenItem),
                             type=dataType,
-                            version=tools.getVersion(leadItem),
+                            version=tools.getVersion(chosenItem),
+                            count=versionCount,
+                            variant=tools.getVariantName(chosenItem),
                             published=publishedTime,
                             status=data["status"] )) )
                     self.assetsNames.append(name)

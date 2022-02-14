@@ -6,6 +6,8 @@ import os, re
 import sys, json
 import time, datetime
 
+from Qt import QtGui
+
 
 
 RESERVED_TAGS = [
@@ -52,6 +54,42 @@ def keydata (dictionary, keyname):
         
         if key == keyname:
             return value
+
+
+
+
+
+
+def getStringWidth (string, font):
+
+    '''
+        Calculates  string width in pixels
+        for the specific font
+
+        :type  string: str
+        :param string: name to find out width
+
+        :type    font: QFont
+        :param   font: font for calculation
+
+        :rtype : int
+        :return: width in pixels
+    '''
+
+
+    # scale font for accuracy
+    scale = 1000
+    font = QtGui.QFont(font)
+    font.setPointSize(
+        font.pointSize() * scale )
+
+    metrics = QtGui.QFontMetrics(font)
+
+    # get width and scale back
+    width = metrics.horizontalAdvance(string)
+    width = int(round(width/scale))
+
+    return width
 
 
 
@@ -368,26 +406,58 @@ def getUsdPreviews (root, name):
 
 
 
-def getUsdLeadItem (path):
+def chooseAssetItem (path):
 
-    assetItem  = str()
-    maxVersion = int()
+    '''
+        Chooses one version of asset items
+        to use it for preview
+    '''
 
-    for item in os.listdir(path):
-        if re.search(r"\.Final\.", item):
+
+    chosenItem  = str()
+
+
+    # iterate over versioned "usd" files only
+    for assetItem in os.listdir(path):
+
+        if re.search(r"\.Final\.", assetItem):
             continue
-        if re.search(r"\.usd[ac]*$", item):
+        if re.search(r"\.usd[ac]*$", assetItem):
 
-            if isFinalVersion(path, item):
-                assetItem = item
-                break
+            if not chosenItem:
+                chosenItem  = assetItem
 
-            itemVersion = getVersion(item)
-            if maxVersion < itemVersion:
-                maxVersion = itemVersion
-                assetItem  = item
 
-    return assetItem
+            # get data to compare current iteration item
+            # with previously chosen one
+            chosenHasPreivews = getUsdPreviews(path, chosenItem)
+            chosenIsFinal  = isFinalVersion(path, chosenItem)
+            chosenVersion  = getVersion(chosenItem)
+
+            assetHasPreivews = getUsdPreviews(path, assetItem)
+            assetIsFinal  = isFinalVersion(path, assetItem)
+            assetVersion  = getVersion(assetItem)
+
+            noPreivews = not chosenHasPreivews and not assetHasPreivews
+            bothHasPreivews = chosenHasPreivews and assetHasPreivews
+
+
+            # first of all choose that one with previews
+            if not chosenHasPreivews and assetHasPreivews:
+                chosenItem = assetItem
+            
+            # then that one that is final version
+            elif noPreivews or bothHasPreivews:
+                if assetIsFinal:
+                    chosenItem = assetItem
+
+                # then depending on higher version
+                elif assetVersion > chosenVersion:
+                    if not chosenIsFinal:
+                        chosenItem = assetItem
+
+
+    return chosenItem
 
 
 

@@ -5,12 +5,13 @@
 # globals
 
 white  = "#ffffff"
+paper  = "#e4e4e4"
 black  = "#060a0c"
 violet = "#a37acc"
 red    = "#f07171"
 
 text      = "#bbbbbb"
-textoff   = "#656667"
+textoff   = "#707070"
 textlock  = "#8b8b8b"
 
 browserBackground = "#444444"
@@ -18,6 +19,7 @@ browserSocket     = "#373737"
 
 iconBackground = "#4e5052"
 iconHilight    = "#545759"
+iconVariant    = "#2a2a2a"
 
 folderHilight  = "#545759"
 checkedHilight = "#58a5cc"

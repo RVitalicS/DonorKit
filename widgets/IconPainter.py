@@ -3,6 +3,7 @@
 
 
 import os
+from . import tools
 from . import stylesheet
 
 
@@ -332,13 +333,53 @@ class Icon (object):
 
 
 
-        # NAME
+        # set antialiasing for text drawing
         self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
 
+
+
+        # VARIANT TAG
+        variant = self.index.data(QtCore.Qt.EditRole)["data"]["variant"]
+        if variant:
+
+            textOption = QtGui.QTextOption()
+            textOption.setWrapMode(QtGui.QTextOption.NoWrap)
+            textOption.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
+
+            font = UIsettings.IconDelegate.Variant.font
+            self.painter.setFont(font)
+            self.painter.setPen( QtGui.QColor(stylesheet.paper) )
+
+            offsetTag = UIsettings.IconDelegate.Variant.offset
+            spaceTag  = UIsettings.IconDelegate.Variant.space
+            heightTag = UIsettings.IconDelegate.Variant.height
+            widthTag  = tools.getStringWidth(variant, font)
+            radiusTag = int(round(heightTag/2))
+
+            tagArea = QtCore.QRect(
+                self.iconRect.x() + offsetTag ,
+                self.iconRect.y() + offsetTag ,
+                widthTag          + spaceTag  ,
+                heightTag                     )
+
+
+            path = QtGui.QPainterPath()
+            path.addRoundedRect(tagArea, radiusTag, radiusTag)
+
+            brush = QtGui.QBrush( QtGui.QColor(stylesheet.iconVariant) )
+            self.painter.fillPath(path, brush)
+
+            self.painter.drawText(
+                QtCore.QRectF(tagArea),
+                variant,
+                textOption)
+
+
+
+        # NAME
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
         textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
-
 
         self.painter.setPen( QtGui.QColor(stylesheet.text) )
         self.painter.setFont( UIsettings.IconDelegate.fontAssetName )
@@ -368,9 +409,10 @@ class Icon (object):
 
 
         # VERSION
-        self.painter.setPen( statusColor )
-        self.painter.setFont( UIsettings.IconDelegate.fontAssetVersion )
+        font = UIsettings.IconDelegate.fontAssetVersion
+        self.painter.setFont(font)
 
+        # draw version text
         offsetVersion = 13
         nameArea = QtCore.QRect(
             nameArea.x()                      ,
@@ -378,13 +420,34 @@ class Icon (object):
             nameArea.width()                  ,
             nameArea.height() - offsetVersion )
 
-        text = self.index.data(QtCore.Qt.EditRole)["data"]["version"]
-        text = "version {}".format(text)
+        version = self.index.data(QtCore.Qt.EditRole)["data"]["version"]
+        textVersion = "version {}".format(version)
 
+        self.painter.setPen( statusColor )
         self.painter.drawText(
             QtCore.QRectF(nameArea),
-            text,
+            textVersion,
             textOption)
+
+        if self.iconRect.contains(self.pointer):
+
+            versionWidth = tools.getStringWidth(textVersion, font)
+            offsetPixel = 1
+
+            nameArea = QtCore.QRect(
+                nameArea.x()      + versionWidth + offsetPixel ,
+                nameArea.y()                                   ,
+                nameArea.width()  - versionWidth - offsetPixel ,
+                nameArea.height()                              )
+
+            count = self.index.data(QtCore.Qt.EditRole)["data"]["count"]
+            textCount = " // {}".format(count)
+
+            self.painter.setPen( QtGui.QColor(stylesheet.text) )
+            self.painter.drawText(
+                QtCore.QRectF(nameArea),
+                textCount,
+                textOption)
 
 
 
