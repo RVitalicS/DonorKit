@@ -142,13 +142,20 @@ def copyTimeSamples (source, target, units=1.0):
 
         timeSamples = Attribute.GetTimeSamples()
         if len(timeSamples) > 1:
-            attrName  = Attribute.GetBaseName()
-            if attrName in ["points"]:
+
+            attrBaseName = Attribute.GetBaseName()
+            if attrBaseName in [
+                    "points",
+                    "normals",
+                    "translate",
+                    "scale",
+                    "rotateXYZ",
+                    "extent" ]:
 
                 OverPrim = target.OverridePrim(source.GetPath())
 
                 newAttribute = OverPrim.CreateAttribute(
-                    Attribute.GetBaseName(),
+                    Attribute.GetName(),
                     Attribute.GetTypeName(),
                     custom=Attribute.IsCustom() )
 
@@ -156,8 +163,9 @@ def copyTimeSamples (source, target, units=1.0):
 
                     attrValue = Attribute.Get(time=sample)
 
-                    for index in range( len(attrValue) ):
-                        attrValue[index] *= float(units)
+                    if attrBaseName in ["points", "translate", "extent"]:
+                        for index in range( len(attrValue) ):
+                            attrValue[index] *= float(units)
 
                     newAttribute.Set(value=attrValue, time=sample)
 
