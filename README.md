@@ -13,6 +13,9 @@ Tool for exporting selected transform/mesh hierarchy from Maya scene to separate
 Add this folder path to PYTHONPATH and run from Maya Script Editor
 
 ```python
+# define library to export assets
+# os.environ["ASSETLIBS"]=/server/library
+
 from toolbox import AssetUsd
 AssetUsd.Export()
 ```
@@ -40,4 +43,5 @@ Operating System: CentOS 7
 
 #### Documentation
 
++ [Library Descriptioin](doc/LibraryDescriptioin.md)
 + [Asset Descriptioin](doc/AssetDescriptioin.md)

@@ -43,8 +43,7 @@ AssetName.Final.usda -> AssetName.v03.usda
 
 
 
-Root folder (**AssetName**) has hidden *.metadata.json* file to interpret structure of 
-refereced layers and folder groups as Usd Asset
+Root folder (**AssetName**) has hidden *.metadata.json* file to interpret structure of refereced layers and folder groups as Usd Asset
 
 ```json
 {
