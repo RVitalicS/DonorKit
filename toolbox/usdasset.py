@@ -7,7 +7,7 @@ import os
 
 
 from . import ostree
-from . import mayatree
+from . import scene
 from . import usdeditor
 
 
@@ -130,7 +130,7 @@ def make (
     sourceStage = Usd.Stage.Open(sourcePath)
     assetStage = Usd.Stage.CreateNew(assetPath)
 
-    root = mayatree.getroot(tree)
+    root = scene.Manager().getroot(tree)
     rootName = os.path.basename(root)
 
     if not name:

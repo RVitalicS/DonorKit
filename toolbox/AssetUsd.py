@@ -2,10 +2,10 @@
 
 
 
-import time
 import re
 import os
 import ctypes
+import importlib
 
 
 
@@ -236,7 +236,6 @@ def Export ():
         widget.exec()
 
         options = widget.getOptions()
-        widget = None
 
 
         if options:
@@ -246,17 +245,14 @@ def Export ():
 
 
 
-            # ALARM ALARM ALARM
-            start = time.time()
-            scene = mayatree.get(getshaders=options.surfacing)
-            end = time.time()
-            print("\nGot Scene Data for {} sec.\n".format(end - start) )
+            mayaScene = scene.Manager()
+            sceneData = mayaScene.get(getshaders=options.surfacing)
 
-            treedata  = scene["data"]
-            shaders = scene["shaders"]
-            root    = scene["root"]
+            mayatree = sceneData["tree"]
+            shaders  = sceneData["shaders"]
+            root     = sceneData["root"]
 
-            if not treedata:
+            if not mayatree:
                 OpenMaya.MGlobal.displayWarning(
                     "Wrong Selection")
                 return
@@ -337,7 +333,7 @@ def Export ():
                     NewStage,
                     root=root, units=units)
 
-                usdeditor.addMayaAttributes(NewStage, treedata)
+                usdeditor.addMayaAttributes(NewStage, mayatree)
                 NewStage.GetRootLayer().Export(
                     ModelPath, args=dict(format="usdc") )
 
@@ -381,7 +377,7 @@ def Export ():
 
                         if key == "render":
                             prman=True
-                            ShaderFileName = "{}.RenderMan.{}.usda".format(
+                            ShaderFileName = "{}.{}.RenderMan.usda".format(
                                 name, version )
 
                         else:
@@ -425,7 +421,7 @@ def Export ():
                 usdasset.make (
                     ReferencePath,
                     AssetPath,
-                    treedata )
+                    mayatree )
 
 
                 # Create/Update Symbolic Link

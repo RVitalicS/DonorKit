@@ -85,12 +85,16 @@ def copyAttrubutes (source, target, units=1.0, time=1.0):
 
 
 def copyStage (source, target,
-               root="/",
+               root=None,
                units=None,
                children=None):
     
 
-    if not units:
+    if root is None:
+        root = "/"
+
+
+    if units is None:
         units = UsdGeom.GetStageMetersPerUnit(source)
 
         UsdGeom.SetStageMetersPerUnit(
@@ -98,7 +102,7 @@ def copyStage (source, target,
             UsdGeom.LinearUnits.meters )
     
     
-    if isinstance(children, type(None)):
+    if children is None:
 
         RootPath = Sdf.Path( root )
         RootPrim = source.GetPrimAtPath(RootPath)
