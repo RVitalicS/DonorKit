@@ -8,7 +8,7 @@ import os
 
 from . import ostree
 from . import scene
-from . import usdeditor
+from . import editor
 
 
 from pxr import Usd, UsdGeom, UsdShade, Gf, Sdf
@@ -158,7 +158,7 @@ def make (
             overroot = assetStage.OverridePrim(TreeRootPath)
 
             if variant == "render":
-                payloadPath = usdeditor.makeRelative(sourcePath, assetPath)
+                payloadPath = editor.makeRelative(sourcePath, assetPath)
                 overroot.GetPayloads().AddPayload(payloadPath)
 
                 bind( sourceStage, assetStage,

@@ -38,9 +38,9 @@ from . import scene
 importlib.reload(scene)
 
 
-from . import usdmaterial
-from . import usdeditor
-from . import usdasset
+from . import material
+from . import editor
+from . import asset
 
 
 import maya.OpenMayaUI as OpenMayaUI
@@ -328,12 +328,12 @@ def Export ():
 
                 OldStage = Usd.Stage.Open(SourceModelPath)
                 NewStage = Usd.Stage.CreateNew(ModelPath)
-                usdeditor.copyStage(
+                editor.copyStage(
                     OldStage,
                     NewStage,
                     root=root, units=units)
 
-                usdeditor.addMayaAttributes(NewStage, mayatree)
+                editor.addMayaAttributes(NewStage, mayatree)
                 NewStage.GetRootLayer().Export(
                     ModelPath, args=dict(format="usdc") )
 
@@ -351,7 +351,7 @@ def Export ():
 
                 OldStage = Usd.Stage.Open(SourceModelPath)
                 NewStage = Usd.Stage.CreateNew(AnimationPath)
-                usdeditor.copyAnimation(
+                editor.copyAnimation(
                     OldStage,
                     NewStage,
                     root=root, reference=ModelPath, units=units )
@@ -397,7 +397,7 @@ def Export ():
 
                         if ShaderData:
                             ShaderData["name"] = name
-                            usdmaterial.make(
+                            material.make(
                                 ShaderPath,
                                 ShaderData,
                                 prman=prman)
@@ -418,7 +418,7 @@ def Export ():
                 else:
                     message = "Asset Saved: "
 
-                usdasset.make (
+                asset.make (
                     ReferencePath,
                     AssetPath,
                     mayatree )
