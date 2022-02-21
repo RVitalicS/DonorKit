@@ -184,11 +184,11 @@ UIsettings.IconDelegate.fontAssetVersion = makeFont( size=7, bold=False, weight=
 UIsettings.IconDelegate.fontAssetLabel   = makeFont( size=6, bold=False, weight=50 )
 UIsettings.IconDelegate.fontAssetStatus  = makeFont( size=7, bold=False, weight=50 )
 
-UIsettings.IconDelegate.Variant = DataClass()
-UIsettings.IconDelegate.Variant.space  = 10
-UIsettings.IconDelegate.Variant.offset = 6
-UIsettings.IconDelegate.Variant.height = 14
-UIsettings.IconDelegate.Variant.font   = makeFont( size=7, bold=False, weight=90 )
+UIsettings.IconDelegate.Animation = DataClass()
+UIsettings.IconDelegate.Animation.space  = 10
+UIsettings.IconDelegate.Animation.offset = 6
+UIsettings.IconDelegate.Animation.height = 14
+UIsettings.IconDelegate.Animation.font   = makeFont( size=7, bold=False, weight=90 )
 
 
 UIsettings.Options = DataClass()

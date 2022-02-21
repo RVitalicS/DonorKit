@@ -19,7 +19,7 @@ browserSocket     = "#373737"
 
 iconBackground = "#4e5052"
 iconHilight    = "#545759"
-iconVariant    = "#2a2a2a"
+iconAnimation  = "#2a2a2a"
 
 folderHilight  = "#545759"
 checkedHilight = "#58a5cc"

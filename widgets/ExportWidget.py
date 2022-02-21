@@ -607,6 +607,7 @@ class ExportWidget (QtWidgets.QDialog):
                             version=tools.getVersion(chosenItem),
                             count=versionCount,
                             variant=tools.getVariantName(chosenItem),
+                            animation=tools.getAnimationName(chosenItem),
                             published=publishedTime,
                             status=data["status"] )) )
                     self.assetsNames.append(name)

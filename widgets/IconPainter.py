@@ -255,6 +255,8 @@ class Icon (object):
             self.width  - self.space*4 ,
             labelHeight - self.space*2 )
 
+        spaceName = labelArea.width()
+
 
 
         # PREVIEW
@@ -313,7 +315,7 @@ class Icon (object):
 
 
 
-        # ICON
+        # TYPE ICON
         typeImage = QtGui.QImage(":/icons/typeusd.png")
 
         offsetIcon = 0
@@ -327,6 +329,7 @@ class Icon (object):
                     labelArea.y() + offsetIcon )
 
         self.painter.drawImage(iconPosition, typeImage)
+        spaceName -= typeImage.width()
 
 
 
@@ -335,115 +338,54 @@ class Icon (object):
 
 
 
-        # VARIANT TAG
-        variant = self.index.data(QtCore.Qt.EditRole)["data"]["variant"]
-        if variant:
+        # ANIMATION TAG
+        textAnimation = self.index.data(QtCore.Qt.EditRole)["data"]["animation"]
+        if textAnimation:
+            textAnimation = textAnimation.replace("_", " ")
 
             textOption = QtGui.QTextOption()
             textOption.setWrapMode(QtGui.QTextOption.NoWrap)
             textOption.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
 
-            font = UIsettings.IconDelegate.Variant.font
-            self.painter.setFont(font)
+            fontAnimation = UIsettings.IconDelegate.Animation.font
+            self.painter.setFont(fontAnimation)
             self.painter.setPen( QtGui.QColor(stylesheet.paper) )
 
-            offsetTag = UIsettings.IconDelegate.Variant.offset
-            spaceTag  = UIsettings.IconDelegate.Variant.space
-            heightTag = UIsettings.IconDelegate.Variant.height
-            widthTag  = tools.getStringWidth(variant, font)
+            offsetTag = UIsettings.IconDelegate.Animation.offset
+            spaceTag  = UIsettings.IconDelegate.Animation.space
+            heightTag = UIsettings.IconDelegate.Animation.height
             radiusTag = int(round(heightTag/2))
+
+            animationWidth = tools.getStringWidth(textAnimation, fontAnimation)
+
+            spaceAnimation = self.iconRect.width() - spaceTag - offsetTag*2
+            if animationWidth > spaceAnimation:
+
+                while animationWidth > spaceAnimation:
+                    if not textAnimation: break
+
+                    textAnimation = textAnimation[:-1]
+                    animationWidth = tools.getStringWidth(
+                        textAnimation + "...", fontAnimation)
+
+                textAnimation += "..."
 
             tagArea = QtCore.QRect(
                 self.iconRect.x() + offsetTag ,
                 self.iconRect.y() + offsetTag ,
-                widthTag          + spaceTag  ,
+                animationWidth    + spaceTag  ,
                 heightTag                     )
 
 
             path = QtGui.QPainterPath()
             path.addRoundedRect(tagArea, radiusTag, radiusTag)
 
-            brush = QtGui.QBrush( QtGui.QColor(stylesheet.iconVariant) )
+            brush = QtGui.QBrush( QtGui.QColor(stylesheet.iconAnimation) )
             self.painter.fillPath(path, brush)
 
             self.painter.drawText(
                 QtCore.QRectF(tagArea),
-                variant,
-                textOption)
-
-
-
-        # NAME
-        textOption = QtGui.QTextOption()
-        textOption.setWrapMode(QtGui.QTextOption.NoWrap)
-        textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
-
-        self.painter.setPen( QtGui.QColor(stylesheet.text) )
-        self.painter.setFont( UIsettings.IconDelegate.fontAssetName )
-
-        offsetName = -2
-
-        if iconSize == 1:
-            nameArea = QtCore.QRect(
-                labelArea.x()                   ,
-                labelArea.y()      + offsetName ,
-                labelArea.width()               ,
-                labelArea.height() - offsetName )
-        else:
-            nameArea = QtCore.QRect(
-                labelArea.x() + typeImage.width() + self.space*2 ,
-                labelArea.y()      + offsetName                ,
-                int(labelArea.width()/2)                       ,
-                labelArea.height() - offsetName                )
-
-        text = self.index.data(QtCore.Qt.EditRole)["data"]["name"]
-
-        self.painter.drawText(
-            QtCore.QRectF(nameArea),
-            text,
-            textOption)
-
-
-
-        # VERSION
-        font = UIsettings.IconDelegate.fontAssetVersion
-        self.painter.setFont(font)
-
-        # draw version text
-        offsetVersion = 13
-        nameArea = QtCore.QRect(
-            nameArea.x()                      ,
-            nameArea.y()      + offsetVersion ,
-            nameArea.width()                  ,
-            nameArea.height() - offsetVersion )
-
-        version = self.index.data(QtCore.Qt.EditRole)["data"]["version"]
-        textVersion = "version {}".format(version)
-
-        self.painter.setPen( statusColor )
-        self.painter.drawText(
-            QtCore.QRectF(nameArea),
-            textVersion,
-            textOption)
-
-        if self.iconRect.contains(self.pointer):
-
-            versionWidth = tools.getStringWidth(textVersion, font)
-            offsetPixel = 1
-
-            nameArea = QtCore.QRect(
-                nameArea.x()      + versionWidth + offsetPixel ,
-                nameArea.y()                                   ,
-                nameArea.width()  - versionWidth - offsetPixel ,
-                nameArea.height()                              )
-
-            count = self.index.data(QtCore.Qt.EditRole)["data"]["count"]
-            textCount = " // {}".format(count)
-
-            self.painter.setPen( QtGui.QColor(stylesheet.text) )
-            self.painter.drawText(
-                QtCore.QRectF(nameArea),
-                textCount,
+                textAnimation,
                 textOption)
 
 
@@ -451,6 +393,10 @@ class Icon (object):
         # PUBLISHED & STATUS LABELS
         self.painter.setPen( QtGui.QColor(stylesheet.textlock) )
         self.painter.setFont( UIsettings.IconDelegate.fontAssetLabel )
+
+        textOption = QtGui.QTextOption()
+        textOption.setWrapMode(QtGui.QTextOption.NoWrap)
+        textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
 
         statusHeight = UIsettings.AssetBrowser.Icon.Asset.statusHeight
 
@@ -468,6 +414,7 @@ class Icon (object):
                 labelArea.y() + int(labelArea.height() - statusHeight ) ,
                 publishedWidth                                          ,
                 statusHeight                                            )
+            spaceName -= publishedWidth*2 + self.space*2
         else:
             publishedWidth = int(((labelArea.width() - self.space*8)/3 )/2)
             publishedArea = QtCore.QRect(
@@ -475,6 +422,7 @@ class Icon (object):
                 labelArea.y() + int(labelArea.height() - statusHeight ) ,
                 publishedWidth                                          ,
                 statusHeight                                            )
+            spaceName -= publishedWidth*2 + self.space*2
 
         self.painter.drawText(
             QtCore.QRectF(publishedArea),
@@ -498,6 +446,10 @@ class Icon (object):
         # PUBLISHED DATE
         self.painter.setPen( QtGui.QColor(stylesheet.text) )
         self.painter.setFont( UIsettings.IconDelegate.fontAssetLabel )
+        
+        textOption = QtGui.QTextOption()
+        textOption.setWrapMode(QtGui.QTextOption.NoWrap)
+        textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
 
         offsetPublished = 10
         dateArea = QtCore.QRect(
@@ -546,6 +498,133 @@ class Icon (object):
             QtCore.QRectF(buttonArea),
             status,
             textOption)
+
+
+
+        # NAME
+        textOption = QtGui.QTextOption()
+        textOption.setWrapMode(QtGui.QTextOption.NoWrap)
+        textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+
+        fontName = UIsettings.IconDelegate.fontAssetName
+        self.painter.setFont(fontName)
+
+        self.painter.setPen( QtGui.QColor(stylesheet.text) )
+
+        offsetName = -2
+        spaceName -= self.space
+
+        if iconSize == 1:
+            nameArea = QtCore.QRect(
+                labelArea.x()                   ,
+                labelArea.y()      + offsetName ,
+                spaceName               ,
+                labelArea.height() - offsetName )
+        else:
+            nameArea = QtCore.QRect(
+                labelArea.x() + typeImage.width() + self.space*2 ,
+                labelArea.y()      + offsetName                ,
+                spaceName                       ,
+                labelArea.height() - offsetName                )
+
+        textName = self.index.data(QtCore.Qt.EditRole)["data"]["name"]
+        textName = textName.replace("_", " ")
+        
+        nameWidth = tools.getStringWidth(textName, fontName)
+        spaceVariant = spaceName - nameWidth
+
+        if nameWidth > spaceName:
+
+            while nameWidth > spaceName:
+                if not textName: break
+
+                textName = textName[:-1]
+                nameWidth = tools.getStringWidth(
+                    textName + "...", fontName)
+
+            textName += "..."
+
+        self.painter.drawText(
+            QtCore.QRectF(nameArea),
+            textName,
+            textOption)
+
+
+
+        # VARIANT
+        variant = self.index.data(QtCore.Qt.EditRole)["data"]["variant"]
+        if variant and spaceVariant > self.space:
+
+            offsetPixel = 1
+
+            variantArea = QtCore.QRect(
+                nameArea.x()      + nameWidth + offsetPixel ,
+                nameArea.y()                                ,
+                nameArea.width()  - nameWidth - offsetPixel ,
+                nameArea.height()                           )
+
+            textVariant = " {}".format(variant)
+            textVariant = textVariant.replace("_", " ")
+        
+            variantWidth = tools.getStringWidth(textVariant, fontName)
+            if variantWidth > spaceVariant:
+
+                while variantWidth > spaceVariant-self.space:
+                    if not textVariant: break
+
+                    textVariant = textVariant[:-1]
+                    variantWidth = tools.getStringWidth(
+                        textVariant + "...", fontName)
+
+                textVariant += "..."
+
+            self.painter.setPen( QtGui.QColor(stylesheet.textlock) )
+            self.painter.drawText(
+                QtCore.QRectF(variantArea),
+                textVariant,
+                textOption)
+
+
+        # VERSION
+        fontVersion = UIsettings.IconDelegate.fontAssetVersion
+        self.painter.setFont(fontVersion)
+
+        # draw version text
+        offsetVersion = 13
+        nameArea = QtCore.QRect(
+            nameArea.x()                      ,
+            nameArea.y()      + offsetVersion ,
+            nameArea.width()                  ,
+            nameArea.height() - offsetVersion )
+
+        version = self.index.data(QtCore.Qt.EditRole)["data"]["version"]
+        textVersion = "version {}".format(version)
+
+        self.painter.setPen( statusColor )
+        self.painter.drawText(
+            QtCore.QRectF(nameArea),
+            textVersion,
+            textOption)
+
+        if self.iconRect.contains(self.pointer):
+
+            versionWidth = tools.getStringWidth(textVersion, fontVersion)
+            offsetPixel = 1
+
+            nameArea = QtCore.QRect(
+                nameArea.x()      + versionWidth + offsetPixel ,
+                nameArea.y()                                   ,
+                nameArea.width()  - versionWidth - offsetPixel ,
+                nameArea.height()                              )
+
+            count = self.index.data(QtCore.Qt.EditRole)["data"]["count"]
+            textCount = " // {}".format(count)
+
+            self.painter.setPen( QtGui.QColor(stylesheet.text) )
+            self.painter.drawText(
+                QtCore.QRectF(nameArea),
+                textCount,
+                textOption)
 
 
 

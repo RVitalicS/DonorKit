@@ -242,7 +242,7 @@ def getVersion (name):
 
 def getAnimationName (name):
 
-    animationTag = re.search(r"\.[A-Z_a-z]+\.usd", name)
+    animationTag = re.search(r"\.[-_A-Za-z]+\.usd", name)
     if animationTag:
         animationName = animationTag.group()
 
@@ -261,7 +261,7 @@ def getAnimationName (name):
 
 def getAssetName (name):
 
-    assetTag = re.search(r"^[A-Z_a-z]+\.", name)
+    assetTag = re.search(r"^[-_A-Za-z]+\.", name)
     if assetTag:
         assetName = assetTag.group()
 
