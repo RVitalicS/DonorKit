@@ -48,18 +48,6 @@ def validJSON (path):
 
 
 
-def keydata (dictionary, keyname):
-
-    for key, value in dictionary.items():
-        
-        if key == keyname:
-            return value
-
-
-
-
-
-
 def getStringWidth (string, font):
 
     '''

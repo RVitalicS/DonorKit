@@ -330,7 +330,7 @@ class Manager (object):
                         "repeatUV" ] and not MPlug.isDefaultValue():
 
                         value = self.getMPlugAs( MPlug, asValue=True )
-                        if not isinstance(value, type(None)):
+                        if not value is None:
                             typeString = self.getMPlugAs( MPlug, asType=True )
 
                             inputs[attrName] = dict(

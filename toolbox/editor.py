@@ -185,7 +185,7 @@ def copyAnimation ( source, target,
                     children=None ):
     
 
-    if isinstance(children, type(None)):
+    if children is None:
 
         defaultPrim = source.GetDefaultPrim()
 

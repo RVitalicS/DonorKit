@@ -531,8 +531,10 @@ class ExportWidget (QtWidgets.QDialog):
     def setLibrary (self, name=None):
 
         if name:
-            path = tools.keydata(self.libraries, name)
-            if path:
+
+            path = self.libraries.get(name, None)
+            if not path is None:
+
                 with Settings.UIManager(update=True) as uiSettings:
 
                     uiSettings["subdirLibrary"] = ""
@@ -544,9 +546,10 @@ class ExportWidget (QtWidgets.QDialog):
         with Settings.UIManager(update=False) as uiSettings:
 
             name = uiSettings["focusLibrary"]
-            path = tools.keydata(self.libraries, name)
+            
+            path = self.libraries.get(name, None)
+            if not path is None:
 
-            if path:
                 self.assetPath.setRoot(name, path)
                 return
 

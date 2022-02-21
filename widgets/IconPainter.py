@@ -246,14 +246,14 @@ class Icon (object):
         elif iconSize == 3:
             labelHeight = IconSettings.Asset.max.label
 
-        previewHeight = self.height - labelHeight
+        previewHeight = self.height - labelHeight - self.space*2
 
 
         labelArea = QtCore.QRect(
             self.pointX + self.space*2 ,
-            self.pointY + self.space + (self.height - labelHeight) ,
+            self.pointY + self.height - labelHeight ,
             self.width  - self.space*4 ,
-            self.height - self.space*3 - (self.height - labelHeight) )
+            labelHeight - self.space*2 )
 
 
 
@@ -279,26 +279,20 @@ class Icon (object):
             previewImage = QtGui.QImage(previewPath)
 
             scaledImage = previewImage.scaledToWidth(
-                self.width,
+                self.iconRect.width(),
                 QtCore.Qt.SmoothTransformation )
 
             previewY  = (previewHeight - scaledImage.height())/2
             previewY  = int(round(previewY))
-            previewY += self.pointY
+            previewY += self.pointY + self.space
 
             self.painter.drawImage(
-                QtCore.QPoint(self.pointX, previewY),
+                QtCore.QPoint(self.iconRect.x(), previewY),
                 scaledImage )
 
         else:
-            previewArea = QtCore.QRect(
-                self.pointX,
-                self.pointY,
-                self.width,
-                previewHeight )
-
             previewColor = QtGui.QColor(stylesheet.iconHilight)
-            self.painter.fillRect(previewArea, previewColor)
+            self.painter.fillRect(self.option.rect, previewColor)
 
 
 
@@ -306,10 +300,10 @@ class Icon (object):
         self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
 
         labelBackground = QtCore.QRect(
-            self.pointX                 ,
-            self.pointY + previewHeight ,
-            self.width                  ,
-            labelHeight                 )
+            self.pointX                              ,
+            self.pointY + previewHeight + self.space ,
+            self.width                               ,
+            labelHeight + self.space                 )
 
         if self.iconRect.contains(self.pointer):
             color = QtGui.QColor(stylesheet.iconHilight)
@@ -458,30 +452,29 @@ class Icon (object):
         self.painter.setPen( QtGui.QColor(stylesheet.textlock) )
         self.painter.setFont( UIsettings.IconDelegate.fontAssetLabel )
 
+        statusHeight = UIsettings.AssetBrowser.Icon.Asset.statusHeight
+
         if iconSize == 1:
-            offsetStatus = 2
             publishedWidth = int(labelArea.width()/2)
             publishedArea  = QtCore.QRect(
-                labelArea.x()                                                 ,
-                labelArea.y()      + int(labelArea.height()/2) + offsetStatus ,
-                publishedWidth                                             ,
-                labelArea.height() - int(labelArea.height()/2) - offsetStatus )
+                labelArea.x()                                           ,
+                labelArea.y() + int(labelArea.height() - statusHeight ) ,
+                publishedWidth                                          ,
+                statusHeight                                            )
         elif iconSize == 2:
-            offsetStatus = -2
             publishedWidth = int(((labelArea.width() - self.space*4)/2 )/2)
             publishedArea = QtCore.QRect(
-                labelArea.x() + labelArea.width() - publishedWidth*2 ,
-                labelArea.y()                         + offsetStatus ,
-                publishedWidth                                       ,
-                labelArea.height()                    - offsetStatus )
+                labelArea.x() + labelArea.width() - publishedWidth*2    ,
+                labelArea.y() + int(labelArea.height() - statusHeight ) ,
+                publishedWidth                                          ,
+                statusHeight                                            )
         else:
-            offsetStatus = -2
             publishedWidth = int(((labelArea.width() - self.space*8)/3 )/2)
             publishedArea = QtCore.QRect(
-                labelArea.x() + labelArea.width() - publishedWidth*2 ,
-                labelArea.y()                         + offsetStatus ,
-                publishedWidth                                       ,
-                labelArea.height()                    - offsetStatus )
+                labelArea.x() + labelArea.width() - publishedWidth*2    ,
+                labelArea.y() + int(labelArea.height() - statusHeight ) ,
+                publishedWidth                                          ,
+                statusHeight                                            )
 
         self.painter.drawText(
             QtCore.QRectF(publishedArea),

@@ -150,23 +150,24 @@ UIsettings.AssetBrowser.Icon.Asset = DataClass()
 
 UIsettings.AssetBrowser.Icon.Asset.min = DataClass()
 UIsettings.AssetBrowser.Icon.Asset.min.width = 130
-UIsettings.AssetBrowser.Icon.Asset.min.height = 150
-UIsettings.AssetBrowser.Icon.Asset.min.label = 70
+UIsettings.AssetBrowser.Icon.Asset.min.height = 152
+UIsettings.AssetBrowser.Icon.Asset.min.label = 74
 
 UIsettings.AssetBrowser.Icon.Asset.mid = DataClass()
 UIsettings.AssetBrowser.Icon.Asset.mid.width = 260
-UIsettings.AssetBrowser.Icon.Asset.mid.height = 150
-UIsettings.AssetBrowser.Icon.Asset.mid.label = 40
+UIsettings.AssetBrowser.Icon.Asset.mid.height = 187
+UIsettings.AssetBrowser.Icon.Asset.mid.label = 36
 
 UIsettings.AssetBrowser.Icon.Asset.max = DataClass()
 UIsettings.AssetBrowser.Icon.Asset.max.width = 390
-UIsettings.AssetBrowser.Icon.Asset.max.height = 300
-UIsettings.AssetBrowser.Icon.Asset.max.label = 40
+UIsettings.AssetBrowser.Icon.Asset.max.height = 260
+UIsettings.AssetBrowser.Icon.Asset.max.label = 36
 
+UIsettings.AssetBrowser.Icon.Asset.statusHeight = 26
 
 UIsettings.AssetBrowser.Icon.Preview = DataClass()
-UIsettings.AssetBrowser.Icon.Preview.width  = 390
-UIsettings.AssetBrowser.Icon.Preview.height = 300
+UIsettings.AssetBrowser.Icon.Preview.width  = 480
+UIsettings.AssetBrowser.Icon.Preview.height = 270
 
 
 UIsettings.IconDelegate = DataClass()
