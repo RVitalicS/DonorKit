@@ -33,7 +33,10 @@ from widgets import tools
 
 
 from . import ostree
-from . import mayatree
+from . import scene
+
+importlib.reload(scene)
+
 
 from . import usdmaterial
 from . import usdeditor

@@ -18,6 +18,9 @@ Add this folder path to PYTHONPATH and run from Maya Script Editor
 
 from toolbox import AssetUsd
 AssetUsd.Export()
+
+import importlib
+importlib.reload(AssetUsd)
 ```
 
 
