@@ -223,6 +223,12 @@ class Icon (object):
 
     def paintAsset (self):
 
+        # BACKGROUND
+        previewColor = QtGui.QColor(stylesheet.iconHilight)
+        self.painter.fillRect(self.option.rect, previewColor)
+
+
+        # DEFINE STATUS
         color = stylesheet.statusWIP
 
         status = self.index.data(QtCore.Qt.EditRole)["data"]["status"]
@@ -234,6 +240,7 @@ class Icon (object):
         statusColor = QtGui.QColor(color)
 
 
+        # GET SIZE
         iconSize = 1
         with Settings.UIManager(update=False) as uiSettings:
             iconSize = uiSettings["iconSize"]
@@ -259,7 +266,7 @@ class Icon (object):
 
 
 
-        # PREVIEW
+        # PREVIEW IMAGE
         previewList = self.index.data(QtCore.Qt.EditRole)["data"]["previews"]
         previewCount = len(previewList)
         if previewCount > 0:
@@ -288,53 +295,10 @@ class Icon (object):
             previewY  = int(round(previewY))
             previewY += self.pointY + self.space
 
+            self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
             self.painter.drawImage(
                 QtCore.QPoint(self.iconRect.x(), previewY),
                 scaledImage )
-
-        else:
-            previewColor = QtGui.QColor(stylesheet.iconHilight)
-            self.painter.fillRect(self.option.rect, previewColor)
-
-
-
-        # BACKGROUND
-        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-
-        labelBackground = QtCore.QRect(
-            self.pointX                              ,
-            self.pointY + previewHeight + self.space ,
-            self.width                               ,
-            labelHeight + self.space                 )
-
-        if self.iconRect.contains(self.pointer):
-            color = QtGui.QColor(stylesheet.iconHilight)
-        else:
-            color = QtGui.QColor(stylesheet.iconBackground)
-        self.painter.fillRect(labelBackground, color)
-
-
-
-        # TYPE ICON
-        typeImage = QtGui.QImage(":/icons/typeusd.png")
-
-        offsetIcon = 0
-        if iconSize == 1:
-            iconPosition = QtCore.QPoint(
-                    labelArea.x() + labelArea.width() - typeImage.width(),
-                    labelArea.y() + offsetIcon )
-        else:
-            iconPosition = QtCore.QPoint(
-                    labelArea.x()              ,
-                    labelArea.y() + offsetIcon )
-
-        self.painter.drawImage(iconPosition, typeImage)
-        spaceName -= typeImage.width()
-
-
-
-        # set antialiasing for text drawing
-        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
 
 
 
@@ -381,12 +345,52 @@ class Icon (object):
             path.addRoundedRect(tagArea, radiusTag, radiusTag)
 
             brush = QtGui.QBrush( QtGui.QColor(stylesheet.iconAnimation) )
+
+            self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
             self.painter.fillPath(path, brush)
 
+
+            self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
             self.painter.drawText(
                 QtCore.QRectF(tagArea),
                 textAnimation,
                 textOption)
+
+
+
+        # INFO AREA
+        labelBackground = QtCore.QRect(
+            self.pointX                              ,
+            self.pointY + previewHeight + self.space ,
+            self.width                               ,
+            labelHeight + self.space                 )
+
+        if self.iconRect.contains(self.pointer):
+            color = QtGui.QColor(stylesheet.iconHilight)
+        else:
+            color = QtGui.QColor(stylesheet.iconBackground)
+
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        self.painter.fillRect(labelBackground, color)
+
+
+
+        # TYPE ICON
+        typeImage = QtGui.QImage(":/icons/typeusd.png")
+
+        offsetIcon = 0
+        if iconSize == 1:
+            iconPosition = QtCore.QPoint(
+                    labelArea.x() + labelArea.width() - typeImage.width(),
+                    labelArea.y() + offsetIcon )
+        else:
+            iconPosition = QtCore.QPoint(
+                    labelArea.x()              ,
+                    labelArea.y() + offsetIcon )
+
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        self.painter.drawImage(iconPosition, typeImage)
+        spaceName -= typeImage.width()
 
 
 
@@ -424,6 +428,8 @@ class Icon (object):
                 statusHeight                                            )
             spaceName -= publishedWidth*2 + self.space*2
 
+        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
+
         self.painter.drawText(
             QtCore.QRectF(publishedArea),
             "Published",
@@ -460,6 +466,7 @@ class Icon (object):
 
         text = self.index.data(QtCore.Qt.EditRole)["data"]["published"]
 
+        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.drawText(
             QtCore.QRectF(dateArea),
             text,
@@ -482,6 +489,8 @@ class Icon (object):
             UIsettings.IconDelegate.radiusStatus)
 
         brush = QtGui.QBrush(statusColor)
+
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         self.painter.fillPath(path, brush)
 
         
@@ -494,6 +503,7 @@ class Icon (object):
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
         textOption.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
 
+        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.drawText(
             QtCore.QRectF(buttonArea),
             status,
@@ -544,6 +554,7 @@ class Icon (object):
 
             textName += "..."
 
+        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.drawText(
             QtCore.QRectF(nameArea),
             textName,
@@ -579,6 +590,8 @@ class Icon (object):
                 textVariant += "..."
 
             self.painter.setPen( QtGui.QColor(stylesheet.textlock) )
+
+            self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
             self.painter.drawText(
                 QtCore.QRectF(variantArea),
                 textVariant,
@@ -601,6 +614,8 @@ class Icon (object):
         textVersion = "version {}".format(version)
 
         self.painter.setPen( statusColor )
+
+        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.drawText(
             QtCore.QRectF(nameArea),
             textVersion,
@@ -621,6 +636,8 @@ class Icon (object):
             textCount = " // {}".format(count)
 
             self.painter.setPen( QtGui.QColor(stylesheet.text) )
+
+            self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
             self.painter.drawText(
                 QtCore.QRectF(nameArea),
                 textCount,
@@ -645,4 +662,6 @@ class Icon (object):
                     QtCore.Qt.SolidLine,
                     QtCore.Qt.RoundCap,
                     QtCore.Qt.RoundJoin)
+
+            self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
             self.painter.strokePath(outlinePath, pen)

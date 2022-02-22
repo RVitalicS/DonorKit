@@ -4,7 +4,6 @@
 
 import re
 import os
-import ctypes
 import importlib
 
 
@@ -120,7 +119,76 @@ def UsdExport (
 
 
 
-def ViewportShot (
+def commandQuery (command, flag):
+
+    result = OpenMaya.MCommandResult()
+
+    command = "{} -query -{}".format(command, flag)
+    OpenMaya.MGlobal.executeCommand(command, result)
+
+    if result.resultType() == OpenMaya.MCommandResult.kInt:
+        value = OpenMaya.intPtr()
+        result.getResult(value)
+        return value.value()
+
+    elif result.resultType() == OpenMaya.MCommandResult.kString:
+        value = [""]
+        result.getResult(value)
+        return value[0]
+
+
+
+
+
+def getDisplayPreferences ():
+
+    command = "displayPref"
+    settings = dict()
+
+    for flag in [
+        "activeObjectPivots"      ,
+        "displayAffected"         ,
+        "displayGradient"         ,
+        "materialLoadingMode"     ,
+        "maxTextureResolution"    ,
+        "regionOfEffect"          ,
+        "shadeTemplates"          ,
+        "textureDrawPixel"        ,
+        "wireframeOnShadedActive" ]:
+
+        value = commandQuery(command, flag)
+
+        if not value is None:
+            settings[flag] = value
+
+    return settings
+
+
+
+
+
+def setDisplayPreferences (settings):
+    
+    command = ['displayPref']
+
+    for flag, value in settings.items():
+
+        if type(value) == str:
+            argument = '-{} "{}"'
+        else:
+            argument = '-{} {}'
+
+        argument = argument.format(flag, value)
+        command.append(argument)
+
+    command = " ".join(command)
+    OpenMaya.MGlobal.executeCommand(command)
+
+
+
+
+
+def PlayBlast (
         path, name,
         minTime, maxTime ):
 
@@ -130,24 +198,12 @@ def ViewportShot (
     '''
 
 
-    command = 'displayPref -wsa "none";'
-    OpenMaya.MGlobal.executeCommand(command)
-
-    width  = Settings.UIsettings.AssetBrowser.Icon.Preview.width
-    height = Settings.UIsettings.AssetBrowser.Icon.Preview.height
-
-    Time = OpenMayaAnim.MAnimControl().currentTime()
-    timeBefore = Time.value()
+    displayPreferences = getDisplayPreferences()
+    setDisplayPreferences(
+        dict(wireframeOnShadedActive="none") )
 
     View = OpenMayaUI.M3dView.active3dView()
-    viewWidth = View.portWidth()
-    viewHeight = View.portHeight()
-
-
-    if minTime is None:
-        minTime = timeBefore
-    if maxTime is None:
-        maxTime = timeBefore
+    View.refresh()
 
 
     baseName = re.sub(r"\.usd[ac]*$", "", name)
@@ -163,60 +219,74 @@ def ViewportShot (
             os.remove(previewRemove)
 
 
-    timeCurrent = minTime
-    while timeCurrent <= maxTime:
+    framename    = "frame"
+    filename     = os.path.join(previewRoot, framename)
+    framePadding = 3
+    compression  = "png"
+
+    width  = Settings.UIsettings.AssetBrowser.Icon.Preview.width
+    height = Settings.UIsettings.AssetBrowser.Icon.Preview.height
+
+
+    Time = OpenMayaAnim.MAnimControl().currentTime()
+    timeBefore = Time.value()
+
+    if minTime is None:
+        minTime = timeBefore
+    if maxTime is None:
+        maxTime = timeBefore
+
+    minTime = int(minTime)
+    maxTime = int(maxTime)
+
+
+    command = [
+        "playblast",
+        "-startTime {}".format(minTime),
+        "-endTime {}".format(maxTime),
+        "-format image ",
+        '-filename "{}"'.format(filename),
+        "-sequenceTime 0",
+        "-clearCache 1",
+        "-viewer 0",
+        "-showOrnaments 0",
+        "-framePadding {}".format(framePadding),
+        "-percent 100",
+        "-compression {}".format(compression),
+        "-quality 100",
+        "-forceOverwrite",
+        "-width {}".format(width),
+        "-height {}".format(height) ]
+    command = " ".join(command)
+
+    OpenMaya.MGlobal.executeCommand(command)
+
+
+    for frame in range(minTime, maxTime+1):
+
+        padding = "{}".format(framePadding)
+
+        sourceName = "{}/{}.{:0" + padding + "d}.{}"
+        sourcePath = sourceName.format(
+            previewRoot,
+            framename,
+            frame,
+            compression )
         
-        Time.setValue(timeCurrent)
-        OpenMayaAnim.MAnimControl.setCurrentTime(Time)
-        previewName = "{}.f{:03d}.png".format(
-            baseName, int(timeCurrent) )
+        previewName = "{}/{}.f{:0" + padding + "d}.{}"
+        previewPath = previewName.format(
+            previewRoot,
+            baseName,
+            frame,
+            compression )
 
-        PreviewPath = os.path.join(
-            previewRoot ,
-            previewName )
-
-
-        Buffer = OpenMaya.MImage()
-        View.refresh()
-        View.readColorBuffer(Buffer, False)
-
-
-        pointer = ctypes.cast( int(Buffer.pixels()), ctypes.POINTER(ctypes.c_char) )
-        pointerAsString = ctypes.string_at(pointer, viewWidth * viewHeight * 4)
-
-        Image = QtGui.QImage(
-            pointerAsString,
-            viewWidth, viewHeight,
-            QtGui.QImage.Format_RGB32 )
-
-        Image = Image.mirrored(horizontal=False, vertical=True)
-
-
-        if Image.width() > width:
-            ScaledImage = Image.scaledToHeight(
-                height, QtCore.Qt.SmoothTransformation)
-
-            x = int((ScaledImage.width() - width)/2)
-            ScaledImage = ScaledImage.copy(x, 0, width, height)
-            ScaledImage.save(PreviewPath)
-
-        elif Image.height() > height:
-            ScaledImage = Image.scaledToWidth(
-                width, QtCore.Qt.SmoothTransformation)
-
-            y = int((ScaledImage.height() - height)/2)
-            ScaledImage = ScaledImage.copy(0, y, width, height)
-            ScaledImage.save(PreviewPath)
-
-
-        timeCurrent += 1.0
+        os.rename(sourcePath, previewPath)
 
 
     Time.setValue(timeBefore)
     OpenMayaAnim.MAnimControl.setCurrentTime(Time)
 
-    command = 'displayPref -wsa "full";'
-    OpenMaya.MGlobal.executeCommand(command)
+    setDisplayPreferences(displayPreferences)
 
 
 
@@ -435,6 +505,11 @@ def Export ():
                         options.assetFinal )
 
 
+                # Create/Update .metadata.json
+                with Metadata.MetadataManager(options.assetPath, "usdasset") as data:
+                    data["published"] = tools.getTimeCode()
+
+
                 # Create Preview Image
                 if os.path.exists(AssetPath):
                     ostree.build(options.assetPath, previews=True)
@@ -445,15 +520,10 @@ def Export ():
                         minTime = options.minTime
                         maxTime = options.maxTime
 
-                    ViewportShot(
+                    PlayBlast(
                         options.assetPath,
                         options.assetName,
                         minTime, maxTime )
-
-
-                # Create/Update .metadata.json
-                with Metadata.MetadataManager(options.assetPath, "usdasset") as data:
-                    data["published"] = tools.getTimeCode()
 
 
 

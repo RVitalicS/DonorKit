@@ -362,6 +362,8 @@ def getUsdPreviews (root, name):
     previews = []
     basename = re.sub(r"\.usd[ac]*$", "", name)
 
+    extension = None
+
     path = os.path.join(root, "previews")
     if not os.path.exists(path):
         return previews
@@ -369,7 +371,12 @@ def getUsdPreviews (root, name):
     for item in os.listdir(path):
         if re.search(r"^"+basename, item):
 
-            if re.search(r"\.png$", item):
+            if extension is None:
+                extension = r"\.png$"
+                if not re.search(extension, item):
+                    extension = r"\.jpg$"
+
+            if re.search(extension, item):
                 previews.append(
                     os.path.join(path, item) )
 
