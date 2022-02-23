@@ -494,9 +494,9 @@ class ExportWidget (QtWidgets.QDialog):
 
             options.minTime = self.animationOpions.rangeStartSpinbox.value()
             options.maxTime = self.animationOpions.rangeEndSpinbox.value()
-            options.fps = self.animationOpions.fpsSpinbox.value()
 
-            options.unitsMultiplier = self.mainOpions.unitSpinbox.value()
+            # options.fps = self.animationOpions.fpsSpinbox.value()
+            # options.unitsMultiplier = self.mainOpions.unitSpinbox.value()
 
             options.assetPath    = self.getAssetPath()
             options.assetName    = self.getAssetName(final=False)

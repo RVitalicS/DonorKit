@@ -543,7 +543,7 @@ class MainOpions (QtWidgets.QWidget):
         self.unitLayout.addWidget(self.unitSpinbox)
 
         self.unitGroupLayout.addLayout(self.unitLayout)
-        self.mainLayout.addLayout(self.unitGroupLayout)
+        # self.mainLayout.addLayout(self.unitGroupLayout)
 
         self.setLayout(self.mainLayout)
 

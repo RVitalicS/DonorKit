@@ -311,7 +311,7 @@ def Export ():
         if options:
 
             version = "v{:02d}".format(options.version)
-            units = 0.01 * options.unitsMultiplier
+            units = 0.01
 
 
 
