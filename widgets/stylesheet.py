@@ -63,6 +63,7 @@ properties = '''
 *[border="none"] { border: none; }
 *[border="round"] { border-radius: $RADIUS_BUTTONpx; }
 
+*[textcolor="white"] { color: $WHITE_COLOR; }
 *[textcolor="light"] { color: $TEXT_ON; }
 *[textcolor="off"] { color: $TEXT_OFF; }
 *[textcolor="lock"] { color: $TEXT_LOCK; }
@@ -172,20 +173,20 @@ QPushButton::pressed[objectName~="rangeButton"] {
 
 
 
-finalbutton = '''
-QPushButton[objectName~="finalButton"] {
+linkbutton = '''
+QPushButton[objectName~="linkButton"] {
     color: $TEXT_ON;
     background: $OPTION_BUTTON;
     border: none;
     }
 
-QPushButton:checked[objectName~="finalButton"] {
+QPushButton:checked[objectName~="linkButton"] {
     color: $TEXT_ON;
     background: $BLACK_COLOR;
     border: none;
     }
 
-QPushButton:checked[objectName~="finalButton"][overwrite="true"] {
+QPushButton:checked[objectName~="linkButton"][overwrite="true"] {
     color: $WHITE_COLOR;
     background: $VIOLET_COLOR;
     border: none;
@@ -210,6 +211,24 @@ QPushButton[objectName~="animationSwitch"] {
     background-image: url(":/icons/unchecked.png");
     background-repeat: repeat-n;
     background-position: center left;
+    }
+'''
+
+
+
+statusbutton = '''
+QPushButton[button="status"] {
+    color: $TEXT_LOCK;
+    background: none;
+    border: none;
+    Text-align: left;
+    }
+QPushButton:hover[button="status"],
+QPushButton:checked[button="status"] {
+    color: $WHITE_COLOR;
+    background: none;
+    border: none;
+    Text-align: left;
     }
 '''
 
@@ -288,7 +307,8 @@ UI = "".join([
     scrollbar,
     backbutton,
     rangebutton,
-    finalbutton,
+    linkbutton,
+    statusbutton,
     checkbutton,
     overridebutton,
     versionCombobox,

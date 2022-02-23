@@ -103,7 +103,7 @@ class ExportWidget (QtWidgets.QDialog):
         self.mainOpions.versionCombobox.currentTextChanged.connect(self.versionChoice)
         self.mainOpions.unitSpinbox.valueChanged.connect(self.unitSetting)
 
-        self.mainOpions.finalButton.released.connect(self.finalWrap)
+        self.mainOpions.linkButton.released.connect(self.linkWrap)
 
         self.exportButton.released.connect(self.exportAction)
 
@@ -176,10 +176,10 @@ class ExportWidget (QtWidgets.QDialog):
 
 
 
-    def finalWrap (self):
+    def linkWrap (self):
 
         with Settings.UIManager(update=True) as uiSettings:
-            uiSettings["final"] = self.mainOpions.finalButton.isChecked()
+            uiSettings["link"] = self.mainOpions.linkButton.isChecked()
 
         self.hilightTags("")
 
@@ -213,15 +213,15 @@ class ExportWidget (QtWidgets.QDialog):
             self.animationOpions.animationNameCombobox.setStyleSheet("")
             self.mainOpions.variantCombobox.setProperty("textcolor", "violet")
             self.mainOpions.variantCombobox.setStyleSheet("")
-            self.mainOpions.finalButton.setProperty("overwrite", "true")
+            self.mainOpions.linkButton.setProperty("overwrite", "true")
         else:
             self.animationOpions.animationNameCombobox.setProperty("textcolor", "light")
             self.animationOpions.animationNameCombobox.setStyleSheet("")
             self.mainOpions.variantCombobox.setProperty("textcolor", "light")
             self.mainOpions.variantCombobox.setStyleSheet("")
-            self.mainOpions.finalButton.setProperty("overwrite", "false")
+            self.mainOpions.linkButton.setProperty("overwrite", "false")
 
-        self.mainOpions.finalButton.setStyleSheet("")
+        self.mainOpions.linkButton.setStyleSheet("")
         self.checkExportState()
 
 
@@ -294,7 +294,7 @@ class ExportWidget (QtWidgets.QDialog):
         animation = self.animationOpions.animationNameCombobox.currentText()
 
         if final:
-            final = self.mainOpions.finalButton.isChecked()
+            final = self.mainOpions.linkButton.isChecked()
 
         return tools.createAssetName(
             name, version,
@@ -380,6 +380,19 @@ class ExportWidget (QtWidgets.QDialog):
 
 
 
+    def loadStatus (self):
+
+        directory = self.assetPath.get()
+        name = self.nameLineEdit.text()
+        path = os.path.join(directory, name)
+
+        metadataPath = os.path.join(path, self.metadata)
+        data = tools.dataread(metadataPath)
+        self.status.set(
+            data.get("status", "") )
+
+
+
     def setName (self, text):
 
         for char in [
@@ -398,16 +411,35 @@ class ExportWidget (QtWidgets.QDialog):
             self.nameLineEdit.setProperty("textcolor", "off")
             self.currentName = ""
             self.checkedName = ""
+            self.status.set()
 
         elif text in self.assetsNames:
             self.nameLineEdit.setProperty("textcolor", "violet")
+            
+            inputMatch = False
+            if not text == self.checkedName:
+                inputMatch = True
+
             self.currentName = ""
             self.checkedName = text
 
+            self.loadStatus()
+            if inputMatch:
+                self.setOptions()
+
         else:
-            self.nameLineEdit.setProperty("textcolor", "light")
+            self.nameLineEdit.setProperty("textcolor", "white")
+
+            inputMatchBreak = False
+            if not self.checkedName == "":
+                inputMatchBreak = True
+
             self.currentName = text
             self.checkedName = ""
+
+            if inputMatchBreak:
+                self.status.set()
+                self.setOptions()
 
 
         self.nameLineEdit.setStyleSheet("")
@@ -449,7 +481,6 @@ class ExportWidget (QtWidgets.QDialog):
 
         if name == self.defaultName:
             self.mainOpions.versionCombobox.addItem("01")
-
 
         else:
             directory = self.assetPath.get()
@@ -503,7 +534,9 @@ class ExportWidget (QtWidgets.QDialog):
             options.assetFinal   = self.getAssetName(final=True )
 
             options.version = int(self.mainOpions.versionCombobox.currentText())
-            options.final = self.mainOpions.finalButton.isChecked()
+            options.link = self.mainOpions.linkButton.isChecked()
+
+            options.status = self.status.get()
 
             return options
 
@@ -758,9 +791,9 @@ class ExportWidget (QtWidgets.QDialog):
             else:
                 self.mainOpions.setVisible(False)
 
-            if uiSettings["final"]:
-                self.mainOpions.finalButton.setChecked(True)
+            if uiSettings["link"]:
+                self.mainOpions.linkButton.setChecked(True)
             else:
-                self.mainOpions.finalButton.setChecked(False)
+                self.mainOpions.linkButton.setChecked(False)
 
         self.overwriteState()

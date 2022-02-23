@@ -495,7 +495,7 @@ def Export ():
 
 
                 # Create/Update Symbolic Link
-                if options.final:
+                if options.link:
 
                     if os.path.exists(options.assetFinal):
                         os.remove(options.assetFinal)
@@ -508,6 +508,7 @@ def Export ():
                 # Create/Update .metadata.json
                 with Metadata.MetadataManager(options.assetPath, "usdasset") as data:
                     data["published"] = tools.getTimeCode()
+                    data["status"]    = options.status
 
 
                 # Create Preview Image

@@ -4,12 +4,16 @@
 
 import math
 from . import stylesheet
+from . import tools
 
 
 from Qt import QtWidgets, QtCore, QtGui
 
 from . import Settings
 UIsettings = Settings.UIsettings
+
+MARGIN      = UIsettings.Options.margin
+HIGHT_THICK = UIsettings.Options.thickHight
 
 
 
@@ -457,11 +461,11 @@ class MainOpions (QtWidgets.QWidget):
         self.versionLabel.setProperty("textcolor", "light")
         self.versionLayout.addWidget(self.versionLabel)
 
-        self.finalLayout = QtWidgets.QHBoxLayout()
-        self.finalLayout.setContentsMargins(0, 0, 0, 0)
-        self.finalLayout.setSpacing(0)
-        self.finalLayout.setObjectName("finalLayout")
-        self.versionLayout.addLayout(self.finalLayout)
+        self.linkLayout = QtWidgets.QHBoxLayout()
+        self.linkLayout.setContentsMargins(0, 0, 0, 0)
+        self.linkLayout.setSpacing(0)
+        self.linkLayout.setObjectName("linkLayout")
+        self.versionLayout.addLayout(self.linkLayout)
 
         self.versionCombobox = QtWidgets.QComboBox()
         self.versionCombobox.setMaximumSize(QtCore.QSize(16777215, 18))
@@ -477,16 +481,16 @@ class MainOpions (QtWidgets.QWidget):
         self.versionCombobox.setMaxCount(100)
         self.versionCombobox.setFrame(False)
         self.versionCombobox.setObjectName("versionCombobox")
-        self.finalLayout.addWidget(self.versionCombobox)
+        self.linkLayout.addWidget(self.versionCombobox)
 
-        self.finalButton = QtWidgets.QPushButton()
-        self.finalButton.setMinimumSize(QtCore.QSize(36, 18))
-        self.finalButton.setMaximumSize(QtCore.QSize(36, 18))
-        self.finalButton.setFont(UIsettings.Options.fontLabel)
-        self.finalButton.setCheckable(True)
-        self.finalButton.setFlat(True)
-        self.finalButton.setObjectName("finalButton")
-        self.finalLayout.addWidget(self.finalButton)
+        self.linkButton = QtWidgets.QPushButton()
+        self.linkButton.setMinimumSize(QtCore.QSize(36, 18))
+        self.linkButton.setMaximumSize(QtCore.QSize(36, 18))
+        self.linkButton.setFont(UIsettings.Options.fontLabel)
+        self.linkButton.setCheckable(True)
+        self.linkButton.setFlat(True)
+        self.linkButton.setObjectName("linkButton")
+        self.linkLayout.addWidget(self.linkButton)
 
         self.mainLayout.addLayout(self.versionLayout)
 
@@ -549,8 +553,201 @@ class MainOpions (QtWidgets.QWidget):
 
         self.variantLabel.setText("Variant")
         self.versionLabel.setText("Version")
-        self.finalButton.setText("final")
+        self.linkButton.setText("link")
         self.unitLabel.setText("unit multiplier")
+        
+
+
+
+
+
+class Status (QtWidgets.QWidget):
+
+
+    def __init__ (self):
+        super(Status, self).__init__()
+
+        self.NAME = str()
+
+        self.mainLayout = QtWidgets.QHBoxLayout()
+        self.mainLayout.setSpacing(0)
+
+
+        lineWidth = UIsettings.Options.Status.lineWidth
+
+        fontLabel = UIsettings.IconDelegate.fontAssetLabel
+        metrics = QtGui.QFontMetrics(fontLabel)
+        labelHeight = metrics.capHeight()
+
+        fontButton = UIsettings.Options.fontLabel
+        metrics = QtGui.QFontMetrics(fontButton)
+        textHeight = metrics.capHeight()
+
+        buttomMargin = MARGIN - int(
+            (HIGHT_THICK - labelHeight - textHeight)/2)
+
+        self.mainLayout.setContentsMargins(
+            0, 0, 0, buttomMargin)
+
+
+        self.mark = QtWidgets.QWidget()
+        self.mark.setMinimumWidth(lineWidth)
+        self.mark.setMaximumWidth(lineWidth)
+        self.mark.setMinimumHeight(HIGHT_THICK)
+        self.mark.setMaximumHeight(HIGHT_THICK)
+
+        self.mark.setAutoFillBackground(True)
+        self.mainLayout.addWidget(self.mark)
+        
+
+        self.statusLayout = QtWidgets.QVBoxLayout()
+        self.statusLayout.setContentsMargins(
+            MARGIN-lineWidth, 0, 0, 0)
+        self.statusLayout.setSpacing(0)
+        self.mainLayout.addLayout(self.statusLayout)
+
+
+
+        self.labelLayout = QtWidgets.QHBoxLayout()
+        self.labelLayout.setContentsMargins(0, 0, 0, 0)
+        self.labelLayout.setSpacing(0)
+        self.labelLayout.setObjectName("labelLayout")
+        self.statusLayout.addLayout(self.labelLayout)
+
+
+        self.labelStatus = QtWidgets.QLabel("STATUS")
+        self.labelStatus.setObjectName("labelStatus")
+        self.labelStatus.setProperty("textcolor", "lock")
+
+        self.labelStatus.setFont(fontLabel)
+        self.labelStatus.setMinimumHeight(labelHeight)
+        self.labelStatus.setMaximumHeight(labelHeight)
+        self.labelLayout.addWidget(self.labelStatus)
+
+        labelSpacer = QtWidgets.QSpacerItem(
+            0, 0,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum)
+        self.labelLayout.addItem(labelSpacer)
+
+
+        self.buttonsLayout = QtWidgets.QHBoxLayout()
+        self.buttonsLayout.setContentsMargins(0, 0, 0, 0)
+        self.buttonsLayout.setSpacing(0)
+        self.statusLayout.addLayout(self.buttonsLayout)
+
+        self.buttonList = []
+        for name in Settings.STATUS_LIST:
+            self.NAME = name
+
+            self.button = QtWidgets.QPushButton(name)
+            self.button.setProperty("button", "status")
+            self.button.setFont(fontButton)
+            self.button.setCheckable(True)
+            self.button.setFlat(True)
+
+            self.button.pressed.connect(self.uncheckButtons)
+            self.button.released.connect(self.checkButton)
+
+            widthButton  = tools.getStringWidth(name, fontButton)
+            widthButton += UIsettings.Options.Status.space
+            self.button.setMinimumWidth(widthButton)
+            self.button.setMaximumWidth(widthButton)
+
+            self.buttonList.append(self.button)
+            self.buttonsLayout.addWidget(self.button)
+
+        self.set()
+
+
+        buttonsSpacer = QtWidgets.QSpacerItem(
+            0, 0,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum)
+        self.buttonsLayout.addItem(buttonsSpacer)
+
+
+        statusSpacer = QtWidgets.QSpacerItem(
+            0, 0,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum)
+        self.mainLayout.addItem(statusSpacer)
+
+        self.setLayout(self.mainLayout)
+
+
+
+    def set (self, status="WIP"):
+        self.NAME = status
+        self.setColor()
+        self.checkButton()
+        self.setVisibility()
+
+
+
+    def get (self):
+
+        return self.NAME
+
+
+
+    def uncheckButtons (self):
+
+        for button in self.buttonList:
+            if button.isDown():
+                self.NAME = button.text()
+            button.setChecked(False)
+
+        self.setColor()
+
+
+
+    def checkButton (self):
+
+        for button in self.buttonList:
+            if button.text() == self.NAME:
+                button.setChecked(True)
+
+
+
+    def setColor(self):
+        
+        color = stylesheet.statusWIP
+        if self.NAME == "Final":
+            color = stylesheet.statusFinal
+        elif self.NAME == "Completed":
+            color = stylesheet.statusCompleted
+
+        palette = QtGui.QPalette()
+        palette.setColor(
+            QtGui.QPalette.Background,
+            color )
+        self.mark.setPalette(palette)
+
+
+
+    def enterEvent (self, event):
+        super(Status, self).enterEvent(event)
+
+        for button in self.buttonList:
+            button.setVisible(True)
+
+
+
+    def leaveEvent (self, event):
+        super(Status, self).leaveEvent(event)
+        self.setVisibility()
+
+
+
+    def setVisibility (self):
+        for button in self.buttonList:
+            if button.text() == self.NAME:
+                button.setVisible(True)
+            else:
+                button.setVisible(False)
+
+
         
 
 
@@ -577,12 +774,20 @@ def setupUi (parent, ListViewLayout):
     parent.mainLayout.setObjectName("mainLayout")
     parent.mainLayout.addItem(ListViewLayout)
 
+    parent.wrappLayout = QtWidgets.QVBoxLayout()
+    parent.wrappLayout.setContentsMargins(0, 0, 0, 0)
+    parent.wrappLayout.setSpacing(0)
+    parent.wrappLayout.setObjectName("wrappLayout")
+
     parent.optionLayout = QtWidgets.QVBoxLayout()
-    parent.optionLayout.setContentsMargins(30, 0, 30, 30)
+    parent.optionLayout.setContentsMargins(MARGIN, 0, MARGIN, 0)
     parent.optionLayout.setSpacing(0)
     parent.optionLayout.setObjectName("optionLayout")
+    parent.wrappLayout.addLayout(parent.optionLayout)
+
+
     parent.nameLayout = QtWidgets.QHBoxLayout()
-    parent.nameLayout.setContentsMargins(0, 16, 0, 30)
+    parent.nameLayout.setContentsMargins(0, 16, 0, MARGIN)
     parent.nameLayout.setSpacing(0)
     parent.nameLayout.setObjectName("nameLayout")
     parent.nameLineEdit = NameLine(parent, parent.defaultName)
@@ -591,8 +796,8 @@ def setupUi (parent, ListViewLayout):
     sizePolicy.setVerticalStretch(0)
     sizePolicy.setHeightForWidth(parent.nameLineEdit.sizePolicy().hasHeightForWidth())
     parent.nameLineEdit.setSizePolicy(sizePolicy)
-    parent.nameLineEdit.setMinimumSize(QtCore.QSize(0, 32))
-    parent.nameLineEdit.setMaximumSize(QtCore.QSize(16777215, 32))
+    parent.nameLineEdit.setMinimumSize(QtCore.QSize(0, HIGHT_THICK))
+    parent.nameLineEdit.setMaximumSize(QtCore.QSize(16777215, HIGHT_THICK))
     parent.nameLineEdit.setSizeIncrement(QtCore.QSize(0, 0))
     parent.nameLineEdit.setBaseSize(QtCore.QSize(0, 0))
     parent.nameLineEdit.setFont(UIsettings.Options.fontLabel)
@@ -603,8 +808,8 @@ def setupUi (parent, ListViewLayout):
     parent.nameLineEdit.setProperty("textcolor", "off")
     parent.nameLineEdit.setTextMargins(10, 0, 0, 0)
     parent.nameLayout.addWidget(parent.nameLineEdit)
-
     parent.optionLayout.addLayout(parent.nameLayout)
+
     parent.modelingLayout = QtWidgets.QHBoxLayout()
     parent.modelingLayout.setContentsMargins(0, 0, 0, 4)
     parent.modelingLayout.setSpacing(10)
@@ -716,21 +921,25 @@ def setupUi (parent, ListViewLayout):
     parent.optionLayout.addItem(optionSpacer)
 
 
+    parent.status = Status()
+    parent.wrappLayout.addWidget(parent.status)
+
+
     parent.exportLayout = QtWidgets.QHBoxLayout()
-    parent.exportLayout.setContentsMargins(0, 30, 0, 0)
+    parent.exportLayout.setContentsMargins(MARGIN, 0, MARGIN, MARGIN)
     parent.exportLayout.setSpacing(10)
     parent.exportLayout.setObjectName("exportLayout")
 
     parent.exportButton = ExportButton(parent)
-    parent.exportButton.setMinimumHeight(32)
+    parent.exportButton.setMinimumHeight(HIGHT_THICK)
     parent.exportButton.setFont(UIsettings.Options.fontLabel)
     parent.exportButton.setFlat(True)
     parent.exportButton.setObjectName("exportButton")
     parent.exportButton.setProperty("state", "disabled")
     parent.exportLayout.addWidget(parent.exportButton)
 
-    parent.optionLayout.addLayout(parent.exportLayout)
-    parent.mainLayout.addLayout(parent.optionLayout)
+    parent.wrappLayout.addLayout(parent.exportLayout)
+    parent.mainLayout.addLayout(parent.wrappLayout)
 
     parent.mainLayout.setStretch(0, 1)
     parent.verticalLayout.addLayout(parent.mainLayout)

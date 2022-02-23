@@ -12,6 +12,16 @@ from Qt import QtGui
 
 
 
+STATUS_LIST = [
+    "Final",
+    "Completed",
+    "WIP" ]
+
+
+
+
+
+
 
 class UI (object):
 
@@ -31,7 +41,7 @@ class UI (object):
             rangeStart=1,
             rangeEnd=1,
             fps=30,
-            final=True,
+            link=True,
             unitsMultiplier=1.0,
             scrollPosition=0.0 )
 
@@ -193,9 +203,17 @@ UIsettings.IconDelegate.Animation.font   = makeFont( size=7, bold=False, weight=
 
 UIsettings.Options = DataClass()
 
+UIsettings.Options.margin     = 30
+UIsettings.Options.thickHight = 32
+
 UIsettings.Options.fontLabel = makeFont( size=9, bold=False, weight=50 )
 UIsettings.Options.fontOverwrite = makeFont( size=7, bold=False, weight=50 )
 
 UIsettings.Options.Export = DataClass()
 UIsettings.Options.Export.patternThickness = 11
 UIsettings.Options.Export.font = makeFont( size=9, bold=False, weight=50 )
+
+
+UIsettings.Options.Status = DataClass()
+UIsettings.Options.Status.lineWidth = 4
+UIsettings.Options.Status.space     = 6
