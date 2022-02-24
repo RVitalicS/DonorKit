@@ -105,6 +105,7 @@ class ExportWidget (QtWidgets.QDialog):
 
         self.mainOpions.linkButton.released.connect(self.linkWrap)
 
+        self.exportButton.pressed.connect(self.exportQuery)
         self.exportButton.released.connect(self.exportAction)
 
 
@@ -222,7 +223,6 @@ class ExportWidget (QtWidgets.QDialog):
             self.mainOpions.linkButton.setProperty("overwrite", "false")
 
         self.mainOpions.linkButton.setStyleSheet("")
-        self.checkExportState()
 
 
 
@@ -302,36 +302,6 @@ class ExportWidget (QtWidgets.QDialog):
             animation=animation,
             final=final,
             extension=extension )
-
-
-
-    def exportAction (self):
-
-        if self.exportButton.property("state") == "enabled":
-            self.exported = True
-            self.close()
-
-
-
-    def checkExportState (self):
-
-        modelingOn  = self.modelingSwitch.isChecked()
-        surfacingOn = self.surfacingSwitch.isChecked()
-        animationOn = self.animationSwitch.isChecked()
-        text = self.animationOpions.animationNameCombobox.currentText()
-
-        self.exportButton.setProperty("state", "disabled")
-
-        if not modelingOn and not surfacingOn and not animationOn:
-            pass
-        elif animationOn and not text:
-            pass
-        elif self.nameLineEdit.text() == self.defaultName:
-            pass
-        else:
-            self.exportButton.setProperty("state", "enabled")
-        
-        self.exportButton.setStyleSheet("")
 
 
 
@@ -439,11 +409,10 @@ class ExportWidget (QtWidgets.QDialog):
 
             if inputMatchBreak:
                 self.status.set()
-                self.setOptions()
+                self.setOptions(force=True)
 
 
         self.nameLineEdit.setStyleSheet("")
-        self.checkExportState()
 
 
         model = self.AssetBrowser.model()
@@ -464,8 +433,17 @@ class ExportWidget (QtWidgets.QDialog):
 
 
 
-    def setOptions (self):
+    def setOptions (self, force=False):
 
+        # in name the same do nothing
+        if not force:
+            name = self.currentName
+            text = self.nameLineEdit.text()
+            if name:
+                if name == text: return
+
+
+        # set asset name text
         if self.checkedName:
             name = self.checkedName
         elif self.currentName:
@@ -476,12 +454,14 @@ class ExportWidget (QtWidgets.QDialog):
         self.nameLineEdit.setText(name)
 
 
+        # set default options
         self.mainOpions.versionCombobox.clear()
-
 
         if name == self.defaultName:
             self.mainOpions.versionCombobox.addItem("01")
 
+
+        # load asset options
         else:
             directory = self.assetPath.get()
             name = self.nameLineEdit.text()
@@ -797,3 +777,33 @@ class ExportWidget (QtWidgets.QDialog):
                 self.mainOpions.linkButton.setChecked(False)
 
         self.overwriteState()
+
+
+
+    def exportQuery (self):
+
+        modelingOn  = self.modelingSwitch.isChecked()
+        surfacingOn = self.surfacingSwitch.isChecked()
+        animationOn = self.animationSwitch.isChecked()
+        text = self.animationOpions.animationNameCombobox.currentText()
+
+        self.exportButton.setProperty("state", "disabled")
+
+        if not modelingOn and not surfacingOn and not animationOn:
+            pass
+        elif animationOn and not text:
+            pass
+        elif self.nameLineEdit.text() == self.defaultName:
+            pass
+        else:
+            self.exportButton.setProperty("state", "enabled")
+
+        self.exportButton.setStyleSheet("")
+
+
+
+    def exportAction (self):
+
+        if self.exportButton.property("state") == "enabled":
+            self.exported = True
+            self.close()

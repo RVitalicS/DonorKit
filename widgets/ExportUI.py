@@ -587,7 +587,7 @@ class Status (QtWidgets.QWidget):
             (HIGHT_THICK - labelHeight - textHeight)/2)
 
         self.mainLayout.setContentsMargins(
-            0, 0, 0, buttomMargin)
+            0, MARGIN, 0, buttomMargin)
 
 
         self.mark = QtWidgets.QWidget()
