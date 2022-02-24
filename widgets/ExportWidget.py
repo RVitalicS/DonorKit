@@ -272,6 +272,7 @@ class ExportWidget (QtWidgets.QDialog):
             uiSettings["iconSize"] = value
 
         self.AssetBrowser.setGrid()
+        self.AssetBrowser.repaint()
 
 
 
@@ -324,7 +325,12 @@ class ExportWidget (QtWidgets.QDialog):
         if data:
             dataType = data["type"]
 
-            if dataType == "folder":
+            if dataType == "library":
+                name = data["data"]["name"]
+                self.setLibrary(name)
+                return
+
+            elif dataType == "folder":
                 name = data["data"]["name"]
                 self.assetPath.moveForward(name)
                 self.checkedName = ""
@@ -543,6 +549,8 @@ class ExportWidget (QtWidgets.QDialog):
 
     def setLibrary (self, name=None):
 
+        self.assetPath.setVisible(True)
+
         if name:
 
             path = self.libraries.get(name, None)
@@ -638,15 +646,40 @@ class ExportWidget (QtWidgets.QDialog):
 
 
 
+    def getLibraries (self):
+    
+        libraries = []
+
+        for name, path in self.libraries.items():
+            libraries.append(
+                dict(type="library", data=dict(
+                    name=name )) )
+
+        return libraries
+
+
+
     def drawBrowserItems (self, path):
 
-        library = self.getDirItems(path)
+        if not path:
+            self.assetPath.setVisible(False)
+            library = self.getLibraries()
+        else:
+            library = self.getDirItems(path)
 
-        hasFolder = False
-        hasAsset  = False
+
+        hasLibrary = False
+        hasFolder  = False
+        hasAsset   = False
         for item in library:
-            if hasFolder and hasAsset:
+            if hasLibrary:
                 break
+            elif hasFolder and hasAsset:
+                break
+
+            elif item["type"] == "library" and not hasLibrary:
+                hasLibrary = True
+                library.append( dict(type="labellibrary", data=dict(text="Libraries")) )
 
             elif item["type"] == "folder" and not hasFolder:
                 hasFolder = True
@@ -660,11 +693,6 @@ class ExportWidget (QtWidgets.QDialog):
         iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
 
         for item in library:
-
-            if item["type"] == "asset":
-                hasAsset = True
-            else:
-                hasFolder = True
 
             iconItem = QtGui.QStandardItem()
 
@@ -794,6 +822,8 @@ class ExportWidget (QtWidgets.QDialog):
         elif animationOn and not text:
             pass
         elif self.nameLineEdit.text() == self.defaultName:
+            pass
+        elif self.assetPath.isHidden():
             pass
         else:
             self.exportButton.setProperty("state", "enabled")

@@ -109,6 +109,63 @@ class AssetBrowser (QtWidgets.QListView):
             offsetAsset = 0
 
 
+
+        # library label
+        hasLibrary = False
+        positionX = margin
+        positionY  = UIsettings.AssetBrowser.margin
+        positionY += UIsettings.Path.height
+        for index in range(model.rowCount()):
+
+            item = model.item(index)
+            data = item.data(QtCore.Qt.EditRole)
+
+            if data["type"] == "labellibrary":
+                hasLibrary = True
+
+                item.setSizeHint(
+                    QtCore.QSize(
+                        folderWidth,
+                        folderHeight ))
+
+                self.setPositionForIndex(
+                    QtCore.QPoint(positionX, positionY), 
+                    model.index(index, 0) )
+
+                positionX  = margin
+                positionY +=  folderHeight
+                break
+
+
+        # libraries loop
+        if hasLibrary:
+            for index in range(model.rowCount()):
+
+                item = model.item(index)
+                data = item.data(QtCore.Qt.EditRole)
+
+                if data["type"] == "library":
+                    
+                    if positionX + folderWidth + offsetFolder*2 > widgetWidth + margin:
+                        positionX  = margin
+                        positionY += folderHeight
+
+                    item.setSizeHint(
+                        QtCore.QSize(
+                            folderWidth,
+                            folderHeight ))
+
+                    self.setPositionForIndex(
+                        QtCore.QPoint(positionX, positionY), 
+                        model.index(index, 0) )
+
+                    positionX += folderWidth + offsetFolder
+
+            positionX  = margin
+            positionY += margin + folderHeight
+
+
+
         # folders label
         hasFolder = False
         positionX = margin
@@ -163,6 +220,7 @@ class AssetBrowser (QtWidgets.QListView):
             positionY += margin + folderHeight
 
 
+
         # assets label
         hasAsset = False
         for index in range(model.rowCount()):
@@ -211,13 +269,12 @@ class AssetBrowser (QtWidgets.QListView):
                     positionX += assetWidth + offsetAsset
 
 
+
         with Settings.UIManager(update=False) as uiSettings:
             scrollPosition = uiSettings["scrollPosition"]
 
             self.verticalScrollBar().setValue(
                 self.intScrollPosition(scrollPosition) )
-
-        self.repaint()
 
 
 

@@ -185,6 +185,7 @@ UIsettings.IconDelegate.space  = 6
 UIsettings.IconDelegate.radius = 6
 UIsettings.IconDelegate.radiusStatus = 2
 
+UIsettings.IconDelegate.fontLibraries   = makeFont( size=11, bold=False, weight=50 )
 UIsettings.IconDelegate.fontCategory    = makeFont( size=8, bold=False, weight=50 )
 UIsettings.IconDelegate.fontFolderName  = makeFont( size=9, bold=False, weight=50 )
 UIsettings.IconDelegate.fontFolderItems = makeFont( size=7, bold=False, weight=20 )

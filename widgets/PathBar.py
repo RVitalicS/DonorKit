@@ -143,6 +143,10 @@ class PathBar (QtWidgets.QWidget):
 
     def moveBack (self):
 
+        if not self.pathLine.text():
+            self.pathChanged.emit("")
+            return
+
         subdir = os.path.dirname(self.pathLine.text())
         path   = os.path.join(self.root, subdir)
 

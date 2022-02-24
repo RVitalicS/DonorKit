@@ -16,6 +16,24 @@ UIsettings = Settings.UIsettings
 
 
 
+def background (function):
+
+    def wrapped(self):
+
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        if self.iconRect.contains(self.pointer):
+            color = QtGui.QColor(stylesheet.folderHilight)
+        else:
+            color = QtGui.QColor(stylesheet.iconBackground)
+        self.painter.fillRect(self.iconRect, color)
+
+        function(self)
+
+    return wrapped
+
+
+
+
 
 
 class Icon (object):
@@ -83,15 +101,50 @@ class Icon (object):
         self.painter.setPen(QtCore.Qt.NoPen)
         
 
-        if iconType in ["labelfolder", "labelasset"]:
+        if iconType in [ "labellibrary" ]:
+            if not self.editing:
+                self.paintCategory()
+        
+        elif iconType in [
+                "labelfolder" ,
+                "labelasset"  ]:
             if not self.editing:
                 self.paintLabel()
+
+        elif iconType == "library":
+            self.paintLibrary()
 
         elif iconType == "folder":
             self.paintFolder()
 
         elif iconType == "asset":
             self.paintAsset()
+
+
+
+    def paintCategory (self):
+        
+        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
+        self.painter.setPen(
+            QtGui.QPen(
+                QtGui.QBrush( QtGui.QColor(stylesheet.text) ),
+                0,
+                QtCore.Qt.SolidLine,
+                QtCore.Qt.RoundCap,
+                QtCore.Qt.RoundJoin) )
+
+        self.painter.setFont( UIsettings.IconDelegate.fontLibraries )
+
+        text = self.index.data(QtCore.Qt.EditRole)["data"]["text"]
+
+        textOption = QtGui.QTextOption()
+        textOption.setWrapMode(QtGui.QTextOption.NoWrap)
+        textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+
+        self.painter.drawText(
+            QtCore.QRectF(self.iconRect),
+            text,
+            textOption)
 
 
 
@@ -108,13 +161,81 @@ class Icon (object):
 
         self.painter.setFont( UIsettings.IconDelegate.fontCategory )
 
-        nameArea = QtCore.QRect(
-            self.pointX + self.space   ,
-            self.pointY + self.space   ,
-            self.width  - self.space*2 ,
-            self.height - self.space*2 )
-
         text = self.index.data(QtCore.Qt.EditRole)["data"]["text"]
+
+        textOption = QtGui.QTextOption()
+        textOption.setWrapMode(QtGui.QTextOption.NoWrap)
+        textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+
+        self.painter.drawText(
+            QtCore.QRectF(self.iconRect),
+            text,
+            textOption)
+
+
+
+    def paintLibrary (self):
+
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+        if self.iconRect.contains(self.pointer):
+            colorBackground = QtGui.QColor(stylesheet.folderHilight)
+            colorText = stylesheet.white
+            libraryImage = QtGui.QImage(":/icons//library-hover.png")
+
+        else:
+            colorBackground = QtGui.QColor(stylesheet.iconBackground)
+            colorText = stylesheet.text
+            libraryImage = QtGui.QImage(":/icons//library.png")
+
+
+        # BACKGROUND
+        self.painter.fillRect(self.iconRect, colorBackground)
+
+        borderWidth = 1
+        borderRect = QtCore.QRect(
+            self.iconRect.x()      + borderWidth    ,
+            self.iconRect.y()      + borderWidth    ,
+            self.iconRect.width()  - borderWidth *2 ,
+            self.iconRect.height() - borderWidth *2 )
+
+        color = QtGui.QColor(stylesheet.browserBackground)
+        self.painter.fillRect(borderRect, color.lighter(107))
+
+
+        # ICON
+        offsetIcon = int((
+            self.height - self.space*2 - libraryImage.height() )/2)
+
+        iconPosition = QtCore.QPoint(
+                self.pointX + self.space + offsetIcon,
+                self.pointY + self.space + offsetIcon)
+
+        self.painter.drawImage(iconPosition, libraryImage)
+
+
+        # NAME
+        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
+        self.painter.setPen(
+            QtGui.QPen(
+                QtGui.QBrush( QtGui.QColor(colorText) ),
+                0,
+                QtCore.Qt.SolidLine,
+                QtCore.Qt.RoundCap,
+                QtCore.Qt.RoundJoin) )
+
+        offsetText = 1
+        self.painter.setFont( UIsettings.IconDelegate.fontFolderName )
+
+        offsetName = libraryImage.width() + offsetIcon*2
+        nameArea = QtCore.QRect(
+            self.iconRect.x()      + offsetName ,
+            self.iconRect.y()                   ,
+            self.iconRect.width()  - offsetName ,
+            self.iconRect.height()              )
+
+
+        text = self.index.data(QtCore.Qt.EditRole)["data"]["name"]
 
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
