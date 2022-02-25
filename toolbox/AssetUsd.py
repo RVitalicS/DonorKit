@@ -510,6 +510,9 @@ def Export ():
                     data["published"] = tools.getTimeCode()
                     data["status"]    = options.status
 
+                    if options.comment:
+                        data["comments"][options.assetName] = options.comment
+
 
                 # Create Preview Image
                 if os.path.exists(AssetPath):

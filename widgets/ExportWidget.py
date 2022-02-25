@@ -18,6 +18,7 @@ from . import BottomBar
 
 from . import ExportUI
 
+from . import Metadata
 from . import Settings
 UIsettings = Settings.UIsettings
 
@@ -54,7 +55,7 @@ class ExportWidget (QtWidgets.QDialog):
         self.connectUi()
         self.applySettings()
 
-        self.metadata  = ".metadata.json"
+        self.metadata  = Metadata.NAME
         self.libraries = self.getAssetRoots()
         self.setLibrary()
 
@@ -75,7 +76,7 @@ class ExportWidget (QtWidgets.QDialog):
         self.assetPath.pathChanged.connect(self.drawBrowserItems)
         self.BottomBar.previewSlider.valueChanged.connect(self.sliderAction)
 
-        self.nameLineEdit.textChanged.connect(self.setName)
+        self.nameEdit.textChanged.connect(self.setName)
 
         self.modelingSwitch.released.connect(self.partitionExport)
         self.surfacingSwitch.released.connect(self.partitionExport)
@@ -92,14 +93,14 @@ class ExportWidget (QtWidgets.QDialog):
         self.animationOverwrite.released.connect(
             self.animationOverwriteSetting )
 
-        self.animationOpions.animationNameCombobox.currentTextChanged.connect(self.hilightTags)
+        self.animationOpions.animationNameCombobox.currentTextChanged.connect(self.interpretTags)
         self.animationOpions.rangeStartSpinbox.valueChanged.connect(self.setRangeStart)
         self.animationOpions.rangeEndSpinbox.valueChanged.connect(self.setRangeEnd)
         self.animationOpions.fpsSpinbox.valueChanged.connect(self.fpsSetting)
 
         self.animationOpions.rangeButton.released.connect(self.getRange)
 
-        self.mainOpions.variantCombobox.currentTextChanged.connect(self.hilightTags)
+        self.mainOpions.variantCombobox.currentTextChanged.connect(self.interpretTags)
         self.mainOpions.versionCombobox.currentTextChanged.connect(self.versionChoice)
         self.mainOpions.unitSpinbox.valueChanged.connect(self.unitSetting)
 
@@ -182,11 +183,11 @@ class ExportWidget (QtWidgets.QDialog):
         with Settings.UIManager(update=True) as uiSettings:
             uiSettings["link"] = self.mainOpions.linkButton.isChecked()
 
-        self.hilightTags("")
+        self.interpretTags("")
 
 
 
-    def hilightTags (self, choice):
+    def interpretTags (self, choice):
 
         hilight = False
 
@@ -207,6 +208,14 @@ class ExportWidget (QtWidgets.QDialog):
 
             if nameVersion == comboVersion:
                 hilight = True
+
+
+        filename = self.getAssetName(final=False)
+        comment = tools.getComment(assetpath, filename)
+        if not comment:
+            self.commentEdit.setDefault()
+        else:
+            self.commentEdit.set(comment)
 
 
         if hilight:
@@ -230,7 +239,7 @@ class ExportWidget (QtWidgets.QDialog):
 
         if text:
             directory = self.assetPath.get()
-            name = self.nameLineEdit.text()
+            name = self.nameEdit.text()
             path = os.path.join(directory, name)
 
             version = int(text)
@@ -262,7 +271,8 @@ class ExportWidget (QtWidgets.QDialog):
 
             self.mainOpions.versionCombobox.setStyleSheet("")
 
-            self.hilightTags("")
+
+            self.interpretTags("")
 
 
 
@@ -280,13 +290,13 @@ class ExportWidget (QtWidgets.QDialog):
 
         return os.path.join(
             self.assetPath.get(),
-            self.nameLineEdit.text() )
+            self.nameEdit.text() )
 
 
 
     def getAssetName (self, final=True, extension="usda"):
 
-        name = self.nameLineEdit.text()
+        name = self.nameEdit.text()
 
         version = self.mainOpions.versionCombobox.currentText()
         version = int(version)
@@ -308,13 +318,24 @@ class ExportWidget (QtWidgets.QDialog):
 
     def partitionExport (self):
 
+        animationSwitchChanged = False
+
         with Settings.UIManager(update=True) as uiSettings:
+
+            animationSwitchBefore = uiSettings["animation"]
+            animationSwitchAfter = self.animationSwitch.isChecked()
+            if animationSwitchBefore != animationSwitchAfter:
+                animationSwitchChanged = True
 
             uiSettings["modelling"] = self.modelingSwitch.isChecked()
             uiSettings["surfacing"] = self.surfacingSwitch.isChecked()
             uiSettings["animation"] = self.animationSwitch.isChecked()
 
         self.applySettings()
+
+        if animationSwitchChanged:
+            version = self.mainOpions.versionCombobox.currentText()
+            self.versionChoice(version)
 
 
 
@@ -359,7 +380,7 @@ class ExportWidget (QtWidgets.QDialog):
     def loadStatus (self):
 
         directory = self.assetPath.get()
-        name = self.nameLineEdit.text()
+        name = self.nameEdit.text()
         path = os.path.join(directory, name)
 
         metadataPath = os.path.join(path, self.metadata)
@@ -380,17 +401,17 @@ class ExportWidget (QtWidgets.QDialog):
 
             text = text.replace(char, "")
 
-        self.nameLineEdit.setText(text)
+        self.nameEdit.setText(text)
 
 
         if text == self.defaultName:
-            self.nameLineEdit.setProperty("textcolor", "off")
+            self.nameEdit.setProperty("textcolor", "off")
             self.currentName = ""
             self.checkedName = ""
             self.status.set()
 
         elif text in self.assetsNames:
-            self.nameLineEdit.setProperty("textcolor", "violet")
+            self.nameEdit.setProperty("textcolor", "violet")
             
             inputMatch = False
             if not text == self.checkedName:
@@ -404,7 +425,7 @@ class ExportWidget (QtWidgets.QDialog):
                 self.setOptions()
 
         else:
-            self.nameLineEdit.setProperty("textcolor", "white")
+            self.nameEdit.setProperty("textcolor", "white")
 
             inputMatchBreak = False
             if not self.checkedName == "":
@@ -418,7 +439,7 @@ class ExportWidget (QtWidgets.QDialog):
                 self.setOptions(force=True)
 
 
-        self.nameLineEdit.setStyleSheet("")
+        self.nameEdit.setStyleSheet("")
 
 
         model = self.AssetBrowser.model()
@@ -444,7 +465,7 @@ class ExportWidget (QtWidgets.QDialog):
         # in name the same do nothing
         if not force:
             name = self.currentName
-            text = self.nameLineEdit.text()
+            text = self.nameEdit.text()
             if name:
                 if name == text: return
 
@@ -457,7 +478,7 @@ class ExportWidget (QtWidgets.QDialog):
         else:
             name = self.defaultName
 
-        self.nameLineEdit.setText(name)
+        self.nameEdit.setText(name)
 
 
         # set default options
@@ -470,7 +491,7 @@ class ExportWidget (QtWidgets.QDialog):
         # load asset options
         else:
             directory = self.assetPath.get()
-            name = self.nameLineEdit.text()
+            name = self.nameEdit.text()
             path = os.path.join(directory, name)
 
             versionList = tools.getVersionList(path)
@@ -522,6 +543,7 @@ class ExportWidget (QtWidgets.QDialog):
             options.version = int(self.mainOpions.versionCombobox.currentText())
             options.link = self.mainOpions.linkButton.isChecked()
 
+            options.comment = self.commentEdit.get()
             options.status = self.status.get()
 
             return options
@@ -821,7 +843,7 @@ class ExportWidget (QtWidgets.QDialog):
             pass
         elif animationOn and not text:
             pass
-        elif self.nameLineEdit.text() == self.defaultName:
+        elif self.nameEdit.text() == self.defaultName:
             pass
         elif self.assetPath.isHidden():
             pass

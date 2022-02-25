@@ -20,21 +20,28 @@ HIGHT_THICK = UIsettings.Options.thickHight
 
 
 
-class NameLine (QtWidgets.QLineEdit):
+class NameEdit (QtWidgets.QLineEdit):
 
 
-    def __init__ (self, parent, text):
-        super(NameLine, self).__init__(parent)
+    def __init__ (self, text):
+        super(NameEdit, self).__init__()
 
         self.defaultName = text
         self.setText(text)
 
 
     def mousePressEvent (self, event):
-        super(NameLine, self).mousePressEvent(event)
+        super(NameEdit, self).mousePressEvent(event)
 
         if self.text() == self.defaultName:
             self.setText("")
+
+
+    def leaveEvent (self, event):
+        super(NameEdit, self).leaveEvent(event)
+
+        if not self.text():
+            self.setText(self.defaultName)
         
 
 
@@ -44,8 +51,8 @@ class NameLine (QtWidgets.QLineEdit):
 class ExportButton (QtWidgets.QPushButton):
 
 
-    def __init__ (self, parent):
-        super(ExportButton, self).__init__(parent)
+    def __init__ (self):
+        super(ExportButton, self).__init__()
 
         self.setMinimumWidth(210)
         self.setMaximumWidth(210)
@@ -228,8 +235,8 @@ class ExportButton (QtWidgets.QPushButton):
 
 class AnimationOpions (QtWidgets.QWidget):
 
-    def __init__ (self, parent):
-        super(AnimationOpions, self).__init__(parent)
+    def __init__ (self):
+        super(AnimationOpions, self).__init__()
 
         self.setMinimumWidth(210)
         self.setMaximumWidth(210)
@@ -404,8 +411,8 @@ class AnimationOpions (QtWidgets.QWidget):
 
 class MainOpions (QtWidgets.QWidget):
 
-    def __init__ (self, parent):
-        super(MainOpions, self).__init__(parent)
+    def __init__ (self):
+        super(MainOpions, self).__init__()
 
         self.setMinimumWidth(210)
         self.setMaximumWidth(210)
@@ -555,6 +562,58 @@ class MainOpions (QtWidgets.QWidget):
         self.versionLabel.setText("Version")
         self.linkButton.setText("link")
         self.unitLabel.setText("unit multiplier")
+
+
+
+
+
+
+class CommentEdit (QtWidgets.QTextEdit):
+
+
+    def __init__ (self, text):
+        super(CommentEdit, self).__init__()
+
+        self.defaultName = text
+        self.setPlainText(text)
+
+        self.setProperty("textcolor", "disabled")
+
+
+    def get (self):
+
+        text = self.toPlainText()
+        if text == self.defaultName:
+            text = ""
+        return text
+
+
+    def set (self, text):
+
+        self.setPlainText(text)
+        self.setProperty("textcolor", "light")
+        self.setStyleSheet("")
+
+
+    def setDefault (self):
+
+        self.setPlainText(self.defaultName)
+        self.setProperty("textcolor", "disabled")
+        self.setStyleSheet("")
+
+
+    def mousePressEvent (self, event):
+        super(CommentEdit, self).mousePressEvent(event)
+
+        if self.toPlainText() == self.defaultName:
+            self.set("")
+
+
+    def leaveEvent (self, event):
+        super(CommentEdit, self).leaveEvent(event)
+
+        if not self.toPlainText():
+            self.setDefault()
         
 
 
@@ -765,14 +824,11 @@ def setupUi (parent, ListViewLayout):
     parent.setProperty("background", "options")
     parent.setProperty("border", "none")
 
-    parent.verticalLayout = QtWidgets.QVBoxLayout(parent)
-    parent.verticalLayout.setContentsMargins(0, 0, 0, 0)
-    parent.verticalLayout.setSpacing(0)
-    parent.verticalLayout.setObjectName("verticalLayout")
     parent.mainLayout = QtWidgets.QHBoxLayout()
+    parent.mainLayout.setContentsMargins(0, 0, 0, 0)
     parent.mainLayout.setSpacing(0)
     parent.mainLayout.setObjectName("mainLayout")
-    parent.mainLayout.addItem(ListViewLayout)
+    parent.mainLayout.addLayout(ListViewLayout)
 
     parent.wrappLayout = QtWidgets.QVBoxLayout()
     parent.wrappLayout.setContentsMargins(0, 0, 0, 0)
@@ -790,31 +846,31 @@ def setupUi (parent, ListViewLayout):
     parent.nameLayout.setContentsMargins(0, 16, 0, MARGIN)
     parent.nameLayout.setSpacing(0)
     parent.nameLayout.setObjectName("nameLayout")
-    parent.nameLineEdit = NameLine(parent, parent.defaultName)
+    parent.nameEdit = NameEdit(parent.defaultName)
     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
     sizePolicy.setHorizontalStretch(0)
     sizePolicy.setVerticalStretch(0)
-    sizePolicy.setHeightForWidth(parent.nameLineEdit.sizePolicy().hasHeightForWidth())
-    parent.nameLineEdit.setSizePolicy(sizePolicy)
-    parent.nameLineEdit.setMinimumSize(QtCore.QSize(0, HIGHT_THICK))
-    parent.nameLineEdit.setMaximumSize(QtCore.QSize(16777215, HIGHT_THICK))
-    parent.nameLineEdit.setSizeIncrement(QtCore.QSize(0, 0))
-    parent.nameLineEdit.setBaseSize(QtCore.QSize(0, 0))
-    parent.nameLineEdit.setFont(UIsettings.Options.fontLabel)
-    parent.nameLineEdit.setObjectName("nameLineEdit")
-    parent.nameLineEdit.setProperty("background", "input")
-    parent.nameLineEdit.setProperty("border", "none")
-    parent.nameLineEdit.setProperty("border", "round")
-    parent.nameLineEdit.setProperty("textcolor", "off")
-    parent.nameLineEdit.setTextMargins(10, 0, 0, 0)
-    parent.nameLayout.addWidget(parent.nameLineEdit)
+    sizePolicy.setHeightForWidth(parent.nameEdit.sizePolicy().hasHeightForWidth())
+    parent.nameEdit.setSizePolicy(sizePolicy)
+    parent.nameEdit.setMinimumSize(QtCore.QSize(0, HIGHT_THICK))
+    parent.nameEdit.setMaximumSize(QtCore.QSize(16777215, HIGHT_THICK))
+    parent.nameEdit.setSizeIncrement(QtCore.QSize(0, 0))
+    parent.nameEdit.setBaseSize(QtCore.QSize(0, 0))
+    parent.nameEdit.setFont(UIsettings.Options.fontLabel)
+    parent.nameEdit.setObjectName("nameEdit")
+    parent.nameEdit.setProperty("background", "input")
+    parent.nameEdit.setProperty("border", "none")
+    parent.nameEdit.setProperty("border", "round")
+    parent.nameEdit.setProperty("textcolor", "off")
+    parent.nameEdit.setTextMargins(10, 0, 0, 0)
+    parent.nameLayout.addWidget(parent.nameEdit)
     parent.optionLayout.addLayout(parent.nameLayout)
 
     parent.modelingLayout = QtWidgets.QHBoxLayout()
     parent.modelingLayout.setContentsMargins(0, 0, 0, 4)
     parent.modelingLayout.setSpacing(10)
     parent.modelingLayout.setObjectName("modelingLayout")
-    parent.modelingLabel = QtWidgets.QLabel(parent)
+    parent.modelingLabel = QtWidgets.QLabel()
     parent.modelingLabel.setMinimumSize(QtCore.QSize(55, 18))
     parent.modelingLabel.setMaximumSize(QtCore.QSize(55, 18))
     parent.modelingLabel.setFont(UIsettings.Options.fontLabel)
@@ -822,7 +878,7 @@ def setupUi (parent, ListViewLayout):
     parent.modelingLabel.setProperty("textcolor", "light")
     parent.modelingLayout.addWidget(parent.modelingLabel)
 
-    parent.modelingSwitch = QtWidgets.QPushButton(parent)
+    parent.modelingSwitch = QtWidgets.QPushButton()
     parent.modelingSwitch.setMinimumSize(QtCore.QSize(16, 16))
     parent.modelingSwitch.setMaximumSize(QtCore.QSize(16, 16))
     parent.modelingSwitch.setText("")
@@ -830,7 +886,7 @@ def setupUi (parent, ListViewLayout):
     parent.modelingSwitch.setFlat(True)
     parent.modelingSwitch.setObjectName("modelingSwitch")
     parent.modelingLayout.addWidget(parent.modelingSwitch)
-    parent.modelingOverwrite = QtWidgets.QPushButton(parent)
+    parent.modelingOverwrite = QtWidgets.QPushButton()
     parent.modelingOverwrite.setMinimumSize(QtCore.QSize(50, 16))
     parent.modelingOverwrite.setMaximumSize(QtCore.QSize(50, 16))
     parent.modelingOverwrite.setFont(UIsettings.Options.fontOverwrite)
@@ -845,7 +901,7 @@ def setupUi (parent, ListViewLayout):
     parent.surfacingLayout.setContentsMargins(0, 0, 0, 4)
     parent.surfacingLayout.setSpacing(10)
     parent.surfacingLayout.setObjectName("surfacingLayout")
-    parent.surfacingLabel = QtWidgets.QLabel(parent)
+    parent.surfacingLabel = QtWidgets.QLabel()
     parent.surfacingLabel.setMinimumSize(QtCore.QSize(55, 18))
     parent.surfacingLabel.setMaximumSize(QtCore.QSize(55, 18))
     parent.surfacingLabel.setFont(UIsettings.Options.fontLabel)
@@ -853,7 +909,7 @@ def setupUi (parent, ListViewLayout):
     parent.surfacingLabel.setProperty("textcolor", "light")
     parent.surfacingLayout.addWidget(parent.surfacingLabel)
 
-    parent.surfacingSwitch = QtWidgets.QPushButton(parent)
+    parent.surfacingSwitch = QtWidgets.QPushButton()
     parent.surfacingSwitch.setMinimumSize(QtCore.QSize(16, 16))
     parent.surfacingSwitch.setMaximumSize(QtCore.QSize(16, 16))
     parent.surfacingSwitch.setText("")
@@ -861,7 +917,7 @@ def setupUi (parent, ListViewLayout):
     parent.surfacingSwitch.setObjectName("surfacingSwitch")
     parent.surfacingLayout.addWidget(parent.surfacingSwitch)
 
-    parent.surfacingOverwrite = QtWidgets.QPushButton(parent)
+    parent.surfacingOverwrite = QtWidgets.QPushButton()
     parent.surfacingOverwrite.setMinimumSize(QtCore.QSize(50, 16))
     parent.surfacingOverwrite.setMaximumSize(QtCore.QSize(50, 16))
     parent.surfacingOverwrite.setFont(UIsettings.Options.fontOverwrite)
@@ -878,7 +934,7 @@ def setupUi (parent, ListViewLayout):
     parent.animationLayout.setContentsMargins(0, 0, 0, 4)
     parent.animationLayout.setSpacing(10)
     parent.animationLayout.setObjectName("animationLayout")
-    parent.animationLabel = QtWidgets.QLabel(parent)
+    parent.animationLabel = QtWidgets.QLabel()
     parent.animationLabel.setMinimumSize(QtCore.QSize(55, 18))
     parent.animationLabel.setMaximumSize(QtCore.QSize(55, 18))
     parent.animationLabel.setFont(UIsettings.Options.fontLabel)
@@ -886,7 +942,7 @@ def setupUi (parent, ListViewLayout):
     parent.animationLabel.setProperty("textcolor", "light")
     parent.animationLayout.addWidget(parent.animationLabel)
 
-    parent.animationSwitch = QtWidgets.QPushButton(parent)
+    parent.animationSwitch = QtWidgets.QPushButton()
     parent.animationSwitch.setMinimumSize(QtCore.QSize(16, 16))
     parent.animationSwitch.setMaximumSize(QtCore.QSize(16, 16))
     parent.animationSwitch.setText("")
@@ -895,7 +951,7 @@ def setupUi (parent, ListViewLayout):
     parent.animationSwitch.setObjectName("animationSwitch")
     parent.animationLayout.addWidget(parent.animationSwitch)
 
-    parent.animationOverwrite = QtWidgets.QPushButton(parent)
+    parent.animationOverwrite = QtWidgets.QPushButton()
     parent.animationOverwrite.setMinimumSize(QtCore.QSize(50, 16))
     parent.animationOverwrite.setMaximumSize(QtCore.QSize(50, 16))
     parent.animationOverwrite.setFont(UIsettings.Options.fontOverwrite)
@@ -909,16 +965,46 @@ def setupUi (parent, ListViewLayout):
     parent.optionLayout.addLayout(parent.animationLayout)
 
 
-    parent.animationOpions = AnimationOpions(parent)
+    parent.animationOpions = AnimationOpions()
     parent.optionLayout.addWidget(parent.animationOpions)
 
 
-    parent.mainOpions = MainOpions(parent)
+    parent.mainOpions = MainOpions()
     parent.optionLayout.addWidget(parent.mainOpions)
+
+
+    parent.commentLabelLayout = QtWidgets.QVBoxLayout()
+    parent.commentLabelLayout.setContentsMargins(0, MARGIN, 0, 0)
+    parent.commentLabelLayout.setSpacing(0)
+    parent.commentLabelLayout.setObjectName("commentLabelLayout")
+    parent.optionLayout.addLayout(parent.commentLabelLayout)
+
+    parent.labelComment = QtWidgets.QLabel("COMMENT")
+    parent.labelComment.setObjectName("labelComment")
+    parent.labelComment.setProperty("textcolor", "lock")
+    parent.labelComment.setFont(UIsettings.IconDelegate.fontAssetLabel)
+    parent.commentLabelLayout.addWidget(parent.labelComment)
 
 
     optionSpacer = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
     parent.optionLayout.addItem(optionSpacer)
+
+
+    parent.commentLayout = QtWidgets.QVBoxLayout()
+    parent.commentLayout.setContentsMargins(0, 0, MARGIN, 0)
+    parent.commentLayout.setSpacing(0)
+    parent.commentLayout.setObjectName("commentLayout")
+    parent.wrappLayout.addLayout(parent.commentLayout)
+
+
+    textOffset = 4
+    parent.commentEdit = CommentEdit("Silent Push")
+    parent.commentEdit.setProperty("background", "options")
+    parent.commentEdit.setProperty("border", "none")
+    parent.commentEdit.setObjectName("commentEdit")
+    parent.commentEdit.setViewportMargins( MARGIN-textOffset, 0, MARGIN, 0)
+    parent.commentEdit.setFont(UIsettings.Options.fontComment)
+    parent.commentLayout.addWidget(parent.commentEdit)
 
 
     parent.status = Status()
@@ -930,7 +1016,7 @@ def setupUi (parent, ListViewLayout):
     parent.exportLayout.setSpacing(10)
     parent.exportLayout.setObjectName("exportLayout")
 
-    parent.exportButton = ExportButton(parent)
+    parent.exportButton = ExportButton()
     parent.exportButton.setMinimumHeight(HIGHT_THICK)
     parent.exportButton.setFont(UIsettings.Options.fontLabel)
     parent.exportButton.setFlat(True)
@@ -942,7 +1028,7 @@ def setupUi (parent, ListViewLayout):
     parent.mainLayout.addLayout(parent.wrappLayout)
 
     parent.mainLayout.setStretch(0, 1)
-    parent.verticalLayout.addLayout(parent.mainLayout)
+    parent.setLayout(parent.mainLayout)
 
     parent.modelingLabel.setText("Modeling")
     parent.modelingOverwrite.setText("overwrite")

@@ -66,6 +66,7 @@ properties = '''
 *[textcolor="white"] { color: $WHITE_COLOR; }
 *[textcolor="light"] { color: $TEXT_ON; }
 *[textcolor="off"] { color: $TEXT_OFF; }
+*[textcolor="disabled"] { color: $OPTION_DISABLE; }
 *[textcolor="lock"] { color: $TEXT_LOCK; }
 *[textcolor="violet"] { color: $VIOLET_COLOR; }
 '''

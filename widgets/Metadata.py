@@ -10,6 +10,13 @@ from . import tools
 
 
 
+NAME = ".metadata.json"
+
+
+
+
+
+
 
 class Metadata (object):
 
@@ -29,11 +36,12 @@ class Metadata (object):
                 info="",
                 published=tools.getTimeCode(),
                 type="usdasset",
+                comments=dict(),
                 status="WIP" )
 
 
         self.path = os.path.join(
-            path, ".metadata.json")
+            path, NAME)
 
         if not os.path.exists(self.path):
             self.default_settings(self.path)
@@ -47,7 +55,15 @@ class Metadata (object):
 
 
     def load (self):
-        return tools.dataread(self.path)
+
+        data = tools.dataread(self.path)
+        dataType = data.get("usdasset", "")
+
+        if dataType == "usdasset":
+            if not data.get("comments", ""):
+                data["comments"] = dict()
+
+        return data
 
 
     def save (self, data):

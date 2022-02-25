@@ -8,6 +8,8 @@ import time, datetime
 
 from Qt import QtGui
 
+from . import Metadata
+
 
 
 RESERVED_TAGS = [
@@ -234,6 +236,24 @@ def getVersion (name):
             return int(versionString)
 
     return int()
+
+
+
+
+
+
+def getComment (path, filename):
+
+    comment = ""
+
+    metadataPath = os.path.join(path, Metadata.NAME)
+    if os.path.exists(metadataPath):
+        data = dataread(metadataPath)
+
+        comments = data.get("comments", dict())
+        comment = comments.get(filename, "")
+
+    return comment
 
 
 

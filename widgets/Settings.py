@@ -17,6 +17,17 @@ STATUS_LIST = [
     "Completed",
     "WIP" ]
 
+PLACEHOLDER = (
+    "Lorem ipsum dolor sit amet, " +
+    "consectetur adipiscing elit, " +
+    "sed do eiusmod tempor incididunt " +
+    "ut labore et dolore magna aliqua.\n\n" +
+    "Ut enim ad minim veniam, " +
+    "quis nostrud exercitation " +
+    "ullamco laboris nisi ut " +
+    "aliquip ex ea commodo consequat."
+)
+
 
 
 
@@ -209,6 +220,7 @@ UIsettings.Options.thickHight = 32
 
 UIsettings.Options.fontLabel = makeFont( size=9, bold=False, weight=50 )
 UIsettings.Options.fontOverwrite = makeFont( size=7, bold=False, weight=50 )
+UIsettings.Options.fontComment = makeFont( size=9, bold=False, weight=50 )
 
 UIsettings.Options.Export = DataClass()
 UIsettings.Options.Export.patternThickness = 11
