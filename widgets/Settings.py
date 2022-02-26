@@ -43,6 +43,7 @@ class UI (object):
             iconSize=1,
             focusLibrary="",
             subdirLibrary="",
+            bookmarks=[],
             modelling=True,
             surfacing=True,
             animation=False,
@@ -152,6 +153,7 @@ UIsettings.Path.fontPath = makeFont( size=9, bold=False, weight=50 )
 UIsettings.Bar = DataClass()
 UIsettings.Bar.height   = 32
 UIsettings.Bar.fontPreview = makeFont( size=7, bold=False, weight=50 )
+UIsettings.Bar.fontBookmark = makeFont( size=8, bold=False, weight=50 )
 
 
 UIsettings.AssetBrowser = DataClass()

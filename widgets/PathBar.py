@@ -18,7 +18,8 @@ UIsettings = Settings.UIsettings
 
 class PathBar (QtWidgets.QWidget):
 
-    pathChanged  = QtCore.Signal( type(str) )
+    bookmarkClicked = QtCore.Signal(bool)
+    pathChanged  = QtCore.Signal(str)
 
 
     def __init__ (self):
@@ -44,16 +45,37 @@ class PathBar (QtWidgets.QWidget):
 
 
         self.mainLayout = QtWidgets.QHBoxLayout()
-        self.mainLayout.setContentsMargins(
+        self.mainLayout.setSpacing(UIsettings.IconDelegate.space*2)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.setSpacing(0)
+
+
+        self.rootLayout = QtWidgets.QHBoxLayout()
+        self.rootLayout.setContentsMargins(
             UIsettings.AssetBrowser.margin + UIsettings.IconDelegate.space,
             UIsettings.AssetBrowser.margin,
+            UIsettings.IconDelegate.space, 0 )
+        self.rootLayout.setSpacing(UIsettings.IconDelegate.space*2)
+        self.mainLayout.addLayout(self.rootLayout)
+
+
+        self.subdirLayout = QtWidgets.QVBoxLayout()
+        self.subdirLayout.setContentsMargins( 0, 0,
             UIsettings.AssetBrowser.margin + UIsettings.IconDelegate.space, 0 )
-        self.mainLayout.setSpacing(UIsettings.IconDelegate.space*2)
+        self.subdirLayout.setSpacing(0)
+        self.mainLayout.addLayout(self.subdirLayout)
 
 
-        self.pathLayout = QtWidgets.QHBoxLayout()
-        self.pathLayout.setContentsMargins( 0, 0, 0, 0 )
-        self.pathLayout.setSpacing(UIsettings.IconDelegate.space)
+        self.bookmarkButton = QtWidgets.QPushButton()
+        self.bookmarkButton.setProperty("bookmark", "true")
+        self.bookmarkButton.setMaximumHeight(UIsettings.AssetBrowser.margin)
+        self.bookmarkButton.setMinimumHeight(UIsettings.AssetBrowser.margin)
+        self.bookmarkButton.setMaximumWidth(UIsettings.AssetBrowser.margin)
+        self.bookmarkButton.setMinimumWidth(UIsettings.AssetBrowser.margin)
+        self.bookmarkButton.setCheckable(True)
+        self.bookmarkButton.setFlat(True)
+        self.bookmarkButton.clicked.connect(self.actionBookmark)
+        self.subdirLayout.addWidget(self.bookmarkButton)
 
 
         self.backButton = QtWidgets.QPushButton()
@@ -64,6 +86,7 @@ class PathBar (QtWidgets.QWidget):
         self.backButton.setFixedSize(
             UIsettings.Path.backIcon,
             UIsettings.Path.height  )
+        self.rootLayout.addWidget(self.backButton)
         self.backButton.clicked.connect(self.moveBack)
 
 
@@ -75,6 +98,7 @@ class PathBar (QtWidgets.QWidget):
         self.pathRoot.setFixedHeight(UIsettings.Path.height)
         self.pathRoot.setMinimumWidth(0)
         self.pathRoot.setFlat(True)
+        self.rootLayout.addWidget(self.pathRoot)
         self.pathRoot.clicked.connect(self.resetRoot)
 
 
@@ -85,15 +109,16 @@ class PathBar (QtWidgets.QWidget):
         self.pathLine.setFont(UIsettings.Path.fontPath)
         self.pathLine.setFixedHeight(UIsettings.Path.height)
         self.pathLine.setObjectName("pathLine")
+        self.subdirLayout.addWidget(self.pathLine)
         self.pathLine.editingFinished.connect(self.changeSubdir)
 
-
-        self.mainLayout.addWidget(self.backButton)
-        self.mainLayout.addItem(self.pathLayout)
-        self.pathLayout.addWidget(self.pathRoot)
-        self.pathLayout.addWidget(self.pathLine)
-
         self.setLayout(self.mainLayout)
+
+
+
+    def actionBookmark (self):
+        flag = self.bookmarkButton.isChecked()
+        self.bookmarkClicked.emit(flag)
 
 
 
@@ -144,6 +169,9 @@ class PathBar (QtWidgets.QWidget):
     def moveBack (self):
 
         if not self.pathLine.text():
+            with Settings.UIManager(update=True) as uiSettings:
+                uiSettings["focusLibrary"] = ""
+                
             self.pathChanged.emit("")
             return
 
@@ -160,25 +188,25 @@ class PathBar (QtWidgets.QWidget):
 
 
 
-    def changeSubdir (self):
+    def changeSubdir (self, text=None):
 
-        text = self.pathLine.text()
-        
+        if not text is None:
+            self.pathLine.setText(text)
+        else:
+            text = self.pathLine.text()
+
         with Settings.UIManager(update=True) as uiSettings:
 
-                subdir = uiSettings["subdirLibrary"]
-                if text != subdir:
+                path = os.path.join(self.root, text)
+                if os.path.exists(path):
 
-                    path = os.path.join(self.root, text)
-                    if os.path.exists(path):
+                    uiSettings["subdirLibrary"] = text
+                    self.pathChanged.emit(path)
 
-                        uiSettings["subdirLibrary"] = text
-                        self.pathChanged.emit(path)
-
-
-                    else:
-                        self.pathLine.setText(subdir)
-                        uiSettings["subdirLibrary"] = subdir
+                else:
+                    subdir = uiSettings["subdirLibrary"]
+                    self.pathLine.setText(subdir)
+                    uiSettings["subdirLibrary"] = subdir
 
 
 

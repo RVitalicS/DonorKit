@@ -3,6 +3,7 @@
 
 
 import os
+import re
 
 from . import resources
 from . import stylesheet
@@ -51,21 +52,19 @@ class ExportWidget (QtWidgets.QDialog):
         self.BottomBar = BottomBar.BottomBar()
         self.browserLayout.addWidget(self.BottomBar)
 
+        self.metadata  = Metadata.NAME
+        self.libraries = self.getAssetRoots()
+
         ExportUI.setupUi(self, self.browserLayout)
         self.connectUi()
         self.applySettings()
-
-        self.metadata  = Metadata.NAME
-        self.libraries = self.getAssetRoots()
-        self.setLibrary()
 
         self.setWindowTitle("Asset Export")
         self.setObjectName("ExportWidget")
         self.resize(820, 580)
 
-
+        self.setLibrary()
         self.AssetBrowser.setFocus(QtCore.Qt.MouseFocusReason)
-
         self.exported = False
 
 
@@ -73,8 +72,12 @@ class ExportWidget (QtWidgets.QDialog):
     def connectUi (self):
 
         self.AssetBrowser.iconClicked.connect(self.iconClicked)
+
         self.assetPath.pathChanged.connect(self.drawBrowserItems)
+        self.assetPath.bookmarkClicked.connect(self.actionBookmark)
+
         self.BottomBar.previewSlider.valueChanged.connect(self.sliderAction)
+        self.BottomBar.bookmarkChoosed.connect(self.jumpBookmark)
 
         self.nameEdit.textChanged.connect(self.setName)
 
@@ -108,6 +111,72 @@ class ExportWidget (QtWidgets.QDialog):
 
         self.exportButton.pressed.connect(self.exportQuery)
         self.exportButton.released.connect(self.exportAction)
+
+
+
+    def bookmarkIndex (self):
+
+        library = self.assetPath.pathRoot.text()
+        subdir  = self.assetPath.pathLine.text()
+        name = library
+        if subdir: name += "/"+ subdir
+
+        count = self.BottomBar.bookmarkCombobox.count()
+        for index in range(count):
+            text = self.BottomBar.bookmarkCombobox.itemText(index)
+
+            if name == text:
+                return index
+
+
+
+    def actionBookmark (self, save):
+
+        index = self.bookmarkIndex()
+        if not index is None:
+
+            data = self.BottomBar.bookmarkCombobox.itemData(index)
+            with Settings.UIManager(update=True) as uiSettings:
+                if data in uiSettings["bookmarks"]:
+                    uiSettings["bookmarks"].remove(data)
+
+            self.BottomBar.bookmarkCombobox.removeItem(index)
+
+        else:
+            library = self.assetPath.pathRoot.text()
+            subdir  = self.assetPath.pathLine.text()
+
+            name = library
+            if subdir: name += "/"+ subdir
+            data = "{"+ library +"}" + subdir
+            self.BottomBar.bookmarkCombobox.addItem(name, data)
+
+            with Settings.UIManager(update=True) as uiSettings:
+                uiSettings["bookmarks"] += [data]
+
+
+
+    def jumpBookmark (self, data):
+
+        bookmark = self.interpretBookmark(data)
+        if not bookmark is None:
+            library, subdir = bookmark
+
+            self.setLibrary(library)
+            self.assetPath.changeSubdir(subdir)
+
+
+
+    def interpretBookmark (self, data):
+
+        key = re.search(r"\{.*\}", data)
+        if key:
+            key = key.group()
+
+            library = re.sub(r"[\{\}]", "", key)
+            subdir = re.sub(key, "", data)
+
+            return (library, subdir)
 
 
 
@@ -596,6 +665,10 @@ class ExportWidget (QtWidgets.QDialog):
                 self.assetPath.setRoot(name, path)
                 return
 
+            elif name == "":
+                self.drawBrowserItems("")
+                return
+
 
         for name, path in self.libraries.items():
             with Settings.UIManager(update=True) as uiSettings:
@@ -683,6 +756,12 @@ class ExportWidget (QtWidgets.QDialog):
 
     def drawBrowserItems (self, path):
 
+        if not self.bookmarkIndex() is None:
+            self.assetPath.bookmarkButton.setChecked(True)
+        else:
+            self.assetPath.bookmarkButton.setChecked(False)
+
+
         if not path:
             self.assetPath.setVisible(False)
             library = self.getLibraries()
@@ -768,6 +847,35 @@ class ExportWidget (QtWidgets.QDialog):
 
     def applySettings (self):
         with Settings.UIManager(update=False) as uiSettings:
+
+
+            bookmarks = uiSettings["bookmarks"]
+            blacklist = []
+            for data in bookmarks:
+                bookmark = self.interpretBookmark(data)
+                if not bookmark is None:
+                    library, subdir = bookmark
+
+                    name = library
+                    if subdir: name += "/"+ subdir
+
+                    if not library in self.libraries:
+                        blacklist.append(data)
+                        continue
+
+                    root = self.libraries.get(library, "")
+                    path = os.path.join(root, name)
+                    if os.path.exists(path):
+                        blacklist.append(data)
+                        continue
+
+                    self.BottomBar.bookmarkCombobox.addItem(name, data)
+
+            if blacklist:
+                with Settings.UIManager(update=True) as uiSettings:
+                    for data in blacklist:
+                        uiSettings["bookmarks"].remove(data)
+
 
             self.animationOpions.rangeStartSpinbox.setValue(uiSettings["rangeStart"])
             self.animationOpions.rangeEndSpinbox.setValue(uiSettings["rangeEnd"])

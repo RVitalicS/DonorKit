@@ -259,7 +259,7 @@ QPushButton:disabled[objectName~="animationOverwrite"] {
 
 
 
-versionCombobox = '''
+versioncombobox = '''
 QComboBox:editable[textcolor="violet"] {
     color: $VIOLET_COLOR;
     background: $OPTION_INPUT;
@@ -290,6 +290,42 @@ QComboBox QAbstractItemView {
 '''
 
 
+
+bookmarkbutton = '''
+QPushButton:checked[bookmark="true"] {
+    border: none;
+    background-image: url(":/icons/bookmark-enabled.png");
+    background-repeat: repeat-n;
+    background-position: center left;
+    }
+QPushButton[bookmark="true"] {
+    border: none;
+    background-image: url(":/icons/bookmark-disabled.png");
+    background-repeat: repeat-n;
+    background-position: center left;
+    }
+'''
+
+
+
+bookmarkcombobox = '''
+QComboBox::drop-down[bookmark="true"] {
+    width: 20px;
+    background: $BROWSER_BACKGROUND;
+}
+QComboBox::down-arrow[bookmark="true"] {
+    image: none;
+}
+QComboBox[bookmark="true"],
+QAbstractItemView[bookmark="true"] {
+    border: none;
+    color: $TEXT_ON;
+    background: $BROWSER_BACKGROUND;
+    selection-background-color: $BLACK_COLOR;
+}
+'''
+
+
 pathline = '''
 QLineEdit[objectName~="pathLine"] {
     color: $TEXT_ON;
@@ -312,7 +348,9 @@ UI = "".join([
     statusbutton,
     checkbutton,
     overridebutton,
-    versionCombobox,
+    versioncombobox,
+    bookmarkbutton,
+    bookmarkcombobox,
     pathline ])
 
 
