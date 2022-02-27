@@ -53,6 +53,7 @@ sliderRadius = int(sliderWidth/2)
 # stylesheet
 
 properties = '''
+*[background="transparent"] { background: transparent; }
 *[background="browser"] { background: $BROWSER_BACKGROUND; }
 *[background="black"] { background: $BLACK_COLOR; }
 

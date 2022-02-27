@@ -2,7 +2,7 @@
 
 
 
-from Qt import QtWidgets, QtCore
+from Qt import QtWidgets, QtCore, QtGui
 
 from . import Settings
 UIsettings = Settings.UIsettings
@@ -15,8 +15,9 @@ UIsettings = Settings.UIsettings
 
 class AssetBrowser (QtWidgets.QListView):
 
+    createFolderQuery = QtCore.Signal(QtCore.QModelIndex)
+    createFolder      = QtCore.Signal(QtCore.QModelIndex, str)
     iconClicked  = QtCore.Signal(QtCore.QModelIndex)
-
 
 
     def __init__(self):
@@ -216,8 +217,31 @@ class AssetBrowser (QtWidgets.QListView):
 
                     positionX += folderWidth + offsetFolder
 
-            positionX  = margin
-            positionY += margin + folderHeight
+
+        # folder create
+        for index in range(model.rowCount()):
+
+            item = model.item(index)
+            data = item.data(QtCore.Qt.EditRole)
+
+            if data["type"] == "plusfolder":
+                
+                if positionX + folderWidth + offsetFolder*2 > widgetWidth + margin:
+                    positionX  = margin
+                    positionY += folderHeight
+
+                item.setSizeHint(
+                    QtCore.QSize(
+                        folderWidth,
+                        folderHeight ))
+
+                self.setPositionForIndex(
+                    QtCore.QPoint(positionX, positionY), 
+                    model.index(index, 0) )
+
+                positionX  = margin
+                positionY += margin + folderHeight
+                break
 
 
 
@@ -338,3 +362,15 @@ class AssetBrowser (QtWidgets.QListView):
     def iconClickedSignal (self, index):
 
         self.iconClicked.emit(index)
+
+
+
+    def createFolderQueryBridge (self, index):
+
+        self.createFolderQuery.emit(index)
+
+
+
+    def createFolderBridge (self, index, name):
+
+        self.createFolder.emit(index, name)

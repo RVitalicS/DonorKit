@@ -52,6 +52,8 @@ class Delegate (QtWidgets.QStyledItemDelegate):
                     parent=parent )
 
         editor.clicked.connect(self.clickAction)
+        editor.createFolderQuery.connect(self.createFolderQuery)
+        editor.createFolder.connect(self.createFolderAction)
         editor.leaveEditor.connect(self.leaveAcion)
 
         return editor
@@ -93,3 +95,16 @@ class Delegate (QtWidgets.QStyledItemDelegate):
     def clickAction (self, index):
 
         self.parent().iconClickedSignal(index)
+
+
+
+    def createFolderQuery (self, index):
+        
+        self.leaveAcion()
+        self.parent().createFolderQueryBridge(index)
+
+
+
+    def createFolderAction (self, index, name):
+        
+        self.parent().createFolderBridge(index, name)

@@ -72,6 +72,8 @@ class ExportWidget (QtWidgets.QDialog):
     def connectUi (self):
 
         self.AssetBrowser.iconClicked.connect(self.iconClicked)
+        self.AssetBrowser.createFolderQuery.connect(self.createFolderQuery)
+        self.AssetBrowser.createFolder.connect(self.createFolder)
 
         self.assetPath.pathChanged.connect(self.drawBrowserItems)
         self.assetPath.bookmarkClicked.connect(self.actionBookmark)
@@ -775,20 +777,27 @@ class ExportWidget (QtWidgets.QDialog):
         for item in library:
             if hasLibrary:
                 break
-            elif hasFolder and hasAsset:
+            elif hasAsset and hasFolder:
                 break
 
             elif item["type"] == "library" and not hasLibrary:
                 hasLibrary = True
-                library.append( dict(type="labellibrary", data=dict(text="Libraries")) )
 
             elif item["type"] == "folder" and not hasFolder:
                 hasFolder = True
-                library.append( dict(type="labelfolder", data=dict(text="Folders")) )
 
             elif item["type"] == "asset" and not hasAsset:
                 hasAsset = True
-                library.append( dict(type="labelasset", data=dict(text="Assets")) )
+
+        if hasLibrary:
+            library.append( dict(type="labellibrary", data=dict(text="Libraries")) )
+
+        if hasFolder or not hasLibrary and not hasAsset:
+            library.append( dict(type="labelfolder", data=dict(text="Folders")) )
+            library.append( dict(type="plusfolder", data=dict()) )
+
+        if hasAsset:
+            library.append( dict(type="labelasset", data=dict(text="Assets")) )
 
 
         iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
@@ -822,6 +831,56 @@ class ExportWidget (QtWidgets.QDialog):
 
         self.checkedName = ""
         self.setOptions()
+
+
+
+    def createFolderQuery (self, index):
+
+        model = self.AssetBrowser.model()
+        iconItem = model.item(index.row())
+
+        dataItem = dict(type="folderquery", data=dict(
+                            name="",
+                            items=0 ))
+        iconItem.setData(dataItem, QtCore.Qt.EditRole)
+
+        self.AssetBrowser.setCurrentIndex(index)
+        self.AssetBrowser.edit(index)
+
+        self.AssetBrowser.repaint()
+
+
+
+    def createFolder (self, index, name):
+
+        model = self.AssetBrowser.model()
+        updateItem = model.item(index.row())
+
+        newPath = os.path.join(
+            self.assetPath.get(), name)
+        if not name or os.path.exists(newPath):
+            updateData = dict(type="plusfolder", data=dict())
+            updateItem.setData(updateData, QtCore.Qt.EditRole)
+            self.AssetBrowser.repaint()
+
+        else:
+            updateData = dict(type="folder", data=dict(
+                            name=name, items=0 ))
+            updateItem.setData(updateData, QtCore.Qt.EditRole)
+
+            plusItem = QtGui.QStandardItem()
+            plusItem.setCheckable(False)
+            plusItem.setEditable(True)
+            plusItem.setData(0, QtCore.Qt.StatusTipRole)
+
+            plusItem.setData(
+                dict(type="plusfolder", data=dict()),
+                QtCore.Qt.EditRole)
+
+            model.appendRow(plusItem)
+
+            self.AssetBrowser.setGrid()
+            os.mkdir(newPath)
 
 
 

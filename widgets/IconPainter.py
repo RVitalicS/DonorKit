@@ -35,6 +35,21 @@ def background (function):
 
 
 
+def rgbReplace (image, color):
+
+    for x in range(0, image.height()):
+        for y in range(0, image.width()):
+
+            color = QtGui.QColor(color)
+            alpha = image.pixelColor(x,y).alpha()
+            color.setAlpha(alpha)
+            image.setPixelColor(x, y, color)
+
+    return image
+
+
+
+
 
 class Icon (object):
 
@@ -49,6 +64,10 @@ class Icon (object):
         self.iconRect = QtCore.QRect()
 
 
+        self.folderNameArea  = QtCore.QRect()
+        self.createFolderArea = QtCore.QRect()
+
+
 
     def sizeHint (self):
         
@@ -60,12 +79,16 @@ class Icon (object):
 
 
 
-    def paint (self, painter, option, index, editing=False):
+    def paint (self, painter, option, index):
+
+        # fake clear
+        background = QtGui.QColor(stylesheet.browserBackground)
+        painter.fillRect(option.rect, background)
         
+        # set globals
         self.painter = painter
         self.option  = option
         self.index   = index
-        self.editing = editing
 
         self.space = UIsettings.IconDelegate.space
         self.radius = UIsettings.IconDelegate.radius
@@ -90,6 +113,7 @@ class Icon (object):
             self.height - self.space*2 )
 
 
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         clipPath = QtGui.QPainterPath()
         clipPath.addRoundedRect(
             self.iconRect.x()     , self.iconRect.y()      ,
@@ -102,20 +126,23 @@ class Icon (object):
         
 
         if iconType in [ "labellibrary" ]:
-            if not self.editing:
-                self.paintCategory()
+            self.paintCategory()
         
         elif iconType in [
                 "labelfolder" ,
                 "labelasset"  ]:
-            if not self.editing:
-                self.paintLabel()
+            self.paintLabel()
 
         elif iconType == "library":
             self.paintLibrary()
 
-        elif iconType == "folder":
+        elif iconType in [
+                "folder"      ,
+                "folderquery" ]:
             self.paintFolder()
+
+        elif iconType == "plusfolder":
+            self.paintPlus()
 
         elif iconType == "asset":
             self.paintAsset()
@@ -181,12 +208,12 @@ class Icon (object):
         if self.iconRect.contains(self.pointer):
             colorBackground = QtGui.QColor(stylesheet.folderHilight)
             colorText = stylesheet.white
-            libraryImage = QtGui.QImage(":/icons//library-hover.png")
+            libraryImage = QtGui.QImage(":/icons/library-hover.png")
 
         else:
             colorBackground = QtGui.QColor(stylesheet.iconBackground)
             colorText = stylesheet.text
-            libraryImage = QtGui.QImage(":/icons//library.png")
+            libraryImage = QtGui.QImage(":/icons/library.png")
 
 
         # BACKGROUND
@@ -285,7 +312,7 @@ class Icon (object):
         self.painter.setFont( UIsettings.IconDelegate.fontFolderName )
 
         offsetName = folderImage.width() + offsetIcon*2
-        nameArea = QtCore.QRect(
+        self.folderNameArea = QtCore.QRect(
             self.pointX + self.space + offsetName   ,
             self.pointY + self.space ,
             self.width  - self.space*2 - offsetName ,
@@ -299,7 +326,7 @@ class Icon (object):
         textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignBottom)
 
         self.painter.drawText(
-            QtCore.QRectF(nameArea),
+            QtCore.QRectF(self.folderNameArea),
             text,
             textOption)
 
@@ -316,7 +343,7 @@ class Icon (object):
         self.painter.setFont( UIsettings.IconDelegate.fontFolderItems )
 
         offsetName = folderImage.width() + offsetIcon*2
-        nameArea = QtCore.QRect(
+        countArea = QtCore.QRect(
             self.pointX + self.space + offsetName   ,
             self.pointY + int(self.height/2) +offsetText ,
             self.width  - self.space*2 - offsetName ,
@@ -336,9 +363,36 @@ class Icon (object):
         textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
 
         self.painter.drawText(
-            QtCore.QRectF(nameArea),
+            QtCore.QRectF(countArea),
             text,
             textOption)
+
+
+
+    def paintPlus (self):
+
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        libraryImage = QtGui.QImage(":/icons/plus.png")
+
+        offsetIcon = int((
+            self.height - self.space*2 - libraryImage.height() )/2)
+
+        iconPosition = QtCore.QPoint(
+                self.pointX + self.space + offsetIcon,
+                self.pointY + self.space + offsetIcon)
+
+        self.createFolderArea = QtCore.QRect(
+            iconPosition.x() ,
+            iconPosition.y() ,
+            libraryImage.width() ,
+            libraryImage.height() )
+
+        if self.createFolderArea.contains(self.pointer):
+            libraryImage = rgbReplace(libraryImage, stylesheet.folderHilight)
+        else:
+            libraryImage = rgbReplace(libraryImage, stylesheet.browserSocket)
+
+        self.painter.drawImage(iconPosition, libraryImage)
 
 
 
