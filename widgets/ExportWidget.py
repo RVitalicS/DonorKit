@@ -686,6 +686,51 @@ class ExportWidget (QtWidgets.QDialog):
 
 
 
+    def sort (self, library):
+
+        labelL    = []
+        labelF    = []
+        labelA    = []
+        plus      = []
+        libraries = []
+        folders   = []
+        assets    = []
+
+        for data in library:
+            dataType = data.get("type")
+
+            if dataType == "labellibrary":
+                labelL += [data]
+            elif dataType == "labelfolder":
+                labelF += [data]
+            elif dataType == "labelasset":
+                labelA += [data]
+            elif dataType == "plusfolder":
+                plus += [data]
+            elif dataType == "library":
+                libraries += [data]
+            elif dataType == "folder":
+                folders += [data]
+            elif dataType == "asset":
+                assets += [data]
+
+        for data in [libraries, folders, assets]:
+            data.sort( key=lambda item : item.get("data").get("name") )
+
+        library = (
+            labelL
+            + labelF
+            + labelA
+            + plus
+            + libraries
+            + folders
+            + assets
+        )
+
+        return library
+
+
+
     def getDirItems (self, path):
 
         if not path:
@@ -802,7 +847,7 @@ class ExportWidget (QtWidgets.QDialog):
 
         iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
 
-        for item in library:
+        for item in self.sort(library):
 
             iconItem = QtGui.QStandardItem()
 
