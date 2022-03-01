@@ -33,6 +33,7 @@ class Delegate (QtWidgets.QStyledItemDelegate):
         self.Icon.pointer = QtCore.QPoint(
             iconArea.x() ,
             iconArea.y() )
+        self.Icon.controlMode = self.parent().controlMode
 
         self.Icon.paint(painter, option, index)
 
@@ -50,10 +51,13 @@ class Delegate (QtWidgets.QStyledItemDelegate):
         editor = IconEditor.Editor(
                     option, index,
                     parent=parent )
+        editor.Icon.controlMode = self.parent().controlMode
 
         editor.clicked.connect(self.clickAction)
         editor.createFolderQuery.connect(self.createFolderQuery)
         editor.createFolder.connect(self.createFolderAction)
+        editor.folderLink.connect(self.folderLinkAction)
+        editor.favoriteClicked.connect(self.favoriteAction)
         editor.leaveEditor.connect(self.leaveAcion)
 
         return editor
@@ -76,6 +80,12 @@ class Delegate (QtWidgets.QStyledItemDelegate):
             self.parent().edit(index)
 
         return True
+
+
+
+    def favoriteAction (self, index):
+
+        self.parent().favoriteClickedSignal(index)
 
 
 
@@ -108,3 +118,9 @@ class Delegate (QtWidgets.QStyledItemDelegate):
     def createFolderAction (self, index, name):
         
         self.parent().createFolderBridge(index, name)
+
+
+
+    def folderLinkAction (self, index):
+        
+        self.parent().folderLinkBridge(index)

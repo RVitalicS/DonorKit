@@ -2,6 +2,7 @@
 
 
 import os
+from . import tools
 from . import stylesheet
 
 
@@ -16,9 +17,135 @@ UIsettings = Settings.UIsettings
 
 
 
+class BackButton (QtWidgets.QPushButton):
+
+
+    def __init__ (self):
+        super(BackButton, self).__init__()
+
+        self.image = QtGui.QImage(":/icons/back.png")
+
+        self.setFixedSize(
+            UIsettings.Path.backIcon,
+            UIsettings.Path.height  )
+
+        self.buttonPressed = False
+
+
+
+    def paintEvent (self, event):
+
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+        buttonRect = self.contentsRect()
+        positionY = (
+            buttonRect.y()
+            + int((
+                UIsettings.Path.height
+                - self.image.height()
+            )/2) )
+        position = QtCore.QPoint( buttonRect.x(), positionY)
+
+        color = QtGui.QColor(stylesheet.browserBackground)
+        painter.fillRect(buttonRect, color)
+
+        if self.buttonPressed:
+            image = tools.recolor(self.image, stylesheet.white)
+        else:
+            image = tools.recolor(self.image, stylesheet.text)
+
+        painter.drawImage(position, image)
+        painter.end()
+
+
+
+    def mousePressEvent (self, event):
+        super(BackButton, self).mousePressEvent(event)
+        self.buttonPressed = True
+        self.repaint()
+
+    def mouseReleaseEvent (self, event):
+        super(BackButton, self).mousePressEvent(event)
+        self.buttonPressed = False
+        self.repaint()
+        self.clearFocus()
+
+    def enterEvent (self, event):
+        super(BackButton, self).enterEvent(event)
+        self.setFocus(QtCore.Qt.MouseFocusReason)
+
+    def leaveEvent (self, event):
+        super(BackButton, self).leaveEvent(event)
+        self.buttonPressed = False
+
+
+
+
+
+
+class BookmarkButton (QtWidgets.QPushButton):
+
+
+    def __init__ (self):
+        super(BookmarkButton, self).__init__()
+
+        self.image = QtGui.QImage(":/icons/bookmark.png")
+
+        self.offset = UIsettings.Path.bookmarkOffset
+
+        self.setMinimumWidth( self.image.width() + self.offset )
+        self.setMaximumWidth( self.image.width() + self.offset )
+
+        self.setMinimumHeight( UIsettings.AssetBrowser.margin )
+        self.setMaximumHeight( UIsettings.AssetBrowser.margin )
+
+        self.buttonHover = False
+
+
+
+    def paintEvent (self, event):
+
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+        buttonRect = self.contentsRect()
+        position = QtCore.QPoint( buttonRect.x()+self.offset, buttonRect.y())
+
+        color = QtGui.QColor(stylesheet.browserBackground)
+        painter.fillRect(buttonRect, color)
+
+        if self.isChecked():
+            image = tools.recolor(self.image, stylesheet.purple)
+        elif self.buttonHover:
+            image = tools.recolor(self.image, stylesheet.browserSocketHover)
+        else:
+            image = tools.recolor(self.image, stylesheet.browserSocket)
+
+        painter.drawImage(position, image)
+        painter.end()
+
+
+
+    def enterEvent (self, event):
+        super(BookmarkButton, self).enterEvent(event)
+        self.buttonHover = True
+        self.setFocus(QtCore.Qt.MouseFocusReason)
+
+    def leaveEvent (self, event):
+        super(BookmarkButton, self).leaveEvent(event)
+        self.buttonHover = False
+        self.clearFocus()
+
+
+
+
+
+
+
 class PathBar (QtWidgets.QWidget):
 
-    bookmarkClicked = QtCore.Signal(bool)
+    bookmarkClicked = QtCore.Signal()
     pathChanged  = QtCore.Signal(str)
 
 
@@ -66,28 +193,15 @@ class PathBar (QtWidgets.QWidget):
         self.mainLayout.addLayout(self.subdirLayout)
 
 
-        self.bookmarkButton = QtWidgets.QPushButton()
-        self.bookmarkButton.setProperty("bookmark", "true")
-        self.bookmarkButton.setMaximumHeight(UIsettings.AssetBrowser.margin)
-        self.bookmarkButton.setMinimumHeight(UIsettings.AssetBrowser.margin)
-        self.bookmarkButton.setMaximumWidth(UIsettings.AssetBrowser.margin)
-        self.bookmarkButton.setMinimumWidth(UIsettings.AssetBrowser.margin)
+        self.bookmarkButton = BookmarkButton()
         self.bookmarkButton.setCheckable(True)
-        self.bookmarkButton.setFlat(True)
         self.bookmarkButton.clicked.connect(self.actionBookmark)
         self.subdirLayout.addWidget(self.bookmarkButton)
 
-
-        self.backButton = QtWidgets.QPushButton()
-        self.backButton.setObjectName("backButton")
-        self.backButton.setProperty("background", "browser")
-        self.backButton.setProperty("border", "none")
-        self.backButton.setFlat(True)
-        self.backButton.setFixedSize(
-            UIsettings.Path.backIcon,
-            UIsettings.Path.height  )
+        
+        self.backButton = BackButton()
         self.rootLayout.addWidget(self.backButton)
-        self.backButton.clicked.connect(self.moveBack)
+        self.backButton.released.connect(self.moveBack)
 
 
         self.pathRoot = QtWidgets.QPushButton()
@@ -117,8 +231,8 @@ class PathBar (QtWidgets.QWidget):
 
 
     def actionBookmark (self):
-        flag = self.bookmarkButton.isChecked()
-        self.bookmarkClicked.emit(flag)
+        
+        self.bookmarkClicked.emit()
 
 
 
@@ -190,6 +304,8 @@ class PathBar (QtWidgets.QWidget):
 
     def changeSubdir (self, text=None):
 
+        success = True
+
         if not text is None:
             self.pathLine.setText(text)
         else:
@@ -207,6 +323,10 @@ class PathBar (QtWidgets.QWidget):
                     subdir = uiSettings["subdirLibrary"]
                     self.pathLine.setText(subdir)
                     uiSettings["subdirLibrary"] = subdir
+
+                    success = False
+
+        return success
 
 
 

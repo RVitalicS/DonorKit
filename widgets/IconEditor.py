@@ -19,6 +19,8 @@ class Editor (QtWidgets.QWidget):
 
     createFolderQuery = QtCore.Signal(QtCore.QModelIndex)
     createFolder      = QtCore.Signal(QtCore.QModelIndex, str)
+    folderLink        = QtCore.Signal(QtCore.QModelIndex)
+    favoriteClicked = QtCore.Signal(QtCore.QModelIndex)
     clicked      = QtCore.Signal(QtCore.QModelIndex)
     leaveEditor  = QtCore.Signal()
 
@@ -95,12 +97,42 @@ class Editor (QtWidgets.QWidget):
                 event.x(),
                 event.y())
 
+            if self.Icon.favoriteArea.contains(pointer):
+                self.favoriteClicked.emit(self.Icon.index)
+                self.repaint()
+                return
+
+            if self.Icon.folderLinkArea.contains(pointer):
+                self.folderLink.emit(self.Icon.index)
+                self.repaint()
+                return
+
             if self.Icon.createFolderArea.contains(pointer):
                 self.createFolderQuery.emit(self.Icon.index)
+                self.repaint()
                 return
 
             if self.Icon.iconRect.contains(pointer):
                 self.clicked.emit(self.Icon.index)
+                return
+
+
+
+    def keyPressEvent (self, event):
+        super(Editor, self).keyReleaseEvent(event)
+
+        if event.key() == QtCore.Qt.Key_Control:
+            self.Icon.controlMode = True
+            self.repaint()
+
+
+
+    def keyReleaseEvent (self, event):
+        super(Editor, self).keyReleaseEvent(event)
+        
+        if event.key() == QtCore.Qt.Key_Control:
+            self.Icon.controlMode = False
+            self.repaint()
 
 
 

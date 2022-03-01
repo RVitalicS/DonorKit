@@ -40,10 +40,13 @@ class UI (object):
     def __init__ (self):
 
         self.default_data = dict(
+            scrollPosition=0.0,
             iconSize=1,
             focusLibrary="",
             subdirLibrary="",
             bookmarks=[],
+            favorites=[],
+            favoriteFilter=False,
             modelling=True,
             surfacing=True,
             animation=False,
@@ -54,8 +57,7 @@ class UI (object):
             rangeEnd=1,
             fps=30,
             link=True,
-            unitsMultiplier=1.0,
-            scrollPosition=0.0 )
+            unitsMultiplier=1.0 )
 
         self.path = os.path.join(
             os.path.dirname(__file__),
@@ -148,12 +150,15 @@ UIsettings.Path.backIcon = 13
 UIsettings.Path.height   = 32
 UIsettings.Path.fontRoot = makeFont( size=9, bold=False, weight=50 )
 UIsettings.Path.fontPath = makeFont( size=9, bold=False, weight=50 )
+UIsettings.Path.bookmarkOffset = 1
 
 
 UIsettings.Bar = DataClass()
-UIsettings.Bar.height   = 32
+UIsettings.Bar.height = 32
 UIsettings.Bar.fontPreview = makeFont( size=7, bold=False, weight=50 )
 UIsettings.Bar.fontBookmark = makeFont( size=8, bold=False, weight=50 )
+UIsettings.Bar.favoriteOffset = 2
+UIsettings.Bar.bookmarkOffset = 0
 
 
 UIsettings.AssetBrowser = DataClass()
@@ -198,6 +203,8 @@ UIsettings.IconDelegate.space  = 6
 UIsettings.IconDelegate.radius = 6
 UIsettings.IconDelegate.radiusStatus = 2
 
+UIsettings.IconDelegate.offsetLink = 9
+
 UIsettings.IconDelegate.fontLibraries   = makeFont( size=11, bold=False, weight=50 )
 UIsettings.IconDelegate.fontCategory    = makeFont( size=8, bold=False, weight=50 )
 UIsettings.IconDelegate.fontFolderName  = makeFont( size=9, bold=False, weight=50 )
@@ -217,6 +224,7 @@ UIsettings.IconDelegate.Animation.font   = makeFont( size=7, bold=False, weight=
 
 UIsettings.Options = DataClass()
 
+UIsettings.Options.width      = 210
 UIsettings.Options.margin     = 30
 UIsettings.Options.thickHight = 32
 

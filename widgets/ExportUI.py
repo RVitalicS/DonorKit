@@ -12,8 +12,10 @@ from Qt import QtWidgets, QtCore, QtGui
 from . import Settings
 UIsettings = Settings.UIsettings
 
+WIDTH       = UIsettings.Options.width
 MARGIN      = UIsettings.Options.margin
 HIGHT_THICK = UIsettings.Options.thickHight
+
 
 
 
@@ -25,6 +27,11 @@ class NameEdit (QtWidgets.QLineEdit):
 
     def __init__ (self, text):
         super(NameEdit, self).__init__()
+
+        self.setMinimumWidth(WIDTH)
+        self.setMaximumWidth(WIDTH)
+        self.setMinimumHeight(HIGHT_THICK)
+        self.setMaximumHeight(HIGHT_THICK)
 
         self.defaultName = text
         self.setText(text)
@@ -54,8 +61,10 @@ class ExportButton (QtWidgets.QPushButton):
     def __init__ (self):
         super(ExportButton, self).__init__()
 
-        self.setMinimumWidth(210)
-        self.setMaximumWidth(210)
+        self.setMinimumWidth(WIDTH)
+        self.setMaximumWidth(WIDTH)
+        self.setMinimumHeight(HIGHT_THICK)
+        self.setMaximumHeight(HIGHT_THICK)
         
         self.buttonPressed = False
 
@@ -233,13 +242,69 @@ class ExportButton (QtWidgets.QPushButton):
 
 
 
+class OptionComboBox (QtWidgets.QComboBox):
+
+
+    def __init__ (self):
+        super(OptionComboBox, self).__init__()
+
+        self.image = QtGui.QImage(":/icons/dropdown.png")
+
+        self.buttonPressed = False
+
+
+    def paintEvent (self, event):
+
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+        buttonRect = self.contentsRect()
+
+        offsetY = int((buttonRect.height() - self.image.height())/2)
+        offsetX = buttonRect.width()  - self.image.width() - offsetY
+        position = QtCore.QPoint(
+            buttonRect.x() + offsetX ,
+            buttonRect.y() + offsetY )
+
+        color = QtGui.QColor(stylesheet.optionInput)
+        painter.fillRect(buttonRect, color)
+
+        if self.buttonPressed:
+            image = tools.recolor(self.image, stylesheet.white)
+        else:
+            image = tools.recolor(self.image, stylesheet.spinboxArrow)
+            
+        painter.drawImage(position, image)
+        painter.end()
+
+
+    def mousePressEvent (self, event):
+        super(OptionComboBox, self).mousePressEvent(event)
+        self.buttonPressed = True
+        self.repaint()
+
+    def mouseReleaseEvent (self, event):
+        super(OptionComboBox, self).mousePressEvent(event)
+        self.buttonPressed = False
+        self.repaint()
+        self.clearFocus()
+
+    def leaveEvent (self, event):
+        super(OptionComboBox, self).leaveEvent(event)
+        self.buttonPressed = False
+        
+
+
+
+
+
 class AnimationOpions (QtWidgets.QWidget):
 
     def __init__ (self):
         super(AnimationOpions, self).__init__()
 
-        self.setMinimumWidth(210)
-        self.setMaximumWidth(210)
+        self.setMinimumWidth(WIDTH)
+        self.setMaximumWidth(WIDTH)
 
 
         self.mainLayout = QtWidgets.QVBoxLayout()
@@ -260,7 +325,7 @@ class AnimationOpions (QtWidgets.QWidget):
         self.animationNameLabel.setProperty("textcolor", "light")
         self.animationNameLayout.addWidget(self.animationNameLabel)
 
-        self.animationNameCombobox = QtWidgets.QComboBox()
+        self.animationNameCombobox = OptionComboBox()
         self.animationNameCombobox.setMaximumSize(QtCore.QSize(16777215, 18))
         self.animationNameCombobox.setFont(UIsettings.Options.fontLabel)
         self.animationNameCombobox.setToolTip("")
@@ -414,8 +479,8 @@ class MainOpions (QtWidgets.QWidget):
     def __init__ (self):
         super(MainOpions, self).__init__()
 
-        self.setMinimumWidth(210)
-        self.setMaximumWidth(210)
+        self.setMinimumWidth(WIDTH)
+        self.setMaximumWidth(WIDTH)
 
 
         self.mainLayout = QtWidgets.QVBoxLayout()
@@ -436,7 +501,7 @@ class MainOpions (QtWidgets.QWidget):
         self.variantLabel.setProperty("textcolor", "light")
         self.variantLayout.addWidget(self.variantLabel)
 
-        self.variantCombobox = QtWidgets.QComboBox()
+        self.variantCombobox = OptionComboBox()
         self.variantCombobox.setMaximumSize(QtCore.QSize(16777215, 18))
         self.variantCombobox.setFont(UIsettings.Options.fontLabel)
         self.variantCombobox.setToolTip("")
@@ -474,7 +539,7 @@ class MainOpions (QtWidgets.QWidget):
         self.linkLayout.setObjectName("linkLayout")
         self.versionLayout.addLayout(self.linkLayout)
 
-        self.versionCombobox = QtWidgets.QComboBox()
+        self.versionCombobox = OptionComboBox()
         self.versionCombobox.setMaximumSize(QtCore.QSize(16777215, 18))
         self.versionCombobox.setFont(UIsettings.Options.fontLabel)
         self.versionCombobox.setToolTip("")
@@ -626,7 +691,13 @@ class Status (QtWidgets.QWidget):
     def __init__ (self):
         super(Status, self).__init__()
 
+        self.setMinimumWidth(WIDTH)
+        self.setMaximumWidth(WIDTH)
+
         self.NAME = str()
+
+        self.setMouseTracking(True)
+        self.hoverStatus = False
 
         self.mainLayout = QtWidgets.QHBoxLayout()
         self.mainLayout.setSpacing(0)
@@ -785,17 +856,24 @@ class Status (QtWidgets.QWidget):
 
 
 
-    def enterEvent (self, event):
-        super(Status, self).enterEvent(event)
+    def mouseMoveEvent (self, event):
+        super(Status, self).mouseMoveEvent(event)
 
-        for button in self.buttonList:
-            button.setVisible(True)
+        pointer = QtCore.QPoint(
+            event.x(),
+            event.y())
 
+        statusArea = self.statusLayout.contentsRect()
+        hover = statusArea.contains(pointer)
 
+        if hover and not self.hoverStatus:
+            self.hoverStatus = True
+            for button in self.buttonList:
+                button.setVisible(True)
 
-    def leaveEvent (self, event):
-        super(Status, self).leaveEvent(event)
-        self.setVisibility()
+        if not hover and self.hoverStatus:
+            self.hoverStatus = False
+            self.setVisibility()
 
 
 
@@ -805,6 +883,49 @@ class Status (QtWidgets.QWidget):
                 button.setVisible(True)
             else:
                 button.setVisible(False)
+        
+
+
+
+
+
+class SwitchButton (QtWidgets.QPushButton):
+
+
+    def __init__ (self):
+        super(SwitchButton, self).__init__()
+        self.setCheckable(True)
+        self.setText("")
+
+        self.checked   = QtGui.QImage(":/icons/checked.png")
+        self.unchecked = QtGui.QImage(":/icons/unchecked.png")
+
+        self.sizeValue = 16
+        self.setMinimumSize(QtCore.QSize(self.sizeValue, self.sizeValue))
+        self.setMaximumSize(QtCore.QSize(self.sizeValue, self.sizeValue))
+
+
+    def paintEvent (self, event):
+
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+        buttonRect = self.contentsRect()
+        offset = int((self.sizeValue - self.checked.width())/2)
+        position = QtCore.QPoint(
+            buttonRect.x()          ,
+            buttonRect.y() + offset )
+
+        color = QtGui.QColor(stylesheet.optionBackground)
+        painter.fillRect(buttonRect, color)
+
+        if self.isChecked():
+            image = self.checked
+        else:
+            image = tools.recolor(self.unchecked, stylesheet.optionDisable)
+
+        painter.drawImage(position, image)
+        painter.end()
 
 
         
@@ -847,15 +968,6 @@ def setupUi (parent, ListViewLayout):
     parent.nameLayout.setSpacing(0)
     parent.nameLayout.setObjectName("nameLayout")
     parent.nameEdit = NameEdit(parent.defaultName)
-    sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-    sizePolicy.setHorizontalStretch(0)
-    sizePolicy.setVerticalStretch(0)
-    sizePolicy.setHeightForWidth(parent.nameEdit.sizePolicy().hasHeightForWidth())
-    parent.nameEdit.setSizePolicy(sizePolicy)
-    parent.nameEdit.setMinimumSize(QtCore.QSize(0, HIGHT_THICK))
-    parent.nameEdit.setMaximumSize(QtCore.QSize(16777215, HIGHT_THICK))
-    parent.nameEdit.setSizeIncrement(QtCore.QSize(0, 0))
-    parent.nameEdit.setBaseSize(QtCore.QSize(0, 0))
     parent.nameEdit.setFont(UIsettings.Options.fontLabel)
     parent.nameEdit.setObjectName("nameEdit")
     parent.nameEdit.setProperty("background", "input")
@@ -878,14 +990,9 @@ def setupUi (parent, ListViewLayout):
     parent.modelingLabel.setProperty("textcolor", "light")
     parent.modelingLayout.addWidget(parent.modelingLabel)
 
-    parent.modelingSwitch = QtWidgets.QPushButton()
-    parent.modelingSwitch.setMinimumSize(QtCore.QSize(16, 16))
-    parent.modelingSwitch.setMaximumSize(QtCore.QSize(16, 16))
-    parent.modelingSwitch.setText("")
-    parent.modelingSwitch.setCheckable(True)
-    parent.modelingSwitch.setFlat(True)
-    parent.modelingSwitch.setObjectName("modelingSwitch")
+    parent.modelingSwitch = SwitchButton()
     parent.modelingLayout.addWidget(parent.modelingSwitch)
+
     parent.modelingOverwrite = QtWidgets.QPushButton()
     parent.modelingOverwrite.setMinimumSize(QtCore.QSize(50, 16))
     parent.modelingOverwrite.setMaximumSize(QtCore.QSize(50, 16))
@@ -909,12 +1016,7 @@ def setupUi (parent, ListViewLayout):
     parent.surfacingLabel.setProperty("textcolor", "light")
     parent.surfacingLayout.addWidget(parent.surfacingLabel)
 
-    parent.surfacingSwitch = QtWidgets.QPushButton()
-    parent.surfacingSwitch.setMinimumSize(QtCore.QSize(16, 16))
-    parent.surfacingSwitch.setMaximumSize(QtCore.QSize(16, 16))
-    parent.surfacingSwitch.setText("")
-    parent.surfacingSwitch.setCheckable(True)
-    parent.surfacingSwitch.setObjectName("surfacingSwitch")
+    parent.surfacingSwitch = SwitchButton()
     parent.surfacingLayout.addWidget(parent.surfacingSwitch)
 
     parent.surfacingOverwrite = QtWidgets.QPushButton()
@@ -942,13 +1044,7 @@ def setupUi (parent, ListViewLayout):
     parent.animationLabel.setProperty("textcolor", "light")
     parent.animationLayout.addWidget(parent.animationLabel)
 
-    parent.animationSwitch = QtWidgets.QPushButton()
-    parent.animationSwitch.setMinimumSize(QtCore.QSize(16, 16))
-    parent.animationSwitch.setMaximumSize(QtCore.QSize(16, 16))
-    parent.animationSwitch.setText("")
-    parent.animationSwitch.setCheckable(True)
-    parent.animationSwitch.setFlat(True)
-    parent.animationSwitch.setObjectName("animationSwitch")
+    parent.animationSwitch = SwitchButton()
     parent.animationLayout.addWidget(parent.animationSwitch)
 
     parent.animationOverwrite = QtWidgets.QPushButton()
@@ -999,10 +1095,13 @@ def setupUi (parent, ListViewLayout):
 
     textOffset = 4
     parent.commentEdit = CommentEdit("Silent Push")
+    parent.commentEdit.setMinimumWidth(WIDTH+MARGIN)
+    parent.commentEdit.setMaximumWidth(WIDTH+MARGIN)
+    parent.commentEdit.setMinimumHeight(HIGHT_THICK)
     parent.commentEdit.setProperty("background", "options")
     parent.commentEdit.setProperty("border", "none")
     parent.commentEdit.setObjectName("commentEdit")
-    parent.commentEdit.setViewportMargins( MARGIN-textOffset, 0, MARGIN, 0)
+    parent.commentEdit.setViewportMargins( MARGIN-textOffset, 0, 0, 0)
     parent.commentEdit.setFont(UIsettings.Options.fontComment)
     parent.commentLayout.addWidget(parent.commentEdit)
 
@@ -1017,7 +1116,6 @@ def setupUi (parent, ListViewLayout):
     parent.exportLayout.setObjectName("exportLayout")
 
     parent.exportButton = ExportButton()
-    parent.exportButton.setMinimumHeight(HIGHT_THICK)
     parent.exportButton.setFont(UIsettings.Options.fontLabel)
     parent.exportButton.setFlat(True)
     parent.exportButton.setObjectName("exportButton")

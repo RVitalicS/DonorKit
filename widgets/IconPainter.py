@@ -21,8 +21,8 @@ def background (function):
     def wrapped(self):
 
         self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-        if self.iconRect.contains(self.pointer):
-            color = QtGui.QColor(stylesheet.folderHilight)
+        if self.hover:
+            color = QtGui.QColor(stylesheet.iconHilight)
         else:
             color = QtGui.QColor(stylesheet.iconBackground)
         self.painter.fillRect(self.iconRect, color)
@@ -35,17 +35,35 @@ def background (function):
 
 
 
-def rgbReplace (image, color):
+def favorite (function):
+    def wrapped (self):
 
-    for x in range(0, image.height()):
-        for y in range(0, image.width()):
+        function(self)
 
-            color = QtGui.QColor(color)
-            alpha = image.pixelColor(x,y).alpha()
-            color.setAlpha(alpha)
-            image.setPixelColor(x, y, color)
+        if self.hover or self.controlMode:
 
-    return image
+            image = QtGui.QImage(":/icons/star.png")
+
+            offset = UIsettings.IconDelegate.space
+            position = QtCore.QPoint(
+                self.iconRect.x() + self.iconRect.width() - image.width() - offset,
+                self.iconRect.y() + offset )
+
+            self.favoriteArea = QtCore.QRect(
+                position.x()   ,
+                position.y()   ,
+                image.width()  ,
+                image.height() )
+
+            if self.favorite:
+                image = tools.recolor(image, stylesheet.checkedHilight)
+            else:
+                image = tools.recolor(image, stylesheet.black, opacity=0.2)
+
+            self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+            self.painter.drawImage(position, image)
+
+    return wrapped
 
 
 
@@ -63,9 +81,15 @@ class Icon (object):
         self.pointer  = QtCore.QPoint(-1, -1)
         self.iconRect = QtCore.QRect()
 
-
         self.folderNameArea  = QtCore.QRect()
         self.createFolderArea = QtCore.QRect()
+
+        self.folderLinkArea = QtCore.QRect()
+
+        self.favorite = False
+        self.favoriteArea = QtCore.QRect()
+
+        self.controlMode = False
 
 
 
@@ -95,7 +119,8 @@ class Icon (object):
 
         self.checked = self.index.data(QtCore.Qt.StatusTipRole)
 
-        iconType = self.index.data(QtCore.Qt.EditRole)["type"]
+        self.data = self.index.data(QtCore.Qt.EditRole).get("data")
+        iconType  = self.index.data(QtCore.Qt.EditRole).get("type")
         
         if iconType != "asset":
             self.radius = 0
@@ -112,6 +137,9 @@ class Icon (object):
             self.width  - self.space*2 ,
             self.height - self.space*2 )
 
+        self.hover = False
+        if self.iconRect.contains(self.pointer):
+            self.hover = True
 
         self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         clipPath = QtGui.QPainterPath()
@@ -145,6 +173,7 @@ class Icon (object):
             self.paintPlus()
 
         elif iconType == "asset":
+            self.favorite = self.data.get("favorite", False)
             self.paintAsset()
 
 
@@ -162,7 +191,7 @@ class Icon (object):
 
         self.painter.setFont( UIsettings.IconDelegate.fontLibraries )
 
-        text = self.index.data(QtCore.Qt.EditRole)["data"]["text"]
+        text = self.data.get("text")
 
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
@@ -188,7 +217,7 @@ class Icon (object):
 
         self.painter.setFont( UIsettings.IconDelegate.fontCategory )
 
-        text = self.index.data(QtCore.Qt.EditRole)["data"]["text"]
+        text = self.data.get("text")
 
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
@@ -205,15 +234,16 @@ class Icon (object):
 
         self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
 
-        if self.iconRect.contains(self.pointer):
-            colorBackground = QtGui.QColor(stylesheet.folderHilight)
+        libraryImage = QtGui.QImage(":/icons/library.png")
+        if self.hover:
+            colorBackground = QtGui.QColor(stylesheet.iconHilight)
             colorText = stylesheet.white
-            libraryImage = QtGui.QImage(":/icons/library-hover.png")
+            libraryImage = tools.recolor(libraryImage, stylesheet.violet)
 
         else:
             colorBackground = QtGui.QColor(stylesheet.iconBackground)
             colorText = stylesheet.text
-            libraryImage = QtGui.QImage(":/icons/library.png")
+            libraryImage = tools.recolor(libraryImage, stylesheet.text)
 
 
         # BACKGROUND
@@ -262,7 +292,7 @@ class Icon (object):
             self.iconRect.height()              )
 
 
-        text = self.index.data(QtCore.Qt.EditRole)["data"]["name"]
+        text = self.data.get("name")
 
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
@@ -279,8 +309,8 @@ class Icon (object):
 
         # BACKGROUND
         self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-        if self.iconRect.contains(self.pointer):
-            color = QtGui.QColor(stylesheet.folderHilight)
+        if self.hover:
+            color = QtGui.QColor(stylesheet.iconHilight)
         else:
             color = QtGui.QColor(stylesheet.iconBackground)
         self.painter.fillRect(self.iconRect, color)
@@ -288,14 +318,16 @@ class Icon (object):
 
         # ICON
         folderImage = QtGui.QImage(":/icons/folder.png")
-        offsetIcon = int((
+
+        folderOffset = int((
             self.height - self.space*2 - folderImage.height() )/2)
 
-        iconPosition = QtCore.QPoint(
-                self.pointX + self.space + offsetIcon,
-                self.pointY + self.space + offsetIcon)
-
-        self.painter.drawImage(iconPosition, folderImage)
+        folderPosition = QtCore.QPoint(
+                self.iconRect.x() + folderOffset,
+                self.iconRect.y() + folderOffset)
+        
+        folderImage = tools.recolor(folderImage, stylesheet.folderColor)
+        self.painter.drawImage(folderPosition, folderImage)
 
 
         # NAME
@@ -311,7 +343,7 @@ class Icon (object):
         offsetText = 1
         self.painter.setFont( UIsettings.IconDelegate.fontFolderName )
 
-        offsetName = folderImage.width() + offsetIcon*2
+        offsetName = folderImage.width() + folderOffset*2
         self.folderNameArea = QtCore.QRect(
             self.pointX + self.space + offsetName   ,
             self.pointY + self.space ,
@@ -319,7 +351,7 @@ class Icon (object):
             int(self.height/2) - int(self.space/2) -offsetText )
 
 
-        text = self.index.data(QtCore.Qt.EditRole)["data"]["name"]
+        name = self.data.get("name")
 
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
@@ -327,7 +359,7 @@ class Icon (object):
 
         self.painter.drawText(
             QtCore.QRectF(self.folderNameArea),
-            text,
+            name,
             textOption)
 
 
@@ -342,7 +374,7 @@ class Icon (object):
 
         self.painter.setFont( UIsettings.IconDelegate.fontFolderItems )
 
-        offsetName = folderImage.width() + offsetIcon*2
+        offsetName = folderImage.width() + folderOffset*2
         countArea = QtCore.QRect(
             self.pointX + self.space + offsetName   ,
             self.pointY + int(self.height/2) +offsetText ,
@@ -350,7 +382,7 @@ class Icon (object):
             int(self.height/2) )
 
 
-        count = self.index.data(QtCore.Qt.EditRole)["data"]["items"]
+        count = self.data.get("items")
         if count == 1:
             text = "1 item"
         elif count > 1:
@@ -366,6 +398,28 @@ class Icon (object):
             QtCore.QRectF(countArea),
             text,
             textOption)
+
+
+        # LINK
+        if self.hover and self.controlMode and name != "":
+
+            linkImage = QtGui.QImage(":/icons/link.png")
+            linkImage = tools.recolor(linkImage, stylesheet.folderLink)
+
+            linkOffset = linkImage.width() + UIsettings.IconDelegate.offsetLink
+
+            linkPosition = QtCore.QPoint(
+                    self.iconRect.x() + self.iconRect.width()  - linkOffset,
+                    self.iconRect.y() + self.iconRect.height() - linkOffset)
+
+            self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+            self.painter.drawImage(linkPosition, linkImage)
+
+            self.folderLinkArea = QtCore.QRect(
+                linkPosition.x() ,
+                linkPosition.y() ,
+                linkImage.width() ,
+                linkImage.height() )
 
 
 
@@ -388,14 +442,15 @@ class Icon (object):
             libraryImage.height() )
 
         if self.createFolderArea.contains(self.pointer):
-            libraryImage = rgbReplace(libraryImage, stylesheet.folderHilight)
+            libraryImage = tools.recolor(libraryImage, stylesheet.iconHilight)
         else:
-            libraryImage = rgbReplace(libraryImage, stylesheet.browserSocket)
+            libraryImage = tools.recolor(libraryImage, stylesheet.browserSocket)
 
         self.painter.drawImage(iconPosition, libraryImage)
 
 
 
+    @favorite
     def paintAsset (self):
 
         # BACKGROUND
@@ -406,7 +461,7 @@ class Icon (object):
         # DEFINE STATUS
         color = stylesheet.statusWIP
 
-        status = self.index.data(QtCore.Qt.EditRole)["data"]["status"]
+        status = self.data.get("status")
         if status == "Final":
             color = stylesheet.statusFinal
         elif status == "Completed":
@@ -442,7 +497,7 @@ class Icon (object):
 
 
         # PREVIEW IMAGE
-        previewList = self.index.data(QtCore.Qt.EditRole)["data"]["previews"]
+        previewList = self.data.get("previews")
         previewCount = len(previewList)
         if previewCount > 0:
 
@@ -478,7 +533,7 @@ class Icon (object):
 
 
         # ANIMATION TAG
-        textAnimation = self.index.data(QtCore.Qt.EditRole)["data"]["animation"]
+        textAnimation = self.data.get("animation")
         if textAnimation:
             textAnimation = textAnimation.replace("_", " ")
 
@@ -533,6 +588,29 @@ class Icon (object):
 
 
 
+        # LINK
+        if self.hover and self.controlMode:
+
+            linkImage = QtGui.QImage(":/icons/link.png")
+            linkImage = tools.recolor(linkImage, stylesheet.white, opacity=0.25)
+
+            linkOffset = linkImage.width() + self.space
+
+            linkPosition = QtCore.QPoint(
+                    self.iconRect.x() + self.iconRect.width()  - linkOffset,
+                    self.iconRect.y() + previewHeight          - linkOffset)
+
+            self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+            self.painter.drawImage(linkPosition, linkImage)
+
+            self.folderLinkArea = QtCore.QRect(
+                linkPosition.x() ,
+                linkPosition.y() ,
+                linkImage.width() ,
+                linkImage.height() )
+
+
+
         # INFO AREA
         labelBackground = QtCore.QRect(
             self.pointX                              ,
@@ -540,7 +618,7 @@ class Icon (object):
             self.width                               ,
             labelHeight + self.space                 )
 
-        if self.iconRect.contains(self.pointer):
+        if self.hover:
             color = QtGui.QColor(stylesheet.iconHilight)
         else:
             color = QtGui.QColor(stylesheet.iconBackground)
@@ -639,7 +717,7 @@ class Icon (object):
             publishedArea.width()                    ,
             publishedArea.height() - offsetPublished )
 
-        text = self.index.data(QtCore.Qt.EditRole)["data"]["published"]
+        text = self.data.get("published")
 
         self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.drawText(
@@ -712,7 +790,7 @@ class Icon (object):
                 spaceName                       ,
                 labelArea.height() - offsetName                )
 
-        textName = self.index.data(QtCore.Qt.EditRole)["data"]["name"]
+        textName = self.data.get("name")
         textName = textName.replace("_", " ")
         
         nameWidth = tools.getStringWidth(textName, fontName)
@@ -738,7 +816,7 @@ class Icon (object):
 
 
         # VARIANT
-        variant = self.index.data(QtCore.Qt.EditRole)["data"]["variant"]
+        variant = self.data.get("variant")
         if variant and spaceVariant > self.space:
 
             offsetPixel = 1
@@ -785,7 +863,7 @@ class Icon (object):
             nameArea.width()                  ,
             nameArea.height() - offsetVersion )
 
-        version = self.index.data(QtCore.Qt.EditRole)["data"]["version"]
+        version = self.data.get("version")
         textVersion = "version {}".format(version)
 
         self.painter.setPen( statusColor )
@@ -796,7 +874,7 @@ class Icon (object):
             textVersion,
             textOption)
 
-        if self.iconRect.contains(self.pointer):
+        if self.hover:
 
             versionWidth = tools.getStringWidth(textVersion, fontVersion)
             offsetPixel = 1
@@ -807,7 +885,7 @@ class Icon (object):
                 nameArea.width()  - versionWidth - offsetPixel ,
                 nameArea.height()                              )
 
-            count = self.index.data(QtCore.Qt.EditRole)["data"]["count"]
+            count = self.data.get("count")
             textCount = " // {}".format(count)
 
             self.painter.setPen( QtGui.QColor(stylesheet.text) )

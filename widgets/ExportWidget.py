@@ -72,6 +72,8 @@ class ExportWidget (QtWidgets.QDialog):
     def connectUi (self):
 
         self.AssetBrowser.iconClicked.connect(self.iconClicked)
+        self.AssetBrowser.favoriteClicked.connect(self.favoriteClicked)
+        self.AssetBrowser.folderLink.connect(self.openFolder)
         self.AssetBrowser.createFolderQuery.connect(self.createFolderQuery)
         self.AssetBrowser.createFolder.connect(self.createFolder)
 
@@ -79,6 +81,7 @@ class ExportWidget (QtWidgets.QDialog):
         self.assetPath.bookmarkClicked.connect(self.actionBookmark)
 
         self.BottomBar.previewSlider.valueChanged.connect(self.sliderAction)
+        self.BottomBar.favoritesButton.released.connect(self.favoriteFilter)
         self.BottomBar.bookmarkChoosed.connect(self.jumpBookmark)
 
         self.nameEdit.textChanged.connect(self.setName)
@@ -118,67 +121,120 @@ class ExportWidget (QtWidgets.QDialog):
 
     def bookmarkIndex (self):
 
-        library = self.assetPath.pathRoot.text()
-        subdir  = self.assetPath.pathLine.text()
-        name = library
-        if subdir: name += "/"+ subdir
-
+        pathUI = self.getPathUI()
         count = self.BottomBar.bookmarkCombobox.count()
+
         for index in range(count):
             text = self.BottomBar.bookmarkCombobox.itemText(index)
 
-            if name == text:
+            if pathUI == text:
                 return index
 
 
 
-    def actionBookmark (self, save):
+    def actionBookmark (self):
 
         index = self.bookmarkIndex()
         if not index is None:
 
-            data = self.BottomBar.bookmarkCombobox.itemData(index)
+            pathID = self.BottomBar.bookmarkCombobox.itemData(index)
             with Settings.UIManager(update=True) as uiSettings:
-                if data in uiSettings["bookmarks"]:
-                    uiSettings["bookmarks"].remove(data)
+                if pathID in uiSettings["bookmarks"]:
+                    uiSettings["bookmarks"].remove(pathID)
 
             self.BottomBar.bookmarkCombobox.removeItem(index)
 
         else:
-            library = self.assetPath.pathRoot.text()
-            subdir  = self.assetPath.pathLine.text()
-
-            name = library
-            if subdir: name += "/"+ subdir
-            data = "{"+ library +"}" + subdir
-            self.BottomBar.bookmarkCombobox.addItem(name, data)
+            pathUI = self.getPathUI()
+            pathID = self.getPathID()
+            self.BottomBar.bookmarkCombobox.addItem(pathUI, pathID)
 
             with Settings.UIManager(update=True) as uiSettings:
-                uiSettings["bookmarks"] += [data]
+                uiSettings["bookmarks"] += [pathID]
 
 
 
-    def jumpBookmark (self, data):
+    def getPathUI (self):
 
-        bookmark = self.interpretBookmark(data)
+        root   = self.assetPath.pathRoot.text()
+        subdir = self.assetPath.pathLine.text()
+
+        if subdir:
+            return root +"/"+ subdir
+        else:
+            return root
+
+
+
+    def getPathID (self, asset=None):
+
+        library = self.assetPath.pathRoot.text()
+        subdir  = self.assetPath.pathLine.text()
+
+        path = "{"+ library +"}" + subdir
+
+        if not asset is None:
+            path += "/" + asset
+
+        return path
+
+
+
+    def jumpBookmark (self, pathID):
+
+        bookmark = self.interpretID(pathID)
         if not bookmark is None:
             library, subdir = bookmark
 
             self.setLibrary(library)
-            self.assetPath.changeSubdir(subdir)
+            success = self.assetPath.changeSubdir(subdir)
+
+            if not success:
+                with Settings.UIManager(update=True) as uiSettings:
+                    if pathID in uiSettings["bookmarks"]:
+                        uiSettings["bookmarks"].remove(pathID)
+
+                count = self.BottomBar.bookmarkCombobox.count()
+                for index in range(count):
+                    data = self.BottomBar.bookmarkCombobox.itemData(index)
+                    if pathID == data:
+                        self.BottomBar.bookmarkCombobox.removeItem(index)
+                        break
+
+            self.BottomBar.bookmarkCombobox.setCurrentIndex(-1)
 
 
 
-    def interpretBookmark (self, data):
+    def interpretID (self, pathID):
 
-        key = re.search(r"\{.*\}", data)
+        key = re.search(r"\{.*\}", pathID)
         if key:
             key = key.group()
 
             library = re.sub(r"[\{\}]", "", key)
-            subdir = re.sub(key, "", data)
+            subdir = re.sub(key, "", pathID)
 
             return (library, subdir)
+
+
+
+    def translateID (self, pathID):
+
+        path = ""
+        bookmark = self.interpretID(pathID)
+
+        if not bookmark is None:
+            root, subdir = bookmark
+
+            root = self.libraries.get(root)
+            if not root is None:
+
+                if subdir:
+                    path = root +"/"+ subdir
+                else:
+                    path = root
+
+        return path
 
 
 
@@ -353,7 +409,7 @@ class ExportWidget (QtWidgets.QDialog):
             uiSettings["iconSize"] = value
 
         self.AssetBrowser.setGrid()
-        self.AssetBrowser.repaint()
+        self.AssetBrowser.adjustSize()
 
 
 
@@ -410,9 +466,36 @@ class ExportWidget (QtWidgets.QDialog):
 
 
 
+    def favoriteClicked (self, index):
+
+        model = self.AssetBrowser.model()
+        iconItem = model.item(index.row())
+        data = index.data(QtCore.Qt.EditRole)
+
+        name = data.get("data").get("name")
+        pathID = self.getPathID(asset=name)
+
+        with Settings.UIManager(update=True) as uiSettings:
+
+            if pathID not in uiSettings["favorites"]:
+                uiSettings["favorites"] += [pathID]
+                data["data"]["favorite"] = True
+
+            else:
+                uiSettings["favorites"].remove(pathID)
+                data["data"]["favorite"] = False
+
+        iconItem.setData(data, QtCore.Qt.EditRole)
+
+        if self.BottomBar.favoritesButton.isChecked():
+            self.favoriteFilter(update=True)
+
+
+
     def iconClicked (self, index):
 
         data = index.data(QtCore.Qt.EditRole)
+        force = False
 
         if data:
             dataType = data["type"]
@@ -433,6 +516,7 @@ class ExportWidget (QtWidgets.QDialog):
 
                 if assetType == "usdasset":
                     name = assetdata["name"]
+                    force = True
 
                     if self.checkedName == name:
                         self.checkedName = ""
@@ -444,7 +528,7 @@ class ExportWidget (QtWidgets.QDialog):
         else:
             self.checkedName = ""
 
-        self.setOptions()
+        self.setOptions(force=force)
 
 
 
@@ -731,13 +815,17 @@ class ExportWidget (QtWidgets.QDialog):
 
 
 
-    def getDirItems (self, path):
+    def getDirItems (self, path, filterFavotires=False):
 
         if not path:
             return []
     
         library = []
         self.assetsNames = []
+
+        favorites = []
+        with Settings.UIManager(update=False) as uiSettings:
+            favorites = uiSettings.get("favorites", [])
 
         for name in os.listdir(path):
 
@@ -762,6 +850,15 @@ class ExportWidget (QtWidgets.QDialog):
                 versionCount = len(versionCount)
 
                 if dataType == "usdasset":
+
+                    favorite = False
+                    pathID = self.getPathID(asset=name)
+                    if pathID in favorites:
+                        favorite = True
+
+                    if filterFavotires and not favorite:
+                            continue
+
                     library.append(
                         dict(type="asset",  data=dict(
                             name=name,
@@ -772,7 +869,8 @@ class ExportWidget (QtWidgets.QDialog):
                             variant=tools.getVariantName(chosenItem),
                             animation=tools.getAnimationName(chosenItem),
                             published=publishedTime,
-                            status=data["status"] )) )
+                            status=data["status"],
+                            favorite=favorite )) )
                     self.assetsNames.append(name)
 
 
@@ -801,6 +899,26 @@ class ExportWidget (QtWidgets.QDialog):
 
 
 
+    def favoriteFilter (self, update=False):
+
+        favoriteFilter = self.BottomBar.favoritesButton.isChecked()
+
+        if not update:
+            with Settings.UIManager(update=True) as uiSettings:
+                uiSettings["favoriteFilter"] = favoriteFilter
+
+                if favoriteFilter:
+                    favorites = []
+                    for pathID in uiSettings.get("favorites"):
+                        path = self.translateID(pathID)
+                        if os.path.exists(path):
+                            favorites.append(pathID)
+                    uiSettings["favorites"] = favorites
+
+        self.drawBrowserItems( self.assetPath.get() )
+
+
+
     def drawBrowserItems (self, path):
 
         if not self.bookmarkIndex() is None:
@@ -813,8 +931,12 @@ class ExportWidget (QtWidgets.QDialog):
             self.assetPath.setVisible(False)
             library = self.getLibraries()
         else:
-            library = self.getDirItems(path)
+            library = self.getDirItems(
+                path,
+                filterFavotires=self.BottomBar.favoritesButton.isChecked() )
 
+
+        hasCheckedName = False
 
         hasLibrary = False
         hasFolder  = False
@@ -862,6 +984,9 @@ class ExportWidget (QtWidgets.QDialog):
                 dict(type=item["type"], data=item["data"]),
                 QtCore.Qt.EditRole)
 
+            if self.checkedName == item.get("data").get("name"):
+                iconItem.setData(1, QtCore.Qt.StatusTipRole)
+                hasCheckedName = True
 
             iconModel.appendRow(iconItem)
 
@@ -873,9 +998,9 @@ class ExportWidget (QtWidgets.QDialog):
 
         self.AssetBrowser.setGrid()
 
-
-        self.checkedName = ""
-        self.setOptions()
+        if not hasCheckedName:
+            self.checkedName = ""
+            self.setOptions()
 
 
 
@@ -891,8 +1016,6 @@ class ExportWidget (QtWidgets.QDialog):
 
         self.AssetBrowser.setCurrentIndex(index)
         self.AssetBrowser.edit(index)
-
-        self.AssetBrowser.repaint()
 
 
 
@@ -929,6 +1052,21 @@ class ExportWidget (QtWidgets.QDialog):
 
 
 
+    def openFolder (self, index):
+
+        model = self.AssetBrowser.model()
+        updateItem = model.item(index.row())
+        data = index.data(QtCore.Qt.EditRole)
+
+        path = os.path.join(
+            self.assetPath.get(),
+            data.get("data").get("name") )
+
+        if os.path.exists(path):
+            tools.openFolder(path)
+
+
+
     def modelingOverwriteSetting (self):
         with Settings.UIManager(update=True) as uiSettings:
             uiSettings["modellingOverwrite"] = self.modelingOverwrite.isChecked()
@@ -953,10 +1091,15 @@ class ExportWidget (QtWidgets.QDialog):
         with Settings.UIManager(update=False) as uiSettings:
 
 
-            bookmarks = uiSettings["bookmarks"]
+            if uiSettings.get("favoriteFilter"):
+                self.BottomBar.favoritesButton.setChecked(True)
+
+
+            self.BottomBar.bookmarkCombobox.clear()
+            bookmarks = uiSettings.get("bookmarks")
             blacklist = []
             for data in bookmarks:
-                bookmark = self.interpretBookmark(data)
+                bookmark = self.interpretID(data)
                 if not bookmark is None:
                     library, subdir = bookmark
 
@@ -980,15 +1123,17 @@ class ExportWidget (QtWidgets.QDialog):
                     for data in blacklist:
                         uiSettings["bookmarks"].remove(data)
 
+            self.BottomBar.bookmarkCombobox.setCurrentIndex(-1)
 
-            self.animationOpions.rangeStartSpinbox.setValue(uiSettings["rangeStart"])
-            self.animationOpions.rangeEndSpinbox.setValue(uiSettings["rangeEnd"])
-            self.animationOpions.fpsSpinbox.setValue(uiSettings["fps"])
-            self.mainOpions.unitSpinbox.setValue(uiSettings["unitsMultiplier"])
 
-            modelingOn  = uiSettings["modelling"]
-            surfacingOn = uiSettings["surfacing"]
-            animationOn = uiSettings["animation"]
+            self.animationOpions.rangeStartSpinbox.setValue(uiSettings.get("rangeStart"))
+            self.animationOpions.rangeEndSpinbox.setValue(uiSettings.get("rangeEnd"))
+            # self.animationOpions.fpsSpinbox.setValue(uiSettings["fps"])
+            # self.mainOpions.unitSpinbox.setValue(uiSettings["unitsMultiplier"])
+
+            modelingOn  = uiSettings.get("modelling")
+            surfacingOn = uiSettings.get("surfacing")
+            animationOn = uiSettings.get("animation")
 
             if modelingOn:
                 self.modelingSwitch.setChecked(True)
@@ -997,7 +1142,7 @@ class ExportWidget (QtWidgets.QDialog):
                 self.modelingSwitch.setChecked(False)
                 self.modelingOverwrite.setEnabled(False)
             
-            if uiSettings["modellingOverwrite"]:
+            if uiSettings.get("modellingOverwrite"):
                 self.modelingOverwrite.setChecked(True)
             else:
                 self.modelingOverwrite.setChecked(False)
@@ -1009,7 +1154,7 @@ class ExportWidget (QtWidgets.QDialog):
                 self.surfacingSwitch.setChecked(False)
                 self.surfacingOverwrite.setEnabled(False)
             
-            if uiSettings["surfacingOverwrite"]:
+            if uiSettings.get("surfacingOverwrite"):
                 self.surfacingOverwrite.setChecked(True)
             else:
                 self.surfacingOverwrite.setChecked(False)
@@ -1023,7 +1168,7 @@ class ExportWidget (QtWidgets.QDialog):
                 self.animationSwitch.setChecked(False)
                 self.animationOverwrite.setEnabled(False)
             
-            if uiSettings["animationOverwrite"]:
+            if uiSettings.get("animationOverwrite"):
                 self.animationOverwrite.setChecked(True)
             else:
                 self.animationOverwrite.setChecked(False)
@@ -1033,7 +1178,7 @@ class ExportWidget (QtWidgets.QDialog):
             else:
                 self.mainOpions.setVisible(False)
 
-            if uiSettings["link"]:
+            if uiSettings.get("link"):
                 self.mainOpions.linkButton.setChecked(True)
             else:
                 self.mainOpions.linkButton.setChecked(False)

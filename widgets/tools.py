@@ -5,6 +5,7 @@
 import os, re
 import sys, json
 import time, datetime
+import subprocess
 
 from Qt import QtGui
 
@@ -50,6 +51,22 @@ def validJSON (path):
 
 
 
+def openFolder (path):
+
+    if sys.platform == "darwin":
+        subprocess.check_call(["open", "--", path])
+
+    elif sys.platform == "linux":
+        subprocess.check_call(["nautilus", path])
+
+    elif sys.platform == "win32":
+        subprocess.check_call(["explorer", path])
+
+
+
+
+
+
 def getStringWidth (string, font):
 
     '''
@@ -80,6 +97,25 @@ def getStringWidth (string, font):
     width = int(round(width/scale))
 
     return width
+
+
+
+
+
+
+def recolor (image, color, opacity=1.0):
+
+    for x in range(image.width()):
+        for y in range(image.height()):
+
+            alpha = int(
+                image.pixelColor(x,y).alpha() * opacity )
+
+            color = QtGui.QColor(color)
+            color.setAlpha(alpha)
+            image.setPixelColor(x, y, color)
+
+    return image
 
 
 

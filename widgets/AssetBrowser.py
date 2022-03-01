@@ -17,6 +17,8 @@ class AssetBrowser (QtWidgets.QListView):
 
     createFolderQuery = QtCore.Signal(QtCore.QModelIndex)
     createFolder      = QtCore.Signal(QtCore.QModelIndex, str)
+    folderLink        = QtCore.Signal(QtCore.QModelIndex)
+    favoriteClicked = QtCore.Signal(QtCore.QModelIndex)
     iconClicked  = QtCore.Signal(QtCore.QModelIndex)
 
 
@@ -42,6 +44,8 @@ class AssetBrowser (QtWidgets.QListView):
 
         self.verticalScrollBar().sliderMoved.connect(
             self.saveScrollPosition)
+        
+        self.controlMode = False
 
 
 
@@ -310,10 +314,34 @@ class AssetBrowser (QtWidgets.QListView):
 
 
 
+    def leaveEvent (self, event):
+
+        super(AssetBrowser, self).leaveEvent(event)
+        self.controlMode = False
+        self.repaint()
+
+
+
     def mouseReleaseEvent (self, event):
 
         super(AssetBrowser, self).mouseReleaseEvent(event)
         self.iconClickedSignal(QtCore.QModelIndex())
+
+
+
+    def keyPressEvent (self, event):
+
+        if event.key() == QtCore.Qt.Key_Control:
+            self.controlMode = True
+            self.repaint()
+
+
+
+    def keyReleaseEvent (self, event):
+        
+        if event.key() == QtCore.Qt.Key_Control:
+            self.controlMode = False
+            self.repaint()
 
 
 
@@ -325,9 +353,8 @@ class AssetBrowser (QtWidgets.QListView):
 
 
     def wheelEvent (self, event):
-
-        super(AssetBrowser, self).wheelEvent(event)
         
+        super(AssetBrowser, self).wheelEvent(event)
         value = self.verticalScrollBar().value()
         self.saveScrollPosition(value)
 
@@ -359,6 +386,12 @@ class AssetBrowser (QtWidgets.QListView):
 
 
 
+    def favoriteClickedSignal (self, index):
+
+        self.favoriteClicked.emit(index)
+
+
+
     def iconClickedSignal (self, index):
 
         self.iconClicked.emit(index)
@@ -374,3 +407,9 @@ class AssetBrowser (QtWidgets.QListView):
     def createFolderBridge (self, index, name):
 
         self.createFolder.emit(index, name)
+
+
+
+    def folderLinkBridge (self, index):
+
+        self.folderLink.emit(index)

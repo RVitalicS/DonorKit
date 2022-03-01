@@ -8,29 +8,34 @@ white  = "#ffffff"
 paper  = "#e4e4e4"
 black  = "#060a0c"
 violet = "#a37acc"
+purple = "#815aa8"
 red    = "#f07171"
 
 text      = "#bbbbbb"
 textoff   = "#707070"
 textlock  = "#8b8b8b"
 
-browserBackground = "#444444"
-browserSocket     = "#373737"
+browserBackground  = "#444444"
+browserSocket      = "#373737"
+browserSocketHover = "#525252"
+browserHandle      = "#808080"
 
 iconBackground = "#4e5052"
 iconHilight    = "#545759"
 iconAnimation  = "#2a2a2a"
 
-folderHilight  = "#545759"
-checkedHilight = "#58a5cc"
+folderLink  = "#7a7a7a"
+folderColor = "#989898"
 
-greyHandle = "#808080"
+checkedHilight = "#58a5cc"
 
 
 optionBackground = "#4e5052"
 optionInput      = "#464849"
 optionButton     = "#606365"
 optionDisable    = "#3a3c3d"
+
+spinboxArrow     = "#bbbbbb"
 
 
 statusFinal     = "#00c59b"
@@ -82,7 +87,7 @@ QSlider::groove:horizontal {
     border-radius: $SLIDER_RADIUSpx;
     }
 QSlider::handle:horizontal {
-    background: $GREY_HANDLE;
+    background: $BROWSER_HANDLE;
     border: none;
     width: $SLIDER_WIDTHpx;
     margin: 0px 0;
@@ -99,37 +104,31 @@ QScrollBar:horizontal, QScrollBar:vertical {
     border-radius: $RADIUS_BARpx;
 }
 
-QScrollBar:horizontal {
-    height:6px;
-}
-
 QScrollBar:vertical {
-    width:6px;
+    width:12px;
+    margin-right: 6px;
 }
 
-QScrollBar::handle:horizontal { min-width:45px; }
 QScrollBar::handle:vertical { min-height:45px; }
 
-QScrollBar::handle:horizontal, QScrollBar::handle:vertical {
-    background: $GREY_HANDLE;
+QScrollBar::handle:vertical {
+    background: $BROWSER_HANDLE;
     border: none;
     border-radius: $RADIUS_BARpx;
 }
 
-QScrollBar:left-arrow:horizontal, QScrollBar::right-arrow:horizontal,
 QScrollBar:left-arrow:vertical, QScrollBar::right-arrow:vertical  {
     background: transparent;
 }
 
-QScrollBar::add-line:horizontal,      QScrollBar::add-line:vertical {
+QScrollBar::add-line:vertical {
     background: transparent;
 }
 
-QScrollBar::sub-line:horizontal,      QScrollBar::sub-line:vertical {
+QScrollBar::sub-line:vertical {
     background: transparent;
 }
 
-QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal,
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     background: none;
 }
@@ -137,17 +136,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 '''
 
 
-backbutton = '''
-QPushButton[objectName~="backButton"] {
-    background-image: url(":/icons/back.png");
-    background-repeat: repeat-n;
-    background-position: center left;
-    }
-QPushButton::pressed[objectName~="backButton"] {
-    background-image: url(":/icons/backwhite.png");
-    background-repeat: repeat-n;
-    background-position: center left;
-    }
+rootbutton = '''
 QPushButton[objectName~="pathRoot"] {
     color: $TEXT_ON;
     }
@@ -192,27 +181,6 @@ QPushButton:checked[objectName~="linkButton"][overwrite="true"] {
     color: $WHITE_COLOR;
     background: $VIOLET_COLOR;
     border: none;
-    }
-'''
-
-
-
-checkbutton = '''
-QPushButton:checked[objectName~="modelingSwitch"],
-QPushButton:checked[objectName~="surfacingSwitch"],
-QPushButton:checked[objectName~="animationSwitch"] {
-    border: none;
-    background-image: url(":/icons/checked.png");
-    background-repeat: repeat-n;
-    background-position: center left;
-    }
-QPushButton[objectName~="modelingSwitch"],
-QPushButton[objectName~="surfacingSwitch"],
-QPushButton[objectName~="animationSwitch"] {
-    border: none;
-    background-image: url(":/icons/unchecked.png");
-    background-repeat: repeat-n;
-    background-position: center left;
     }
 '''
 
@@ -279,32 +247,12 @@ QComboBox::drop-down {
     width: 20px;
     background: $OPTION_INPUT;
 }
-QComboBox::down-arrow {
-    image: url(":/icons/dropdown.png");
-}
 QComboBox QAbstractItemView {
     border: none;
     color: $TEXT_ON;
     background: $OPTION_INPUT;
     selection-background-color: $BLACK_COLOR;
 }
-'''
-
-
-
-bookmarkbutton = '''
-QPushButton:checked[bookmark="true"] {
-    border: none;
-    background-image: url(":/icons/bookmark-enabled.png");
-    background-repeat: repeat-n;
-    background-position: center left;
-    }
-QPushButton[bookmark="true"] {
-    border: none;
-    background-image: url(":/icons/bookmark-disabled.png");
-    background-repeat: repeat-n;
-    background-position: center left;
-    }
 '''
 
 
@@ -343,15 +291,13 @@ UI = "".join([
     properties,
     slider,
     scrollbar,
-    backbutton,
     rangebutton,
     linkbutton,
     statusbutton,
-    checkbutton,
     overridebutton,
     versioncombobox,
-    bookmarkbutton,
     bookmarkcombobox,
+    rootbutton,
     pathline ])
 
 
@@ -373,8 +319,7 @@ UI = UI.replace("$HILIGHT_CHECKED", checkedHilight)
 
 UI = UI.replace("$BROWSER_BACKGROUND", browserBackground)
 UI = UI.replace("$BROWSER_SOCKET", browserSocket)
-
-UI = UI.replace("$GREY_HANDLE", greyHandle)
+UI = UI.replace("$BROWSER_HANDLE", browserHandle)
 
 UI = UI.replace("$SLIDER_WIDTH", str(sliderWidth) )
 UI = UI.replace("$SLIDER_RADIUS", str(sliderRadius) )
