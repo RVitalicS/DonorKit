@@ -6,7 +6,7 @@ import os
 import re
 
 from . import resources
-from . import stylesheet
+from . import theme
 from . import tools
 
 
@@ -20,8 +20,11 @@ from . import BottomBar
 from . import ExportUI
 
 from . import Metadata
+
+
 from . import Settings
 UIsettings = Settings.UIsettings
+
 
 
 
@@ -37,25 +40,30 @@ class ExportWidget (QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(ExportWidget, self).__init__(parent)
 
-        self.setStyleSheet( stylesheet.UI )
+        self.theme = theme.Theme()
+        
+        self.metadata  = Metadata.NAME
+        self.libraries = self.getAssetRoots()
+
+        self.assetsNames = []
+        self.exported = False
+
+        self.setStyleSheet( self.theme.getStyleSheet() )
 
         self.browserLayout = QtWidgets.QVBoxLayout()
         self.browserLayout.setContentsMargins(0, 0, 0, 0)
         self.browserLayout.setSpacing(0)
 
-        self.assetPath = PathBar.PathBar()
-        self.browserLayout.addWidget(self.assetPath)
+        self.AssetPath = PathBar.PathBar(self.theme)
+        self.browserLayout.addWidget(self.AssetPath)
 
         self.AssetBrowser = AssetBrowser.AssetBrowser()
         self.browserLayout.addWidget(self.AssetBrowser)
 
-        self.BottomBar = BottomBar.BottomBar()
+        self.BottomBar = BottomBar.BottomBar(self.theme)
         self.browserLayout.addWidget(self.BottomBar)
 
-        self.metadata  = Metadata.NAME
-        self.libraries = self.getAssetRoots()
-
-        ExportUI.setupUi(self, self.browserLayout)
+        ExportUI.setupUi(self, self.browserLayout, self.theme)
         self.connectUi()
         self.applySettings()
 
@@ -65,7 +73,15 @@ class ExportWidget (QtWidgets.QDialog):
 
         self.setLibrary()
         self.AssetBrowser.setFocus(QtCore.Qt.MouseFocusReason)
-        self.exported = False
+
+
+
+    def setIsolation (self, flag):
+
+        flag = not flag
+
+        self.AssetPath.setVisible(flag)
+        self.BottomBar.setVisible(flag)
 
 
 
@@ -77,11 +93,11 @@ class ExportWidget (QtWidgets.QDialog):
         self.AssetBrowser.createFolderQuery.connect(self.createFolderQuery)
         self.AssetBrowser.createFolder.connect(self.createFolder)
 
-        self.assetPath.pathChanged.connect(self.drawBrowserItems)
-        self.assetPath.bookmarkClicked.connect(self.actionBookmark)
+        self.AssetPath.pathChanged.connect(self.drawBrowserItems)
+        self.AssetPath.bookmarkClicked.connect(self.actionBookmark)
 
-        self.BottomBar.previewSlider.valueChanged.connect(self.sliderAction)
-        self.BottomBar.favoritesButton.released.connect(self.favoriteFilter)
+        self.BottomBar.preview.slider.valueChanged.connect(self.sliderAction)
+        self.BottomBar.favorite.button.released.connect(self.favoriteFilter)
         self.BottomBar.bookmarkChoosed.connect(self.jumpBookmark)
 
         self.nameEdit.textChanged.connect(self.setName)
@@ -156,8 +172,8 @@ class ExportWidget (QtWidgets.QDialog):
 
     def getPathUI (self):
 
-        root   = self.assetPath.pathRoot.text()
-        subdir = self.assetPath.pathLine.text()
+        root   = self.AssetPath.pathRoot.text()
+        subdir = self.AssetPath.pathLine.text()
 
         if subdir:
             return root +"/"+ subdir
@@ -168,8 +184,8 @@ class ExportWidget (QtWidgets.QDialog):
 
     def getPathID (self, asset=None):
 
-        library = self.assetPath.pathRoot.text()
-        subdir  = self.assetPath.pathLine.text()
+        library = self.AssetPath.pathRoot.text()
+        subdir  = self.AssetPath.pathLine.text()
 
         path = "{"+ library +"}" + subdir
 
@@ -187,7 +203,7 @@ class ExportWidget (QtWidgets.QDialog):
             library, subdir = bookmark
 
             self.setLibrary(library)
-            success = self.assetPath.changeSubdir(subdir)
+            success = self.AssetPath.changeSubdir(subdir)
 
             if not success:
                 with Settings.UIManager(update=True) as uiSettings:
@@ -365,7 +381,7 @@ class ExportWidget (QtWidgets.QDialog):
     def versionChoice (self, text):
 
         if text:
-            directory = self.assetPath.get()
+            directory = self.AssetPath.get()
             name = self.nameEdit.text()
             path = os.path.join(directory, name)
 
@@ -416,7 +432,7 @@ class ExportWidget (QtWidgets.QDialog):
     def getAssetPath (self):
 
         return os.path.join(
-            self.assetPath.get(),
+            self.AssetPath.get(),
             self.nameEdit.text() )
 
 
@@ -487,7 +503,7 @@ class ExportWidget (QtWidgets.QDialog):
 
         iconItem.setData(data, QtCore.Qt.EditRole)
 
-        if self.BottomBar.favoritesButton.isChecked():
+        if self.BottomBar.favorite.button.isChecked():
             self.favoriteFilter(update=True)
 
 
@@ -507,7 +523,7 @@ class ExportWidget (QtWidgets.QDialog):
 
             elif dataType == "folder":
                 name = data["data"]["name"]
-                self.assetPath.moveForward(name)
+                self.AssetPath.moveForward(name)
                 self.checkedName = ""
 
             elif dataType == "asset":
@@ -534,7 +550,7 @@ class ExportWidget (QtWidgets.QDialog):
 
     def loadStatus (self):
 
-        directory = self.assetPath.get()
+        directory = self.AssetPath.get()
         name = self.nameEdit.text()
         path = os.path.join(directory, name)
 
@@ -580,7 +596,7 @@ class ExportWidget (QtWidgets.QDialog):
                 self.setOptions()
 
         else:
-            self.nameEdit.setProperty("textcolor", "white")
+            self.nameEdit.setProperty("textcolor", "kicker")
 
             inputMatchBreak = False
             if not self.checkedName == "":
@@ -645,7 +661,7 @@ class ExportWidget (QtWidgets.QDialog):
 
         # load asset options
         else:
-            directory = self.assetPath.get()
+            directory = self.AssetPath.get()
             name = self.nameEdit.text()
             path = os.path.join(directory, name)
 
@@ -726,7 +742,7 @@ class ExportWidget (QtWidgets.QDialog):
 
     def setLibrary (self, name=None):
 
-        self.assetPath.setVisible(True)
+        self.setIsolation(False)
 
         if name:
 
@@ -737,7 +753,7 @@ class ExportWidget (QtWidgets.QDialog):
 
                     uiSettings["subdirLibrary"] = ""
                     uiSettings["focusLibrary"]  = name
-                    self.assetPath.setRoot(name, path)
+                    self.AssetPath.setRoot(name, path)
                     return
 
 
@@ -748,7 +764,7 @@ class ExportWidget (QtWidgets.QDialog):
             path = self.libraries.get(name, None)
             if not path is None:
 
-                self.assetPath.setRoot(name, path)
+                self.AssetPath.setRoot(name, path)
                 return
 
             elif name == "":
@@ -762,11 +778,11 @@ class ExportWidget (QtWidgets.QDialog):
                 uiSettings["subdirLibrary"] = ""
                 uiSettings["focusLibrary"]  = name
             
-            self.assetPath.setRoot(name, path)
+            self.AssetPath.setRoot(name, path)
             return
 
 
-        self.assetPath.setRoot("", "")
+        self.AssetPath.setRoot("", "")
 
 
 
@@ -889,6 +905,7 @@ class ExportWidget (QtWidgets.QDialog):
     def getLibraries (self):
     
         libraries = []
+        self.assetsNames = []
 
         for name, path in self.libraries.items():
             libraries.append(
@@ -901,7 +918,7 @@ class ExportWidget (QtWidgets.QDialog):
 
     def favoriteFilter (self, update=False):
 
-        favoriteFilter = self.BottomBar.favoritesButton.isChecked()
+        favoriteFilter = self.BottomBar.favorite.button.isChecked()
 
         if not update:
             with Settings.UIManager(update=True) as uiSettings:
@@ -915,25 +932,25 @@ class ExportWidget (QtWidgets.QDialog):
                             favorites.append(pathID)
                     uiSettings["favorites"] = favorites
 
-        self.drawBrowserItems( self.assetPath.get() )
+        self.drawBrowserItems( self.AssetPath.get() )
 
 
 
     def drawBrowserItems (self, path):
 
         if not self.bookmarkIndex() is None:
-            self.assetPath.bookmarkButton.setChecked(True)
+            self.AssetPath.bookmarkButton.setChecked(True)
         else:
-            self.assetPath.bookmarkButton.setChecked(False)
+            self.AssetPath.bookmarkButton.setChecked(False)
 
 
         if not path:
-            self.assetPath.setVisible(False)
+            self.setIsolation(True)
             library = self.getLibraries()
         else:
             library = self.getDirItems(
                 path,
-                filterFavotires=self.BottomBar.favoritesButton.isChecked() )
+                filterFavotires=self.BottomBar.favorite.button.isChecked() )
 
 
         hasCheckedName = False
@@ -993,7 +1010,7 @@ class ExportWidget (QtWidgets.QDialog):
 
         self.AssetBrowser.setModel(iconModel)
         self.AssetBrowser.setItemDelegate(
-            IconDelegate.Delegate(self.AssetBrowser) )
+            IconDelegate.Delegate(self.AssetBrowser, self.theme) )
 
 
         self.AssetBrowser.setGrid()
@@ -1025,7 +1042,7 @@ class ExportWidget (QtWidgets.QDialog):
         updateItem = model.item(index.row())
 
         newPath = os.path.join(
-            self.assetPath.get(), name)
+            self.AssetPath.get(), name)
         if not name or os.path.exists(newPath):
             updateData = dict(type="plusfolder", data=dict())
             updateItem.setData(updateData, QtCore.Qt.EditRole)
@@ -1059,7 +1076,7 @@ class ExportWidget (QtWidgets.QDialog):
         data = index.data(QtCore.Qt.EditRole)
 
         path = os.path.join(
-            self.assetPath.get(),
+            self.AssetPath.get(),
             data.get("data").get("name") )
 
         if os.path.exists(path):
@@ -1092,7 +1109,7 @@ class ExportWidget (QtWidgets.QDialog):
 
 
             if uiSettings.get("favoriteFilter"):
-                self.BottomBar.favoritesButton.setChecked(True)
+                self.BottomBar.favorite.button.setChecked(True)
 
 
             self.BottomBar.bookmarkCombobox.clear()
@@ -1202,7 +1219,7 @@ class ExportWidget (QtWidgets.QDialog):
             pass
         elif self.nameEdit.text() == self.defaultName:
             pass
-        elif self.assetPath.isHidden():
+        elif self.AssetPath.isHidden():
             pass
         else:
             self.exportButton.setProperty("state", "enabled")

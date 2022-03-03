@@ -4,14 +4,14 @@
 
 import os
 from . import tools
-from . import stylesheet
-
 
 from Qt import QtWidgets, QtCore, QtGui
 
 from . import Settings
 UIsettings = Settings.UIsettings
-        
+
+SPACE  = UIsettings.IconDelegate.space * 2
+MARGIN = UIsettings.AssetBrowser.margin
 
 
 
@@ -20,10 +20,11 @@ UIsettings = Settings.UIsettings
 class FavoriteButton (QtWidgets.QPushButton):
 
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(FavoriteButton, self).__init__()
         self.setCheckable(True)
 
+        self.theme = theme
         self.image = QtGui.QImage(":/icons/star.png")
 
         self.setMinimumWidth( self.image.width() )
@@ -36,7 +37,6 @@ class FavoriteButton (QtWidgets.QPushButton):
         self.buttonHover = False
 
 
-
     def paintEvent (self, event):
 
         painter = QtGui.QPainter(self)
@@ -45,19 +45,18 @@ class FavoriteButton (QtWidgets.QPushButton):
         buttonRect = self.contentsRect()
         position = QtCore.QPoint(buttonRect.x(), buttonRect.y())
 
-        color = QtGui.QColor(stylesheet.browserBackground)
+        color = QtGui.QColor(self.theme.browserBackground)
         painter.fillRect(buttonRect, color)
 
         if self.isChecked():
-            image = tools.recolor(self.image, stylesheet.browserHandle)
+            image = tools.recolor(self.image, self.theme.browserSocketPressed)
         elif self.buttonHover:
-            image = tools.recolor(self.image, stylesheet.browserSocketHover)
+            image = tools.recolor(self.image, self.theme.browserSocketHover)
         else:
-            image = tools.recolor(self.image, stylesheet.browserSocket)
+            image = tools.recolor(self.image, self.theme.browserSocket)
 
         painter.drawImage(position, image)
         painter.end()
-
 
 
     def enterEvent (self, event):
@@ -78,9 +77,10 @@ class FavoriteButton (QtWidgets.QPushButton):
 class BookmarkButton (QtWidgets.QPushButton):
 
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(BookmarkButton, self).__init__()
 
+        self.theme = theme
         self.image = QtGui.QImage(":/icons/bookmark.png")
 
         self.setMinimumWidth( self.image.width() )
@@ -94,7 +94,6 @@ class BookmarkButton (QtWidgets.QPushButton):
         self.buttonHover = False
 
 
-
     def paintEvent (self, event):
 
         painter = QtGui.QPainter(self)
@@ -103,15 +102,15 @@ class BookmarkButton (QtWidgets.QPushButton):
         buttonRect = self.contentsRect()
         position = QtCore.QPoint(buttonRect.x(), buttonRect.y())
 
-        color = QtGui.QColor(stylesheet.browserBackground)
+        color = QtGui.QColor(self.theme.browserBackground)
         painter.fillRect(buttonRect, color)
 
         if self.buttonPressed:
-            image = tools.recolor(self.image, stylesheet.browserHandle)
+            image = tools.recolor(self.image, self.theme.browserSocketPressed)
         elif self.buttonHover:
-            image = tools.recolor(self.image, stylesheet.browserSocketHover)
+            image = tools.recolor(self.image, self.theme.browserSocketHover)
         else:
-            image = tools.recolor(self.image, stylesheet.browserSocket)
+            image = tools.recolor(self.image, self.theme.browserSocket)
 
         painter.drawImage(position, image)
         painter.end()
@@ -143,6 +142,202 @@ class BookmarkButton (QtWidgets.QPushButton):
 
 
 
+class ThemeButton (QtWidgets.QPushButton):
+
+
+    def __init__ (self, theme):
+        super(ThemeButton, self).__init__()
+
+        self.theme = theme
+        self.image = QtGui.QImage(":/icons/theme.png")
+
+        self.setMinimumWidth( self.image.width() )
+        self.setMaximumWidth( self.image.width() )
+
+        offset = UIsettings.Bar.bookmarkOffset
+        self.setMinimumHeight( self.image.height() + offset )
+        self.setMaximumHeight( self.image.height() + offset )
+
+        self.buttonPressed = False
+        self.buttonHover = False
+
+
+    def paintEvent (self, event):
+
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+        buttonRect = self.contentsRect()
+        position = QtCore.QPoint(buttonRect.x(), buttonRect.y())
+
+        color = QtGui.QColor(self.theme.browserBackground)
+        painter.fillRect(buttonRect, color)
+
+        if self.buttonPressed:
+            image = tools.recolor(self.image, self.theme.browserSocketPressed)
+        elif self.buttonHover:
+            image = tools.recolor(self.image, self.theme.browserSocketHover)
+        else:
+            image = tools.recolor(self.image, self.theme.browserSocket)
+
+        painter.drawImage(position, image)
+        painter.end()
+
+
+    def mousePressEvent (self, event):
+        super(ThemeButton, self).mousePressEvent(event)
+        self.buttonPressed = True
+        self.repaint()
+
+    def mouseReleaseEvent (self, event):
+        super(ThemeButton, self).mousePressEvent(event)
+        self.buttonPressed = False
+        self.repaint()
+        self.clearFocus()
+
+    def enterEvent (self, event):
+        super(ThemeButton, self).enterEvent(event)
+        self.buttonHover = True
+        self.setFocus(QtCore.Qt.MouseFocusReason)
+
+    def leaveEvent (self, event):
+        super(ThemeButton, self).leaveEvent(event)
+        self.buttonHover = False
+        self.buttonPressed = False
+        
+
+
+
+
+
+class FavoriteGroup (QtWidgets.QWidget):
+
+    def __init__ (self, theme):
+        super(FavoriteGroup, self).__init__()
+
+        self.mainLayout = QtWidgets.QHBoxLayout()
+        self.mainLayout.setContentsMargins(0,0, SPACE*2 ,0)
+        self.mainLayout.setSpacing(SPACE)
+
+        self.label = QtWidgets.QLabel("FAVORITES")
+        self.label.setFont(UIsettings.Bar.fontPreview)
+        self.label.setAlignment(
+            QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label.setProperty("textcolor", "light")
+
+        self.button = FavoriteButton(theme)
+
+        self.mainLayout.addWidget(self.label)
+        self.mainLayout.addWidget(self.button)
+        self.setLayout(self.mainLayout)
+        
+
+
+
+
+
+class BookmarkGroup (QtWidgets.QWidget):
+
+    def __init__ (self, theme):
+        super(BookmarkGroup, self).__init__()
+
+        self.mainLayout = QtWidgets.QHBoxLayout()
+        self.mainLayout.setContentsMargins(0,0, SPACE*2 ,0)
+        self.mainLayout.setSpacing(SPACE)
+
+        self.label = QtWidgets.QLabel("BOOKMARKS")
+        self.label.setFont(UIsettings.Bar.fontPreview)
+        self.label.setAlignment(
+            QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label.setProperty("textcolor", "light")
+
+        self.button = BookmarkButton(theme)
+
+        self.mainLayout.addWidget(self.label)
+        self.mainLayout.addWidget(self.button)
+        self.setLayout(self.mainLayout)
+        
+
+
+
+
+
+class ThemeGroup (QtWidgets.QWidget):
+
+    def __init__ (self, theme):
+        super(ThemeGroup, self).__init__()
+
+        self.theme = theme
+        self.current = theme.name
+
+        self.mainLayout = QtWidgets.QHBoxLayout()
+        self.mainLayout.setContentsMargins(0,0, SPACE*2 ,0)
+        self.mainLayout.setSpacing(SPACE)
+
+        self.label = QtWidgets.QLabel("THEME")
+        self.label.setFont(UIsettings.Bar.fontPreview)
+        self.label.setAlignment(
+            QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label.setProperty("textcolor", "light")
+
+        self.button = ThemeButton(theme)
+        self.button.released.connect(self.change)
+
+        self.mainLayout.addWidget(self.label)
+        self.mainLayout.addWidget(self.button)
+        self.setLayout(self.mainLayout)
+
+
+    def change (self):
+
+        if self.current == "dark":
+            self.current = "light"
+        else:
+            self.current = "dark"
+
+        with Settings.UIManager(update=True) as uiSettings:
+            uiSettings["theme"] = self.current
+
+        if self.current != self.theme.name:
+            self.label.setText("RESTART")
+        else:
+            self.label.setText("THEME")
+        
+
+
+
+
+
+class PreviewGroup (QtWidgets.QWidget):
+
+    def __init__ (self, theme):
+        super(PreviewGroup, self).__init__()
+
+        self.mainLayout = QtWidgets.QHBoxLayout()
+        self.mainLayout.setContentsMargins(0,0,0,0)
+        self.mainLayout.setSpacing(SPACE)
+
+        self.label = QtWidgets.QLabel("PREVIEW")
+        self.label.setFont(UIsettings.Bar.fontPreview)
+        self.label.setAlignment(
+            QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label.setProperty("textcolor", "light")
+
+        self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.slider.setFixedWidth(35)
+        self.slider.setRange(1, 3)
+        self.slider.setTickInterval(1)
+
+        with Settings.UIManager(update=False) as uiSettings:
+            self.slider.setValue(uiSettings["iconSize"])
+
+        self.mainLayout.addWidget(self.label)
+        self.mainLayout.addWidget(self.slider)
+        self.setLayout(self.mainLayout)
+        
+
+
+
 
 
 class BottomBar (QtWidgets.QWidget):
@@ -150,125 +345,113 @@ class BottomBar (QtWidgets.QWidget):
     bookmarkChoosed = QtCore.Signal(str)
 
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(BottomBar, self).__init__()
 
         height = UIsettings.Bar.height
 
-        self.setMaximumHeight( height )
-        self.setMinimumHeight( height )
-
 
         self.setAutoFillBackground(True)
-
         palette = QtGui.QPalette()
         palette.setColor(
             QtGui.QPalette.Background,
-            stylesheet.browserBackground )
+            theme.browserBackground )
         self.setPalette(palette)
 
 
-        self.mainLayout = QtWidgets.QHBoxLayout()
-        self.mainLayout.setContentsMargins(
-            UIsettings.AssetBrowser.margin + UIsettings.IconDelegate.space,
-            0,
-            UIsettings.AssetBrowser.margin + UIsettings.IconDelegate.space,
-            0 )
+        self.mainLayout = QtWidgets.QVBoxLayout()
+        self.mainLayout.setContentsMargins(0,0,0,0)
         self.mainLayout.setSpacing(0)
 
-
-        self.favoritesLayout = QtWidgets.QHBoxLayout()
-        self.favoritesLayout.setContentsMargins(0, 0,
-            UIsettings.IconDelegate.space*4, 0)
-        self.favoritesLayout.setSpacing(UIsettings.IconDelegate.space*2)
-        self.mainLayout.addLayout(self.favoritesLayout)
-
-        self.favoritesLabel = QtWidgets.QLabel("FAVORITES")
-        self.favoritesLabel.setObjectName("favoritesLabel")
-        self.favoritesLabel.setFont(UIsettings.Bar.fontPreview)
-        self.favoritesLabel.setAlignment(
-            QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.favoritesLabel.setProperty("textcolor", "light")
-        self.favoritesLayout.addWidget(self.favoritesLabel)
-
-        self.favoritesButton = FavoriteButton()
-        self.favoritesLayout.addWidget(self.favoritesButton)
-
-
-        self.bookmarksLayout = QtWidgets.QHBoxLayout()
-        self.bookmarksLayout.setContentsMargins(0, 0,
-            UIsettings.IconDelegate.space*4, 0)
-        self.bookmarksLayout.setSpacing(UIsettings.IconDelegate.space*2)
-        self.mainLayout.addLayout(self.bookmarksLayout)
-
-        self.bookmarksLabel = QtWidgets.QLabel("BOOKMARKS")
-        self.bookmarksLabel.setObjectName("bookmarksLabel")
-        self.bookmarksLabel.setFont(UIsettings.Bar.fontPreview)
-        self.bookmarksLabel.setAlignment(
-            QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.bookmarksLabel.setProperty("textcolor", "light")
-        self.bookmarksLayout.addWidget(self.bookmarksLabel)
-
-
-        self.bookmarkButton = BookmarkButton()
-        self.bookmarksLayout.addWidget(self.bookmarkButton)
-        self.bookmarkButton.pressed.connect(self.showBookmarks)
 
         self.bookmarkCombobox = QtWidgets.QComboBox()
         self.bookmarkCombobox.setFont(UIsettings.Bar.fontBookmark)
         self.bookmarkCombobox.setEditable(False)
         self.bookmarkCombobox.setFrame(False)
+        self.bookmarkCombobox.setVisible(False)
+        self.bookmarkCombobox.setFixedHeight(0)
         self.bookmarkCombobox.setProperty("bookmark", "true")
-        self.bookmarkCombobox.activated.connect(self.bookmarkData)
-        self.bookmarksLayout.addWidget(self.bookmarkCombobox)
+        self.bookmarkCombobox.activated.connect(self.getData)
+        self.mainLayout.addWidget(self.bookmarkCombobox)
 
 
-        spacer = QtWidgets.QSpacerItem(
-            0, 0,
+        self.groupsLayout = QtWidgets.QHBoxLayout()
+        self.groupsLayout.setContentsMargins(
+            MARGIN + int(SPACE/2), 0,
+            MARGIN + int(SPACE/2), 0)
+        self.groupsLayout.setSpacing(0)
+        self.mainLayout.addLayout(self.groupsLayout)
+
+
+        self.favorite = FavoriteGroup(theme)
+        self.favorite.setFixedHeight(height)
+        self.groupsLayout.addWidget(self.favorite)
+
+        self.bookmark = BookmarkGroup(theme)
+        self.bookmark.setFixedHeight(height)
+        self.bookmark.button.pressed.connect(self.showBookmarks)
+        self.groupsLayout.addWidget(self.bookmark)
+
+
+        spacer = QtWidgets.QSpacerItem(0, 0,
             QtWidgets.QSizePolicy.Expanding,
             QtWidgets.QSizePolicy.Minimum)
-        self.mainLayout.addItem(spacer)
+        self.groupsLayout.addItem(spacer)
 
 
-        self.previewLayout = QtWidgets.QHBoxLayout()
-        self.previewLayout.setContentsMargins(0,0,0,0)
-        self.previewLayout.setSpacing(UIsettings.IconDelegate.space*2)
-        self.mainLayout.addLayout(self.previewLayout)
+        self.theme = ThemeGroup(theme)
+        self.theme.setFixedHeight(height)
+        self.groupsLayout.addWidget(self.theme)
 
-        self.previewLabel = QtWidgets.QLabel("PREVIEW")
-        self.previewLabel.setObjectName("previewLabel")
-        self.previewLabel.setFont(UIsettings.Bar.fontPreview)
-        self.previewLabel.setAlignment(
-            QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.previewLabel.setProperty("textcolor", "light")
-        self.previewLayout.addWidget(self.previewLabel)
-
-        self.previewSlider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
-        self.previewSlider.setObjectName("previewSlider")
-        self.previewSlider.setFixedWidth(35)
-        self.previewSlider.setRange(1, 3)
-        self.previewSlider.setTickInterval(1)
-        self.previewLayout.addWidget(self.previewSlider)
-
-        with Settings.UIManager(update=False) as uiSettings:
-            self.previewSlider.setValue(uiSettings["iconSize"])
+        self.preview = PreviewGroup(theme)
+        self.preview.setFixedHeight(height)
+        self.groupsLayout.addWidget(self.preview)
 
 
-        self.mainLayout.setStretch(0, 0)
-        self.mainLayout.setStretch(1, 0)
-        self.mainLayout.setStretch(2, 1)
-        self.mainLayout.setStretch(3, 0)
+        self.groupsLayout.setStretch(0, 0)
+        self.groupsLayout.setStretch(1, 0)
+        self.groupsLayout.setStretch(2, 1)
+        self.groupsLayout.setStretch(3, 0)
+        self.groupsLayout.setStretch(4, 0)
+
         self.setLayout(self.mainLayout)
-
 
 
     def showBookmarks (self):
         self.bookmarkCombobox.setCurrentIndex(-1)
+        self.bookmarkCombobox.setVisible(True)
         self.bookmarkCombobox.showPopup()
 
 
-
-    def bookmarkData (self, index):
+    def getData (self, index):
         data = self.bookmarkCombobox.itemData(index)
         self.bookmarkChoosed.emit(data)
         self.bookmarkCombobox.setVisible(False)
+
+
+
+    def resizeEvent (self, event):
+        super(BottomBar, self).resizeEvent(event)
+
+        self.favorite.hide()
+        self.bookmark.hide()
+        self.preview.hide()
+        self.theme.hide()
+
+        width = self.width() - MARGIN * 2 - SPACE
+        sumwidth = self.favorite.width()
+
+        if width > sumwidth:
+            self.favorite.show()
+
+            sumwidth += self.bookmark.width()
+            if width > sumwidth:
+                self.bookmark.show()
+
+                sumwidth += self.preview.width()
+                if width > sumwidth:
+                    self.preview.show()
+
+                    sumwidth += self.theme.width()
+                    if width > sumwidth:
+                        self.theme.show()

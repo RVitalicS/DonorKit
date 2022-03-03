@@ -4,7 +4,6 @@
 
 import os
 from . import tools
-from . import stylesheet
 
 
 from Qt import QtCore, QtGui
@@ -22,9 +21,9 @@ def background (function):
 
         self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         if self.hover:
-            color = QtGui.QColor(stylesheet.iconHilight)
+            color = QtGui.QColor(self.theme.iconHilight)
         else:
-            color = QtGui.QColor(stylesheet.iconBackground)
+            color = QtGui.QColor(self.theme.iconBackground)
         self.painter.fillRect(self.iconRect, color)
 
         function(self)
@@ -56,9 +55,9 @@ def favorite (function):
                 image.height() )
 
             if self.favorite:
-                image = tools.recolor(image, stylesheet.checkedHilight)
+                image = tools.recolor(image, self.theme.checkedHilight)
             else:
-                image = tools.recolor(image, stylesheet.black, opacity=0.2)
+                image = tools.recolor(image, self.theme.kicker, opacity=0.25)
 
             self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
             self.painter.drawImage(position, image)
@@ -73,9 +72,10 @@ class Icon (object):
 
 
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(Icon, self).__init__()
 
+        self.theme = theme
         self.index = QtCore.QModelIndex()
 
         self.pointer  = QtCore.QPoint(-1, -1)
@@ -106,7 +106,7 @@ class Icon (object):
     def paint (self, painter, option, index):
 
         # fake clear
-        background = QtGui.QColor(stylesheet.browserBackground)
+        background = QtGui.QColor(self.theme.browserBackground)
         painter.fillRect(option.rect, background)
         
         # set globals
@@ -183,7 +183,7 @@ class Icon (object):
         self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.setPen(
             QtGui.QPen(
-                QtGui.QBrush( QtGui.QColor(stylesheet.text) ),
+                QtGui.QBrush( QtGui.QColor(self.theme.text) ),
                 0,
                 QtCore.Qt.SolidLine,
                 QtCore.Qt.RoundCap,
@@ -209,7 +209,7 @@ class Icon (object):
         self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.setPen(
             QtGui.QPen(
-                QtGui.QBrush( QtGui.QColor(stylesheet.text) ),
+                QtGui.QBrush( QtGui.QColor(self.theme.text) ),
                 0,
                 QtCore.Qt.SolidLine,
                 QtCore.Qt.RoundCap,
@@ -236,18 +236,19 @@ class Icon (object):
 
         libraryImage = QtGui.QImage(":/icons/library.png")
         if self.hover:
-            colorBackground = QtGui.QColor(stylesheet.iconHilight)
-            colorText = stylesheet.white
-            libraryImage = tools.recolor(libraryImage, stylesheet.violet)
+            colorBackground = QtGui.QColor(self.theme.libraryHover)
+            colorText = self.theme.kicker
+            libraryImage = tools.recolor(libraryImage, self.theme.violet)
 
         else:
-            colorBackground = QtGui.QColor(stylesheet.iconBackground)
-            colorText = stylesheet.text
-            libraryImage = tools.recolor(libraryImage, stylesheet.text)
+            colorBackground = QtGui.QColor(self.theme.libraryBackground)
+            colorText = self.theme.text
+            libraryImage = tools.recolor(libraryImage, self.theme.text)
 
 
         # BACKGROUND
-        self.painter.fillRect(self.iconRect, colorBackground)
+        colorOutline = QtGui.QColor(self.theme.libraryOutline)
+        self.painter.fillRect(self.option.rect, colorOutline)
 
         borderWidth = 1
         borderRect = QtCore.QRect(
@@ -256,8 +257,7 @@ class Icon (object):
             self.iconRect.width()  - borderWidth *2 ,
             self.iconRect.height() - borderWidth *2 )
 
-        color = QtGui.QColor(stylesheet.browserBackground)
-        self.painter.fillRect(borderRect, color.lighter(107))
+        self.painter.fillRect(borderRect, colorBackground)
 
 
         # ICON
@@ -310,9 +310,9 @@ class Icon (object):
         # BACKGROUND
         self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         if self.hover:
-            color = QtGui.QColor(stylesheet.iconHilight)
+            color = QtGui.QColor(self.theme.iconHilight)
         else:
-            color = QtGui.QColor(stylesheet.iconBackground)
+            color = QtGui.QColor(self.theme.iconBackground)
         self.painter.fillRect(self.iconRect, color)
 
 
@@ -326,7 +326,7 @@ class Icon (object):
                 self.iconRect.x() + folderOffset,
                 self.iconRect.y() + folderOffset)
         
-        folderImage = tools.recolor(folderImage, stylesheet.folderColor)
+        folderImage = tools.recolor(folderImage, self.theme.folderColor)
         self.painter.drawImage(folderPosition, folderImage)
 
 
@@ -334,7 +334,7 @@ class Icon (object):
         self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.setPen(
             QtGui.QPen(
-                QtGui.QBrush( QtGui.QColor(stylesheet.text) ),
+                QtGui.QBrush( QtGui.QColor(self.theme.text) ),
                 0,
                 QtCore.Qt.SolidLine,
                 QtCore.Qt.RoundCap,
@@ -366,7 +366,7 @@ class Icon (object):
         # ITEMS
         self.painter.setPen(
             QtGui.QPen(
-                QtGui.QBrush( QtGui.QColor(stylesheet.textlock) ),
+                QtGui.QBrush( QtGui.QColor(self.theme.textlock) ),
                 0,
                 QtCore.Qt.SolidLine,
                 QtCore.Qt.RoundCap,
@@ -404,7 +404,7 @@ class Icon (object):
         if self.hover and self.controlMode and name != "":
 
             linkImage = QtGui.QImage(":/icons/link.png")
-            linkImage = tools.recolor(linkImage, stylesheet.folderLink)
+            linkImage = tools.recolor(linkImage, self.theme.kicker, opacity=0.25)
 
             linkOffset = linkImage.width() + UIsettings.IconDelegate.offsetLink
 
@@ -442,9 +442,9 @@ class Icon (object):
             libraryImage.height() )
 
         if self.createFolderArea.contains(self.pointer):
-            libraryImage = tools.recolor(libraryImage, stylesheet.iconHilight)
+            libraryImage = tools.recolor(libraryImage, self.theme.plusHover)
         else:
-            libraryImage = tools.recolor(libraryImage, stylesheet.browserSocket)
+            libraryImage = tools.recolor(libraryImage, self.theme.plusColor)
 
         self.painter.drawImage(iconPosition, libraryImage)
 
@@ -453,19 +453,15 @@ class Icon (object):
     @favorite
     def paintAsset (self):
 
-        # BACKGROUND
-        previewColor = QtGui.QColor(stylesheet.iconHilight)
-        self.painter.fillRect(self.option.rect, previewColor)
-
 
         # DEFINE STATUS
-        color = stylesheet.statusWIP
+        color = self.theme.statusWIP
 
         status = self.data.get("status")
         if status == "Final":
-            color = stylesheet.statusFinal
+            color = self.theme.statusFinal
         elif status == "Completed":
-            color = stylesheet.statusCompleted
+            color = self.theme.statusCompleted
 
         statusColor = QtGui.QColor(color)
 
@@ -494,6 +490,56 @@ class Icon (object):
 
         spaceName = labelArea.width()
 
+
+
+        # INFO BACKGROUND
+        labelBackground = QtCore.QRect(
+            self.pointX                              ,
+            self.pointY + previewHeight + self.space ,
+            self.width                               ,
+            labelHeight + self.space                 )
+
+        if self.hover:
+            color = QtGui.QColor(self.theme.iconOutline)
+        else:
+            color = QtGui.QColor(self.theme.iconBackground)
+
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        self.painter.fillRect(labelBackground, color)
+
+        # INFO BACKGROUND
+        if self.hover:
+
+            thickness = 1
+            shape = QtCore.QRect(
+                self.iconRect.x()      + thickness   ,
+                self.iconRect.y()      + thickness   ,
+                self.iconRect.width()  - thickness*2 ,
+                self.iconRect.height() - thickness*2 )
+
+            outlinePath = QtGui.QPainterPath()
+            outlinePath.addRoundedRect(
+                shape, 
+                self.radius, 
+                self.radius)
+
+            if self.hover:
+                color = QtGui.QColor(self.theme.iconHilight)
+            else:
+                color = QtGui.QColor(self.theme.iconBackground)
+
+            self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+            self.painter.fillPath(outlinePath, QtGui.QBrush(color))
+
+
+        # ICON BACKGROUND
+        clearBackground = QtCore.QRect(
+            self.pointX                ,
+            self.pointY                ,
+            self.width                 ,
+            previewHeight + self.space )
+        previewColor = QtGui.QColor(self.theme.iconSpace)
+        self.painter.fillRect(clearBackground, previewColor)
 
 
         # PREVIEW IMAGE
@@ -543,7 +589,7 @@ class Icon (object):
 
             fontAnimation = UIsettings.IconDelegate.Animation.font
             self.painter.setFont(fontAnimation)
-            self.painter.setPen( QtGui.QColor(stylesheet.paper) )
+            self.painter.setPen( QtGui.QColor(self.theme.paper) )
 
             offsetTag = UIsettings.IconDelegate.Animation.offset
             spaceTag  = UIsettings.IconDelegate.Animation.space
@@ -574,7 +620,7 @@ class Icon (object):
             path = QtGui.QPainterPath()
             path.addRoundedRect(tagArea, radiusTag, radiusTag)
 
-            brush = QtGui.QBrush( QtGui.QColor(stylesheet.iconAnimation) )
+            brush = QtGui.QBrush( QtGui.QColor(self.theme.iconAnimation) )
 
             self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
             self.painter.fillPath(path, brush)
@@ -592,7 +638,7 @@ class Icon (object):
         if self.hover and self.controlMode:
 
             linkImage = QtGui.QImage(":/icons/link.png")
-            linkImage = tools.recolor(linkImage, stylesheet.white, opacity=0.25)
+            linkImage = tools.recolor(linkImage, self.theme.kicker, opacity=0.25)
 
             linkOffset = linkImage.width() + self.space
 
@@ -608,23 +654,6 @@ class Icon (object):
                 linkPosition.y() ,
                 linkImage.width() ,
                 linkImage.height() )
-
-
-
-        # INFO AREA
-        labelBackground = QtCore.QRect(
-            self.pointX                              ,
-            self.pointY + previewHeight + self.space ,
-            self.width                               ,
-            labelHeight + self.space                 )
-
-        if self.hover:
-            color = QtGui.QColor(stylesheet.iconHilight)
-        else:
-            color = QtGui.QColor(stylesheet.iconBackground)
-
-        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-        self.painter.fillRect(labelBackground, color)
 
 
 
@@ -648,7 +677,7 @@ class Icon (object):
 
 
         # PUBLISHED & STATUS LABELS
-        self.painter.setPen( QtGui.QColor(stylesheet.textlock) )
+        self.painter.setPen( QtGui.QColor(self.theme.textlock) )
         self.painter.setFont( UIsettings.IconDelegate.fontAssetLabel )
 
         textOption = QtGui.QTextOption()
@@ -703,7 +732,7 @@ class Icon (object):
 
 
         # PUBLISHED DATE
-        self.painter.setPen( QtGui.QColor(stylesheet.text) )
+        self.painter.setPen( QtGui.QColor(self.theme.text) )
         self.painter.setFont( UIsettings.IconDelegate.fontAssetLabel )
         
         textOption = QtGui.QTextOption()
@@ -749,7 +778,7 @@ class Icon (object):
         
 
         # STATUS TEXT
-        self.painter.setPen( QtGui.QColor(stylesheet.white) )
+        self.painter.setPen( QtGui.QColor(self.theme.white) )
         self.painter.setFont( UIsettings.IconDelegate.fontAssetStatus )
 
         textOption = QtGui.QTextOption()
@@ -772,7 +801,10 @@ class Icon (object):
         fontName = UIsettings.IconDelegate.fontAssetName
         self.painter.setFont(fontName)
 
-        self.painter.setPen( QtGui.QColor(stylesheet.text) )
+        if self.hover or self.checked == 1:
+            self.painter.setPen( QtGui.QColor(self.theme.kicker) )
+        else:
+            self.painter.setPen( QtGui.QColor(self.theme.text) )
 
         offsetName = -2
         spaceName -= self.space
@@ -842,7 +874,7 @@ class Icon (object):
 
                 textVariant += "..."
 
-            self.painter.setPen( QtGui.QColor(stylesheet.textlock) )
+            self.painter.setPen( QtGui.QColor(self.theme.text) )
 
             self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
             self.painter.drawText(
@@ -874,7 +906,7 @@ class Icon (object):
             textVersion,
             textOption)
 
-        if self.hover:
+        if self.hover and self.controlMode:
 
             versionWidth = tools.getStringWidth(textVersion, fontVersion)
             offsetPixel = 1
@@ -888,7 +920,7 @@ class Icon (object):
             count = self.data.get("count")
             textCount = " // {}".format(count)
 
-            self.painter.setPen( QtGui.QColor(stylesheet.text) )
+            self.painter.setPen( QtGui.QColor(self.theme.text) )
 
             self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
             self.painter.drawText(
@@ -907,7 +939,7 @@ class Icon (object):
                 self.radius, 
                 self.radius)
 
-            color = QtGui.QColor(stylesheet.checkedHilight)
+            color = QtGui.QColor(self.theme.checkedHilight)
         
             pen = QtGui.QPen(
                     QtGui.QBrush(color),

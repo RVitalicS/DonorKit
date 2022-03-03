@@ -25,10 +25,10 @@ class Editor (QtWidgets.QWidget):
     leaveEditor  = QtCore.Signal()
 
 
-    def __init__ (self, option, index, parent=None):
+    def __init__ (self, option, index, theme, parent=None):
         super(Editor, self).__init__(parent)
 
-        self.Icon = IconPainter.Icon()
+        self.Icon = IconPainter.Icon(theme)
         self.Icon.index = index
 
         self.inputFolderName = False

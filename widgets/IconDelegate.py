@@ -19,10 +19,11 @@ from . import IconEditor
 class Delegate (QtWidgets.QStyledItemDelegate):
 
 
-    def __init__ (self, parent):
+    def __init__ (self, parent, theme):
         super(Delegate, self).__init__(parent)
 
-        self.Icon = IconPainter.Icon()
+        self.theme = theme
+        self.Icon = IconPainter.Icon(theme)
 
 
 
@@ -50,6 +51,7 @@ class Delegate (QtWidgets.QStyledItemDelegate):
 
         editor = IconEditor.Editor(
                     option, index,
+                    self.theme,
                     parent=parent )
         editor.Icon.controlMode = self.parent().controlMode
 

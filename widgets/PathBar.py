@@ -3,7 +3,6 @@
 
 import os
 from . import tools
-from . import stylesheet
 
 
 from Qt import QtWidgets, QtCore, QtGui
@@ -20,9 +19,10 @@ UIsettings = Settings.UIsettings
 class BackButton (QtWidgets.QPushButton):
 
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(BackButton, self).__init__()
 
+        self.theme = theme
         self.image = QtGui.QImage(":/icons/back.png")
 
         self.setFixedSize(
@@ -47,13 +47,13 @@ class BackButton (QtWidgets.QPushButton):
             )/2) )
         position = QtCore.QPoint( buttonRect.x(), positionY)
 
-        color = QtGui.QColor(stylesheet.browserBackground)
+        color = QtGui.QColor(self.theme.browserBackground)
         painter.fillRect(buttonRect, color)
 
         if self.buttonPressed:
-            image = tools.recolor(self.image, stylesheet.white)
+            image = tools.recolor(self.image, self.theme.kicker)
         else:
-            image = tools.recolor(self.image, stylesheet.text)
+            image = tools.recolor(self.image, self.theme.text)
 
         painter.drawImage(position, image)
         painter.end()
@@ -87,9 +87,10 @@ class BackButton (QtWidgets.QPushButton):
 class BookmarkButton (QtWidgets.QPushButton):
 
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(BookmarkButton, self).__init__()
 
+        self.theme = theme
         self.image = QtGui.QImage(":/icons/bookmark.png")
 
         self.offset = UIsettings.Path.bookmarkOffset
@@ -112,15 +113,15 @@ class BookmarkButton (QtWidgets.QPushButton):
         buttonRect = self.contentsRect()
         position = QtCore.QPoint( buttonRect.x()+self.offset, buttonRect.y())
 
-        color = QtGui.QColor(stylesheet.browserBackground)
+        color = QtGui.QColor(self.theme.browserBackground)
         painter.fillRect(buttonRect, color)
 
         if self.isChecked():
-            image = tools.recolor(self.image, stylesheet.purple)
+            image = tools.recolor(self.image, self.theme.purple)
         elif self.buttonHover:
-            image = tools.recolor(self.image, stylesheet.browserSocketHover)
+            image = tools.recolor(self.image, self.theme.browserSocketHover)
         else:
-            image = tools.recolor(self.image, stylesheet.browserSocket)
+            image = tools.recolor(self.image, self.theme.browserSocket)
 
         painter.drawImage(position, image)
         painter.end()
@@ -149,7 +150,7 @@ class PathBar (QtWidgets.QWidget):
     pathChanged  = QtCore.Signal(str)
 
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(PathBar, self).__init__()
 
         self.root = str()
@@ -167,7 +168,7 @@ class PathBar (QtWidgets.QWidget):
         palette = QtGui.QPalette()
         palette.setColor(
             QtGui.QPalette.Background,
-            stylesheet.browserBackground )
+            theme.browserBackground )
         self.setPalette(palette)
 
 
@@ -193,13 +194,13 @@ class PathBar (QtWidgets.QWidget):
         self.mainLayout.addLayout(self.subdirLayout)
 
 
-        self.bookmarkButton = BookmarkButton()
+        self.bookmarkButton = BookmarkButton(theme)
         self.bookmarkButton.setCheckable(True)
         self.bookmarkButton.clicked.connect(self.actionBookmark)
         self.subdirLayout.addWidget(self.bookmarkButton)
 
         
-        self.backButton = BackButton()
+        self.backButton = BackButton(theme)
         self.rootLayout.addWidget(self.backButton)
         self.backButton.released.connect(self.moveBack)
 

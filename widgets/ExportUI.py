@@ -3,7 +3,6 @@
 
 
 import math
-from . import stylesheet
 from . import tools
 
 
@@ -58,8 +57,10 @@ class NameEdit (QtWidgets.QLineEdit):
 class ExportButton (QtWidgets.QPushButton):
 
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(ExportButton, self).__init__()
+
+        self.theme = theme
 
         self.setMinimumWidth(WIDTH)
         self.setMaximumWidth(WIDTH)
@@ -159,21 +160,20 @@ class ExportButton (QtWidgets.QPushButton):
         clipPath.addRoundedRect(
             buttonRect.x()     , buttonRect.y()      ,
             buttonRect.width() , buttonRect.height() ,
-            stylesheet.radiusButton,
-            stylesheet.radiusButton,
+            4, 4,
             mode=QtCore.Qt.AbsoluteSize              )
 
         painter.setClipPath(clipPath)
 
         if self.buttonPressed or self.delayValue >= 0:
-            textcolor = QtGui.QColor(stylesheet.white)
+            textcolor = QtGui.QColor(self.theme.white)
             if disabled or self.delayValue >= 0:
-                backgroundcolor = QtGui.QColor(stylesheet.red)
+                backgroundcolor = QtGui.QColor(self.theme.exportLocked)
             else:
-                backgroundcolor = QtGui.QColor(stylesheet.black)
+                backgroundcolor = QtGui.QColor(self.theme.black)
         else:
-            textcolor = QtGui.QColor(stylesheet.text)
-            backgroundcolor = QtGui.QColor(stylesheet.optionButton)
+            textcolor = QtGui.QColor(self.theme.text)
+            backgroundcolor = QtGui.QColor(self.theme.optionButton)
 
         painter.fillRect(buttonRect, backgroundcolor)
 
@@ -245,9 +245,10 @@ class ExportButton (QtWidgets.QPushButton):
 class OptionComboBox (QtWidgets.QComboBox):
 
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(OptionComboBox, self).__init__()
 
+        self.theme = theme
         self.image = QtGui.QImage(":/icons/dropdown.png")
 
         self.buttonPressed = False
@@ -266,13 +267,13 @@ class OptionComboBox (QtWidgets.QComboBox):
             buttonRect.x() + offsetX ,
             buttonRect.y() + offsetY )
 
-        color = QtGui.QColor(stylesheet.optionInput)
+        color = QtGui.QColor(self.theme.optionInput)
         painter.fillRect(buttonRect, color)
 
         if self.buttonPressed:
-            image = tools.recolor(self.image, stylesheet.white)
+            image = tools.recolor(self.image, self.theme.white)
         else:
-            image = tools.recolor(self.image, stylesheet.spinboxArrow)
+            image = tools.recolor(self.image, self.theme.spinboxArrow)
             
         painter.drawImage(position, image)
         painter.end()
@@ -300,7 +301,7 @@ class OptionComboBox (QtWidgets.QComboBox):
 
 class AnimationOpions (QtWidgets.QWidget):
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(AnimationOpions, self).__init__()
 
         self.setMinimumWidth(WIDTH)
@@ -325,7 +326,7 @@ class AnimationOpions (QtWidgets.QWidget):
         self.animationNameLabel.setProperty("textcolor", "light")
         self.animationNameLayout.addWidget(self.animationNameLabel)
 
-        self.animationNameCombobox = OptionComboBox()
+        self.animationNameCombobox = OptionComboBox(theme)
         self.animationNameCombobox.setMaximumSize(QtCore.QSize(16777215, 18))
         self.animationNameCombobox.setFont(UIsettings.Options.fontLabel)
         self.animationNameCombobox.setToolTip("")
@@ -458,7 +459,10 @@ class AnimationOpions (QtWidgets.QWidget):
         self.fpsSpinbox.setEnabled(False)
         self.fpsLayout.addWidget(self.fpsSpinbox)
 
-        fpsSpacer = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        fpsSpacer = QtWidgets.QSpacerItem(
+            40, 20,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum)
         self.fpsLayout.addItem(fpsSpacer)
         # self.mainLayout.addLayout(self.fpsLayout)
 
@@ -476,7 +480,7 @@ class AnimationOpions (QtWidgets.QWidget):
 
 class MainOpions (QtWidgets.QWidget):
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(MainOpions, self).__init__()
 
         self.setMinimumWidth(WIDTH)
@@ -501,7 +505,7 @@ class MainOpions (QtWidgets.QWidget):
         self.variantLabel.setProperty("textcolor", "light")
         self.variantLayout.addWidget(self.variantLabel)
 
-        self.variantCombobox = OptionComboBox()
+        self.variantCombobox = OptionComboBox(theme)
         self.variantCombobox.setMaximumSize(QtCore.QSize(16777215, 18))
         self.variantCombobox.setFont(UIsettings.Options.fontLabel)
         self.variantCombobox.setToolTip("")
@@ -539,7 +543,7 @@ class MainOpions (QtWidgets.QWidget):
         self.linkLayout.setObjectName("linkLayout")
         self.versionLayout.addLayout(self.linkLayout)
 
-        self.versionCombobox = OptionComboBox()
+        self.versionCombobox = OptionComboBox(theme)
         self.versionCombobox.setMaximumSize(QtCore.QSize(16777215, 18))
         self.versionCombobox.setFont(UIsettings.Options.fontLabel)
         self.versionCombobox.setToolTip("")
@@ -688,8 +692,10 @@ class CommentEdit (QtWidgets.QTextEdit):
 class Status (QtWidgets.QWidget):
 
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(Status, self).__init__()
+
+        self.theme = theme
 
         self.setMinimumWidth(WIDTH)
         self.setMaximumWidth(WIDTH)
@@ -808,6 +814,7 @@ class Status (QtWidgets.QWidget):
 
 
     def set (self, status="WIP"):
+        self.uncheckButtons()
         self.NAME = status
         self.setColor()
         self.checkButton()
@@ -842,11 +849,11 @@ class Status (QtWidgets.QWidget):
 
     def setColor(self):
         
-        color = stylesheet.statusWIP
+        color = self.theme.statusWIP
         if self.NAME == "Final":
-            color = stylesheet.statusFinal
+            color = self.theme.statusFinal
         elif self.NAME == "Completed":
-            color = stylesheet.statusCompleted
+            color = self.theme.statusCompleted
 
         palette = QtGui.QPalette()
         palette.setColor(
@@ -892,13 +899,15 @@ class Status (QtWidgets.QWidget):
 class SwitchButton (QtWidgets.QPushButton):
 
 
-    def __init__ (self):
+    def __init__ (self, theme):
         super(SwitchButton, self).__init__()
+
+        self.theme = theme
+
         self.setCheckable(True)
         self.setText("")
 
-        self.checked   = QtGui.QImage(":/icons/checked.png")
-        self.unchecked = QtGui.QImage(":/icons/unchecked.png")
+        self.check = QtGui.QImage(":/icons/check.png")
 
         self.sizeValue = 16
         self.setMinimumSize(QtCore.QSize(self.sizeValue, self.sizeValue))
@@ -911,18 +920,18 @@ class SwitchButton (QtWidgets.QPushButton):
         painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
 
         buttonRect = self.contentsRect()
-        offset = int((self.sizeValue - self.checked.width())/2)
+        offset = int((self.sizeValue - self.check.width())/2)
         position = QtCore.QPoint(
             buttonRect.x()          ,
             buttonRect.y() + offset )
 
-        color = QtGui.QColor(stylesheet.optionBackground)
+        color = QtGui.QColor(self.theme.optionBackground)
         painter.fillRect(buttonRect, color)
 
         if self.isChecked():
-            image = self.checked
+            image = tools.recolor(self.check, self.theme.green)
         else:
-            image = tools.recolor(self.unchecked, stylesheet.optionDisable)
+            image = tools.recolor(self.check, self.theme.optionDisable)
 
         painter.drawImage(position, image)
         painter.end()
@@ -934,7 +943,7 @@ class SwitchButton (QtWidgets.QPushButton):
 
 
 
-def setupUi (parent, ListViewLayout):
+def setupUi (parent, ListViewLayout, theme):
 
 
     parent.defaultName = "Name"
@@ -990,7 +999,7 @@ def setupUi (parent, ListViewLayout):
     parent.modelingLabel.setProperty("textcolor", "light")
     parent.modelingLayout.addWidget(parent.modelingLabel)
 
-    parent.modelingSwitch = SwitchButton()
+    parent.modelingSwitch = SwitchButton(theme)
     parent.modelingLayout.addWidget(parent.modelingSwitch)
 
     parent.modelingOverwrite = QtWidgets.QPushButton()
@@ -1016,7 +1025,7 @@ def setupUi (parent, ListViewLayout):
     parent.surfacingLabel.setProperty("textcolor", "light")
     parent.surfacingLayout.addWidget(parent.surfacingLabel)
 
-    parent.surfacingSwitch = SwitchButton()
+    parent.surfacingSwitch = SwitchButton(theme)
     parent.surfacingLayout.addWidget(parent.surfacingSwitch)
 
     parent.surfacingOverwrite = QtWidgets.QPushButton()
@@ -1044,7 +1053,7 @@ def setupUi (parent, ListViewLayout):
     parent.animationLabel.setProperty("textcolor", "light")
     parent.animationLayout.addWidget(parent.animationLabel)
 
-    parent.animationSwitch = SwitchButton()
+    parent.animationSwitch = SwitchButton(theme)
     parent.animationLayout.addWidget(parent.animationSwitch)
 
     parent.animationOverwrite = QtWidgets.QPushButton()
@@ -1061,11 +1070,11 @@ def setupUi (parent, ListViewLayout):
     parent.optionLayout.addLayout(parent.animationLayout)
 
 
-    parent.animationOpions = AnimationOpions()
+    parent.animationOpions = AnimationOpions(theme)
     parent.optionLayout.addWidget(parent.animationOpions)
 
 
-    parent.mainOpions = MainOpions()
+    parent.mainOpions = MainOpions(theme)
     parent.optionLayout.addWidget(parent.mainOpions)
 
 
@@ -1106,7 +1115,7 @@ def setupUi (parent, ListViewLayout):
     parent.commentLayout.addWidget(parent.commentEdit)
 
 
-    parent.status = Status()
+    parent.status = Status(theme)
     parent.wrappLayout.addWidget(parent.status)
 
 
@@ -1115,7 +1124,7 @@ def setupUi (parent, ListViewLayout):
     parent.exportLayout.setSpacing(10)
     parent.exportLayout.setObjectName("exportLayout")
 
-    parent.exportButton = ExportButton()
+    parent.exportButton = ExportButton(theme)
     parent.exportButton.setFont(UIsettings.Options.fontLabel)
     parent.exportButton.setFlat(True)
     parent.exportButton.setObjectName("exportButton")

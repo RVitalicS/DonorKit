@@ -360,6 +360,13 @@ class AssetBrowser (QtWidgets.QListView):
 
 
 
+    # def paintEvent (self, event):
+    #     painter = QtGui.QPainter(self.viewport())
+    #     painter.end()
+    #     super(AssetBrowser, self).paintEvent(event)
+
+
+
     def floatScrollPosition (self, value):
 
         maxim = 1 + self.verticalScrollBar().maximum()

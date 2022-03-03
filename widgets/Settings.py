@@ -57,11 +57,13 @@ class UI (object):
             rangeEnd=1,
             fps=30,
             link=True,
-            unitsMultiplier=1.0 )
+            unitsMultiplier=1.0,
+            theme="dark" )
 
         self.path = os.path.join(
             os.path.dirname(__file__),
-            "UIsettings.json")
+            "databank",
+            ".AssetExportSettings.json")
 
         if not os.path.exists(self.path):
             self.default_settings(self.path)
