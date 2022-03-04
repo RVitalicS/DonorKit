@@ -9,11 +9,11 @@ from . import tools
 from Qt import QtWidgets, QtCore, QtGui
 
 from . import Settings
-UIsettings = Settings.UIsettings
+UIGlobals = Settings.UIGlobals
 
-WIDTH       = UIsettings.Options.width
-MARGIN      = UIsettings.Options.margin
-HIGHT_THICK = UIsettings.Options.thickHight
+WIDTH       = UIGlobals.Options.width
+MARGIN      = UIGlobals.Options.margin
+HIGHT_THICK = UIGlobals.Options.thickHight
 
 
 
@@ -80,7 +80,7 @@ class ExportButton (QtWidgets.QPushButton):
         self.delayTime  = 35
         self.delayValue = -1
 
-        self.patternThickness = UIsettings.Options.Export.patternThickness
+        self.patternThickness = UIGlobals.Options.Export.patternThickness
         self.patternStep = int(round(
             (self.patternThickness/math.cos(45))*1.5 ))
 
@@ -223,7 +223,7 @@ class ExportButton (QtWidgets.QPushButton):
                 QtCore.Qt.RoundCap,
                 QtCore.Qt.RoundJoin) )
 
-        painter.setFont( UIsettings.Options.Export.font )
+        painter.setFont( UIGlobals.Options.Export.font )
 
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
@@ -320,7 +320,7 @@ class AnimationOpions (QtWidgets.QWidget):
         self.animationNameLabel = QtWidgets.QLabel()
         self.animationNameLabel.setMinimumSize(QtCore.QSize(55, 24))
         self.animationNameLabel.setMaximumSize(QtCore.QSize(55, 24))
-        self.animationNameLabel.setFont(UIsettings.Options.fontLabel)
+        self.animationNameLabel.setFont(UIGlobals.Options.fontLabel)
         self.animationNameLabel.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.animationNameLabel.setObjectName("animationNameLabel")
         self.animationNameLabel.setProperty("textcolor", "light")
@@ -328,7 +328,7 @@ class AnimationOpions (QtWidgets.QWidget):
 
         self.animationNameCombobox = OptionComboBox(theme)
         self.animationNameCombobox.setMaximumSize(QtCore.QSize(16777215, 18))
-        self.animationNameCombobox.setFont(UIsettings.Options.fontLabel)
+        self.animationNameCombobox.setFont(UIGlobals.Options.fontLabel)
         self.animationNameCombobox.setToolTip("")
         self.animationNameCombobox.setStatusTip("")
         self.animationNameCombobox.setWhatsThis("")
@@ -350,7 +350,7 @@ class AnimationOpions (QtWidgets.QWidget):
         self.animationRangeLabel = QtWidgets.QLabel()
         self.animationRangeLabel.setMinimumSize(QtCore.QSize(55, 24))
         self.animationRangeLabel.setMaximumSize(QtCore.QSize(55, 24))
-        self.animationRangeLabel.setFont(UIsettings.Options.fontLabel)
+        self.animationRangeLabel.setFont(UIGlobals.Options.fontLabel)
         self.animationRangeLabel.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.animationRangeLabel.setObjectName("animationRangeLabel")
         self.animationRangeLabel.setProperty("textcolor", "light")
@@ -364,7 +364,7 @@ class AnimationOpions (QtWidgets.QWidget):
         self.rangeStartSpinbox.setMaximumSize(QtCore.QSize(50, 18))
         self.rangeStartSpinbox.setMinimum(0)
         self.rangeStartSpinbox.setMaximum(99999)
-        self.rangeStartSpinbox.setFont(UIsettings.Options.fontLabel)
+        self.rangeStartSpinbox.setFont(UIGlobals.Options.fontLabel)
         self.rangeStartSpinbox.setToolTip("")
         self.rangeStartSpinbox.setStatusTip("")
         self.rangeStartSpinbox.setWhatsThis("")
@@ -389,7 +389,7 @@ class AnimationOpions (QtWidgets.QWidget):
         self.rangeEndSpinbox.setMaximumSize(QtCore.QSize(50, 18))
         self.rangeEndSpinbox.setMinimum(0)
         self.rangeEndSpinbox.setMaximum(99999)
-        self.rangeEndSpinbox.setFont(UIsettings.Options.fontLabel)
+        self.rangeEndSpinbox.setFont(UIGlobals.Options.fontLabel)
         self.rangeEndSpinbox.setToolTip("")
         self.rangeEndSpinbox.setStatusTip("")
         self.rangeEndSpinbox.setWhatsThis("")
@@ -414,7 +414,7 @@ class AnimationOpions (QtWidgets.QWidget):
         self.rangeButton = QtWidgets.QPushButton()
         self.rangeButton.setMinimumSize(QtCore.QSize(36, 18))
         self.rangeButton.setMaximumSize(QtCore.QSize(36, 18))
-        self.rangeButton.setFont(UIsettings.Options.fontLabel)
+        self.rangeButton.setFont(UIGlobals.Options.fontLabel)
         self.rangeButton.setFlat(False)
         self.rangeButton.setObjectName("rangeButton")
         self.rangeGroupLayout.addWidget(self.rangeButton)
@@ -422,56 +422,11 @@ class AnimationOpions (QtWidgets.QWidget):
         self.animationRangeLayout.addLayout(self.rangeGroupLayout)
         self.mainLayout.addLayout(self.animationRangeLayout)
 
-        self.fpsLayout = QtWidgets.QHBoxLayout()
-        self.fpsLayout.setContentsMargins(0, 0, 0, 0)
-        self.fpsLayout.setSpacing(10)
-        self.fpsLayout.setObjectName("fpsLayout")
-        self.fpsLabel = QtWidgets.QLabel()
-        self.fpsLabel.setMinimumSize(QtCore.QSize(55, 24))
-        self.fpsLabel.setMaximumSize(QtCore.QSize(55, 24))
-        self.fpsLabel.setFont(UIsettings.Options.fontLabel)
-        self.fpsLabel.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.fpsLabel.setObjectName("fpsLabel")
-        self.fpsLabel.setProperty("textcolor", "lock")
-        self.fpsLabel.setEnabled(False)
-        self.fpsLayout.addWidget(self.fpsLabel)
-
-        self.fpsSpinbox = QtWidgets.QSpinBox()
-        self.fpsSpinbox.setMaximumSize(QtCore.QSize(50, 18))
-        self.fpsSpinbox.setFont(UIsettings.Options.fontLabel)
-        self.fpsSpinbox.setToolTip("")
-        self.fpsSpinbox.setStatusTip("")
-        self.fpsSpinbox.setWhatsThis("")
-        self.fpsSpinbox.setAccessibleName("")
-        self.fpsSpinbox.setAccessibleDescription("")
-        self.fpsSpinbox.setWrapping(False)
-        self.fpsSpinbox.setFrame(True)
-        self.fpsSpinbox.setReadOnly(False)
-        self.fpsSpinbox.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
-        self.fpsSpinbox.setSpecialValueText("")
-        self.fpsSpinbox.setSuffix("")
-        self.fpsSpinbox.setPrefix("")
-        self.fpsSpinbox.setProperty("value", 30)
-        self.fpsSpinbox.setObjectName("fpsSpinbox")
-        self.fpsSpinbox.setProperty("background", "options")
-        self.fpsSpinbox.setProperty("border", "none")
-        self.fpsSpinbox.setProperty("textcolor", "lock")
-        self.fpsSpinbox.setEnabled(False)
-        self.fpsLayout.addWidget(self.fpsSpinbox)
-
-        fpsSpacer = QtWidgets.QSpacerItem(
-            40, 20,
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Minimum)
-        self.fpsLayout.addItem(fpsSpacer)
-        # self.mainLayout.addLayout(self.fpsLayout)
-
         self.setLayout(self.mainLayout)
 
         self.animationNameLabel.setText("name")
         self.animationRangeLabel.setText("range")
         self.rangeButton.setText("get")
-        self.fpsLabel.setText("fps")
         
 
 
@@ -499,7 +454,7 @@ class MainOpions (QtWidgets.QWidget):
         self.variantLabel = QtWidgets.QLabel()
         self.variantLabel.setMinimumSize(QtCore.QSize(55, 24))
         self.variantLabel.setMaximumSize(QtCore.QSize(55, 24))
-        self.variantLabel.setFont(UIsettings.Options.fontLabel)
+        self.variantLabel.setFont(UIGlobals.Options.fontLabel)
         self.variantLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.variantLabel.setObjectName("variantLabel")
         self.variantLabel.setProperty("textcolor", "light")
@@ -507,7 +462,7 @@ class MainOpions (QtWidgets.QWidget):
 
         self.variantCombobox = OptionComboBox(theme)
         self.variantCombobox.setMaximumSize(QtCore.QSize(16777215, 18))
-        self.variantCombobox.setFont(UIsettings.Options.fontLabel)
+        self.variantCombobox.setFont(UIGlobals.Options.fontLabel)
         self.variantCombobox.setToolTip("")
         self.variantCombobox.setStatusTip("")
         self.variantCombobox.setWhatsThis("")
@@ -531,7 +486,7 @@ class MainOpions (QtWidgets.QWidget):
         self.versionLabel = QtWidgets.QLabel()
         self.versionLabel.setMinimumSize(QtCore.QSize(55, 24))
         self.versionLabel.setMaximumSize(QtCore.QSize(55, 24))
-        self.versionLabel.setFont(UIsettings.Options.fontLabel)
+        self.versionLabel.setFont(UIGlobals.Options.fontLabel)
         self.versionLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.versionLabel.setObjectName("versionLabel")
         self.versionLabel.setProperty("textcolor", "light")
@@ -545,7 +500,7 @@ class MainOpions (QtWidgets.QWidget):
 
         self.versionCombobox = OptionComboBox(theme)
         self.versionCombobox.setMaximumSize(QtCore.QSize(16777215, 18))
-        self.versionCombobox.setFont(UIsettings.Options.fontLabel)
+        self.versionCombobox.setFont(UIGlobals.Options.fontLabel)
         self.versionCombobox.setToolTip("")
         self.versionCombobox.setStatusTip("")
         self.versionCombobox.setWhatsThis("")
@@ -562,75 +517,19 @@ class MainOpions (QtWidgets.QWidget):
         self.linkButton = QtWidgets.QPushButton()
         self.linkButton.setMinimumSize(QtCore.QSize(36, 18))
         self.linkButton.setMaximumSize(QtCore.QSize(36, 18))
-        self.linkButton.setFont(UIsettings.Options.fontLabel)
+        self.linkButton.setFont(UIGlobals.Options.fontLabel)
         self.linkButton.setCheckable(True)
         self.linkButton.setFlat(True)
         self.linkButton.setObjectName("linkButton")
         self.linkLayout.addWidget(self.linkButton)
 
         self.mainLayout.addLayout(self.versionLayout)
-
-        self.unitGroupLayout = QtWidgets.QHBoxLayout()
-        self.unitGroupLayout.setContentsMargins(0, 20, 0, 0)
-        self.unitGroupLayout.setSpacing(10)
-        self.unitGroupLayout.setObjectName("unitGroupLayout")
-        self.unitGroupLabel = QtWidgets.QLabel()
-        self.unitGroupLabel.setMinimumSize(QtCore.QSize(55, 24))
-        self.unitGroupLabel.setMaximumSize(QtCore.QSize(55, 24))
-        self.unitGroupLabel.setFont(UIsettings.Options.fontLabel)
-        self.unitGroupLabel.setText("")
-        self.unitGroupLabel.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.unitGroupLabel.setObjectName("unitGroupLabel")
-        self.unitGroupLayout.addWidget(self.unitGroupLabel)
-
-        self.unitLayout = QtWidgets.QHBoxLayout()
-        self.unitLayout.setContentsMargins(0, 0, 0, 0)
-        self.unitLayout.setSpacing(10)
-        self.unitLayout.setObjectName("unitLayout")
-        self.unitLabel = QtWidgets.QLabel()
-        self.unitLabel.setMinimumSize(QtCore.QSize(55, 24))
-        self.unitLabel.setMaximumSize(QtCore.QSize(200, 24))
-        self.unitLabel.setFont(UIsettings.Options.fontLabel)
-        self.unitLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.unitLabel.setObjectName("unitLabel")
-        self.unitLabel.setProperty("textcolor", "light")
-        self.unitLayout.addWidget(self.unitLabel)
-
-        self.unitSpinbox = QtWidgets.QDoubleSpinBox()
-        self.unitSpinbox.setMinimumSize(QtCore.QSize(50, 18))
-        self.unitSpinbox.setMaximumSize(QtCore.QSize(50, 18))
-        self.unitSpinbox.setFont(UIsettings.Options.fontLabel)
-        self.unitSpinbox.setToolTip("")
-        self.unitSpinbox.setStatusTip("")
-        self.unitSpinbox.setWhatsThis("")
-        self.unitSpinbox.setAccessibleName("")
-        self.unitSpinbox.setAccessibleDescription("")
-        self.unitSpinbox.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.unitSpinbox.setWrapping(False)
-        self.unitSpinbox.setFrame(True)
-        self.unitSpinbox.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.unitSpinbox.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
-        self.unitSpinbox.setSpecialValueText("")
-        self.unitSpinbox.setAccelerated(False)
-        self.unitSpinbox.setSuffix("")
-        self.unitSpinbox.setDecimals(2)
-        self.unitSpinbox.setMaximum(1000.0)
-        self.unitSpinbox.setProperty("value", 1.0)
-        self.unitSpinbox.setObjectName("unitSpinbox")
-        self.unitSpinbox.setProperty("background", "options")
-        self.unitSpinbox.setProperty("border", "none")
-        self.unitSpinbox.setProperty("textcolor", "light")
-        self.unitLayout.addWidget(self.unitSpinbox)
-
-        self.unitGroupLayout.addLayout(self.unitLayout)
-        # self.mainLayout.addLayout(self.unitGroupLayout)
-
+        
         self.setLayout(self.mainLayout)
 
         self.variantLabel.setText("Variant")
         self.versionLabel.setText("Version")
         self.linkButton.setText("link")
-        self.unitLabel.setText("unit multiplier")
 
 
 
@@ -709,13 +608,13 @@ class Status (QtWidgets.QWidget):
         self.mainLayout.setSpacing(0)
 
 
-        lineWidth = UIsettings.Options.Status.lineWidth
+        lineWidth = UIGlobals.Options.Status.lineWidth
 
-        fontLabel = UIsettings.IconDelegate.fontAssetLabel
+        fontLabel = UIGlobals.IconDelegate.fontAssetLabel
         metrics = QtGui.QFontMetrics(fontLabel)
         labelHeight = metrics.capHeight()
 
-        fontButton = UIsettings.Options.fontLabel
+        fontButton = UIGlobals.Options.fontLabel
         metrics = QtGui.QFontMetrics(fontButton)
         textHeight = metrics.capHeight()
 
@@ -786,7 +685,7 @@ class Status (QtWidgets.QWidget):
             self.button.released.connect(self.checkButton)
 
             widthButton  = tools.getStringWidth(name, fontButton)
-            widthButton += UIsettings.Options.Status.space
+            widthButton += UIGlobals.Options.Status.space
             self.button.setMinimumWidth(widthButton)
             self.button.setMaximumWidth(widthButton)
 
@@ -977,7 +876,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.nameLayout.setSpacing(0)
     parent.nameLayout.setObjectName("nameLayout")
     parent.nameEdit = NameEdit(parent.defaultName)
-    parent.nameEdit.setFont(UIsettings.Options.fontLabel)
+    parent.nameEdit.setFont(UIGlobals.Options.fontLabel)
     parent.nameEdit.setObjectName("nameEdit")
     parent.nameEdit.setProperty("background", "input")
     parent.nameEdit.setProperty("border", "none")
@@ -994,7 +893,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.modelingLabel = QtWidgets.QLabel()
     parent.modelingLabel.setMinimumSize(QtCore.QSize(55, 18))
     parent.modelingLabel.setMaximumSize(QtCore.QSize(55, 18))
-    parent.modelingLabel.setFont(UIsettings.Options.fontLabel)
+    parent.modelingLabel.setFont(UIGlobals.Options.fontLabel)
     parent.modelingLabel.setObjectName("modelingLabel")
     parent.modelingLabel.setProperty("textcolor", "light")
     parent.modelingLayout.addWidget(parent.modelingLabel)
@@ -1005,7 +904,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.modelingOverwrite = QtWidgets.QPushButton()
     parent.modelingOverwrite.setMinimumSize(QtCore.QSize(50, 16))
     parent.modelingOverwrite.setMaximumSize(QtCore.QSize(50, 16))
-    parent.modelingOverwrite.setFont(UIsettings.Options.fontOverwrite)
+    parent.modelingOverwrite.setFont(UIGlobals.Options.fontOverwrite)
     parent.modelingOverwrite.setCheckable(True)
     parent.modelingOverwrite.setObjectName("modelingOverwrite")
     parent.modelingLayout.addWidget(parent.modelingOverwrite)
@@ -1020,7 +919,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.surfacingLabel = QtWidgets.QLabel()
     parent.surfacingLabel.setMinimumSize(QtCore.QSize(55, 18))
     parent.surfacingLabel.setMaximumSize(QtCore.QSize(55, 18))
-    parent.surfacingLabel.setFont(UIsettings.Options.fontLabel)
+    parent.surfacingLabel.setFont(UIGlobals.Options.fontLabel)
     parent.surfacingLabel.setObjectName("surfacingLabel")
     parent.surfacingLabel.setProperty("textcolor", "light")
     parent.surfacingLayout.addWidget(parent.surfacingLabel)
@@ -1031,7 +930,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.surfacingOverwrite = QtWidgets.QPushButton()
     parent.surfacingOverwrite.setMinimumSize(QtCore.QSize(50, 16))
     parent.surfacingOverwrite.setMaximumSize(QtCore.QSize(50, 16))
-    parent.surfacingOverwrite.setFont(UIsettings.Options.fontOverwrite)
+    parent.surfacingOverwrite.setFont(UIGlobals.Options.fontOverwrite)
     parent.surfacingOverwrite.setCheckable(True)
     parent.surfacingOverwrite.setFlat(True)
     parent.surfacingOverwrite.setObjectName("surfacingOverwrite")
@@ -1048,7 +947,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.animationLabel = QtWidgets.QLabel()
     parent.animationLabel.setMinimumSize(QtCore.QSize(55, 18))
     parent.animationLabel.setMaximumSize(QtCore.QSize(55, 18))
-    parent.animationLabel.setFont(UIsettings.Options.fontLabel)
+    parent.animationLabel.setFont(UIGlobals.Options.fontLabel)
     parent.animationLabel.setObjectName("animationLabel")
     parent.animationLabel.setProperty("textcolor", "light")
     parent.animationLayout.addWidget(parent.animationLabel)
@@ -1059,7 +958,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.animationOverwrite = QtWidgets.QPushButton()
     parent.animationOverwrite.setMinimumSize(QtCore.QSize(50, 16))
     parent.animationOverwrite.setMaximumSize(QtCore.QSize(50, 16))
-    parent.animationOverwrite.setFont(UIsettings.Options.fontOverwrite)
+    parent.animationOverwrite.setFont(UIGlobals.Options.fontOverwrite)
     parent.animationOverwrite.setCheckable(True)
     parent.animationOverwrite.setFlat(True)
     parent.animationOverwrite.setObjectName("animationOverwrite")
@@ -1087,7 +986,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.labelComment = QtWidgets.QLabel("COMMENT")
     parent.labelComment.setObjectName("labelComment")
     parent.labelComment.setProperty("textcolor", "lock")
-    parent.labelComment.setFont(UIsettings.IconDelegate.fontAssetLabel)
+    parent.labelComment.setFont(UIGlobals.IconDelegate.fontAssetLabel)
     parent.commentLabelLayout.addWidget(parent.labelComment)
 
 
@@ -1111,7 +1010,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.commentEdit.setProperty("border", "none")
     parent.commentEdit.setObjectName("commentEdit")
     parent.commentEdit.setViewportMargins( MARGIN-textOffset, 0, 0, 0)
-    parent.commentEdit.setFont(UIsettings.Options.fontComment)
+    parent.commentEdit.setFont(UIGlobals.Options.fontComment)
     parent.commentLayout.addWidget(parent.commentEdit)
 
 
@@ -1125,7 +1024,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.exportLayout.setObjectName("exportLayout")
 
     parent.exportButton = ExportButton(theme)
-    parent.exportButton.setFont(UIsettings.Options.fontLabel)
+    parent.exportButton.setFont(UIGlobals.Options.fontLabel)
     parent.exportButton.setFlat(True)
     parent.exportButton.setObjectName("exportButton")
     parent.exportButton.setProperty("state", "disabled")

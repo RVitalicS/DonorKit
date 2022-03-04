@@ -7,7 +7,7 @@ from Qt import QtWidgets, QtCore, QtGui
 from . import IconPainter
 
 from . import Settings
-UIsettings = Settings.UIsettings
+UIGlobals = Settings.UIGlobals
 
 
 
@@ -68,7 +68,7 @@ class Editor (QtWidgets.QWidget):
                 self.iconName.setProperty("border", "none")
                 self.iconName.setProperty("textcolor", "light")
                 self.iconName.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignBottom)
-                self.iconName.setFont(UIsettings.IconDelegate.fontFolderName)
+                self.iconName.setFont(UIGlobals.IconDelegate.fontFolderName)
                 self.iconName.setContentsMargins( 0, 0, 0, 0)
                 self.iconName.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
                 self.iconName.setGeometry(self.Icon.folderNameArea)

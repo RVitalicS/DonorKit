@@ -8,7 +8,7 @@ from . import tools
 from Qt import QtWidgets, QtCore, QtGui
 
 from . import Settings
-UIsettings = Settings.UIsettings
+UIGlobals = Settings.UIGlobals
 
 
 
@@ -26,8 +26,8 @@ class BackButton (QtWidgets.QPushButton):
         self.image = QtGui.QImage(":/icons/back.png")
 
         self.setFixedSize(
-            UIsettings.Path.backIcon,
-            UIsettings.Path.height  )
+            UIGlobals.Path.backIcon,
+            UIGlobals.Path.height  )
 
         self.buttonPressed = False
 
@@ -42,7 +42,7 @@ class BackButton (QtWidgets.QPushButton):
         positionY = (
             buttonRect.y()
             + int((
-                UIsettings.Path.height
+                UIGlobals.Path.height
                 - self.image.height()
             )/2) )
         position = QtCore.QPoint( buttonRect.x(), positionY)
@@ -93,13 +93,13 @@ class BookmarkButton (QtWidgets.QPushButton):
         self.theme = theme
         self.image = QtGui.QImage(":/icons/bookmark.png")
 
-        self.offset = UIsettings.Path.bookmarkOffset
+        self.offset = UIGlobals.Path.bookmarkOffset
 
         self.setMinimumWidth( self.image.width() + self.offset )
         self.setMaximumWidth( self.image.width() + self.offset )
 
-        self.setMinimumHeight( UIsettings.AssetBrowser.margin )
-        self.setMaximumHeight( UIsettings.AssetBrowser.margin )
+        self.setMinimumHeight( UIGlobals.AssetBrowser.margin )
+        self.setMaximumHeight( UIGlobals.AssetBrowser.margin )
 
         self.buttonHover = False
 
@@ -156,8 +156,8 @@ class PathBar (QtWidgets.QWidget):
         self.root = str()
 
 
-        height  = UIsettings.AssetBrowser.margin
-        height += UIsettings.Path.height
+        height  = UIGlobals.AssetBrowser.margin
+        height += UIGlobals.Path.height
 
         self.setMaximumHeight( height )
         self.setMinimumHeight( height )
@@ -173,23 +173,23 @@ class PathBar (QtWidgets.QWidget):
 
 
         self.mainLayout = QtWidgets.QHBoxLayout()
-        self.mainLayout.setSpacing(UIsettings.IconDelegate.space*2)
+        self.mainLayout.setSpacing(UIGlobals.IconDelegate.space*2)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
 
 
         self.rootLayout = QtWidgets.QHBoxLayout()
         self.rootLayout.setContentsMargins(
-            UIsettings.AssetBrowser.margin + UIsettings.IconDelegate.space,
-            UIsettings.AssetBrowser.margin,
-            UIsettings.IconDelegate.space, 0 )
-        self.rootLayout.setSpacing(UIsettings.IconDelegate.space*2)
+            UIGlobals.AssetBrowser.margin + UIGlobals.IconDelegate.space,
+            UIGlobals.AssetBrowser.margin,
+            UIGlobals.IconDelegate.space, 0 )
+        self.rootLayout.setSpacing(UIGlobals.IconDelegate.space*2)
         self.mainLayout.addLayout(self.rootLayout)
 
 
         self.subdirLayout = QtWidgets.QVBoxLayout()
         self.subdirLayout.setContentsMargins( 0, 0,
-            UIsettings.AssetBrowser.margin + UIsettings.IconDelegate.space, 0 )
+            UIGlobals.AssetBrowser.margin + UIGlobals.IconDelegate.space, 0 )
         self.subdirLayout.setSpacing(0)
         self.mainLayout.addLayout(self.subdirLayout)
 
@@ -209,8 +209,8 @@ class PathBar (QtWidgets.QWidget):
         self.pathRoot.setObjectName("pathRoot")
         self.pathRoot.setProperty("background", "browser")
         self.pathRoot.setProperty("border", "none")
-        self.pathRoot.setFont(UIsettings.Path.fontRoot)
-        self.pathRoot.setFixedHeight(UIsettings.Path.height)
+        self.pathRoot.setFont(UIGlobals.Path.fontRoot)
+        self.pathRoot.setFixedHeight(UIGlobals.Path.height)
         self.pathRoot.setMinimumWidth(0)
         self.pathRoot.setFlat(True)
         self.rootLayout.addWidget(self.pathRoot)
@@ -221,8 +221,8 @@ class PathBar (QtWidgets.QWidget):
         self.pathLine.setObjectName("pathLine")
         self.pathLine.setProperty("background", "browser")
         self.pathLine.setProperty("border", "none")
-        self.pathLine.setFont(UIsettings.Path.fontPath)
-        self.pathLine.setFixedHeight(UIsettings.Path.height)
+        self.pathLine.setFont(UIGlobals.Path.fontPath)
+        self.pathLine.setFixedHeight(UIGlobals.Path.height)
         self.pathLine.setObjectName("pathLine")
         self.subdirLayout.addWidget(self.pathLine)
         self.pathLine.editingFinished.connect(self.changeSubdir)
@@ -242,13 +242,13 @@ class PathBar (QtWidgets.QWidget):
         self.pathRoot.setText(name)
         self.root = path
 
-        with Settings.UIManager(update=True) as uiSettings:
-            subdirLibrary = uiSettings["subdirLibrary"]
+        with Settings.Manager(update=True) as settings:
+            subdirLibrary = settings["subdirLibrary"]
 
             if os.path.exists(os.path.join(path, subdirLibrary)):
                 self.pathLine.setText(subdirLibrary)
             else:
-                uiSettings["subdirLibrary"] = ""
+                settings["subdirLibrary"] = ""
                 self.pathLine.setText("")
 
         path = os.path.join(self.root, self.pathLine.text())
@@ -258,8 +258,8 @@ class PathBar (QtWidgets.QWidget):
 
     def resetRoot (self):
 
-        with Settings.UIManager(update=True) as uiSettings:
-            uiSettings["subdirLibrary"] = ""
+        with Settings.Manager(update=True) as settings:
+            settings["subdirLibrary"] = ""
             self.pathLine.setText("")
 
         self.pathChanged.emit(self.root)
@@ -272,9 +272,9 @@ class PathBar (QtWidgets.QWidget):
         path   = os.path.join(self.root, subdir)
 
         if os.path.exists(path):
-            with Settings.UIManager(update=True) as uiSettings:
+            with Settings.Manager(update=True) as settings:
 
-                uiSettings["subdirLibrary"] = subdir
+                settings["subdirLibrary"] = subdir
                 self.pathLine.setText(subdir)
             
             self.pathChanged.emit(path)
@@ -284,8 +284,8 @@ class PathBar (QtWidgets.QWidget):
     def moveBack (self):
 
         if not self.pathLine.text():
-            with Settings.UIManager(update=True) as uiSettings:
-                uiSettings["focusLibrary"] = ""
+            with Settings.Manager(update=True) as settings:
+                settings["focusLibrary"] = ""
                 
             self.pathChanged.emit("")
             return
@@ -294,9 +294,9 @@ class PathBar (QtWidgets.QWidget):
         path   = os.path.join(self.root, subdir)
 
         if os.path.exists(path):
-            with Settings.UIManager(update=True) as uiSettings:
+            with Settings.Manager(update=True) as settings:
 
-                uiSettings["subdirLibrary"] = subdir
+                settings["subdirLibrary"] = subdir
                 self.pathLine.setText(subdir)
             
             self.pathChanged.emit(path)
@@ -312,18 +312,18 @@ class PathBar (QtWidgets.QWidget):
         else:
             text = self.pathLine.text()
 
-        with Settings.UIManager(update=True) as uiSettings:
+        with Settings.Manager(update=True) as settings:
 
                 path = os.path.join(self.root, text)
                 if os.path.exists(path):
 
-                    uiSettings["subdirLibrary"] = text
+                    settings["subdirLibrary"] = text
                     self.pathChanged.emit(path)
 
                 else:
-                    subdir = uiSettings["subdirLibrary"]
+                    subdir = settings["subdirLibrary"]
                     self.pathLine.setText(subdir)
-                    uiSettings["subdirLibrary"] = subdir
+                    settings["subdirLibrary"] = subdir
 
                     success = False
 

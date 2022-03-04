@@ -5,7 +5,7 @@ import os
 from . import tools
 
 from . import Settings
-UIsettings = Settings.UIsettings
+UIGlobals = Settings.UIGlobals
 
 
 
@@ -16,14 +16,17 @@ UIsettings = Settings.UIsettings
 class Theme (object):
 
 
-    def __init__ (self):
-
+    def __init__ (self, application="manager"):
 
         self.name = "dark"
         filename = "themedark.json"
 
-        with Settings.UIManager(update=False) as uiSettings:
-            self.name = uiSettings.get("theme", "")
+        if application == "export":
+            with Settings.Export(update=False) as settings:
+                self.name = settings.get("theme", "")
+        else:
+            with Settings.Manager(update=False) as settings:
+                self.name = settings.get("theme", "")
 
         if self.name == "light":
             filename = "themelight.json"

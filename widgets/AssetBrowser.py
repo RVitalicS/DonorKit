@@ -5,7 +5,7 @@
 from Qt import QtWidgets, QtCore, QtGui
 
 from . import Settings
-UIsettings = Settings.UIsettings
+UIGlobals = Settings.UIGlobals
 
 
 
@@ -52,16 +52,16 @@ class AssetBrowser (QtWidgets.QListView):
     def setGrid (self):
         
 
-        margin = UIsettings.AssetBrowser.margin
-        scrollWidth = UIsettings.AssetBrowser.scrollWidth
+        margin = UIGlobals.AssetBrowser.margin
+        scrollWidth = UIGlobals.AssetBrowser.scrollWidth
 
 
         iconSize = 1
-        with Settings.UIManager(update=False) as uiSettings:
-            iconSize = uiSettings["iconSize"]
+        with Settings.Manager(update=False) as settings:
+            iconSize = settings["iconSize"]
 
 
-        IconSettings = UIsettings.AssetBrowser.Icon
+        IconSettings = UIGlobals.AssetBrowser.Icon
 
         folderWidth  = IconSettings.Folder.width
         folderHeight = IconSettings.Folder.height
@@ -118,8 +118,8 @@ class AssetBrowser (QtWidgets.QListView):
         # library label
         hasLibrary = False
         positionX = margin
-        positionY  = UIsettings.AssetBrowser.margin
-        positionY += UIsettings.Path.height
+        positionY  = UIGlobals.AssetBrowser.margin
+        positionY += UIGlobals.Path.height
         for index in range(model.rowCount()):
 
             item = model.item(index)
@@ -298,8 +298,8 @@ class AssetBrowser (QtWidgets.QListView):
 
 
 
-        with Settings.UIManager(update=False) as uiSettings:
-            scrollPosition = uiSettings["scrollPosition"]
+        with Settings.Manager(update=False) as settings:
+            scrollPosition = settings["scrollPosition"]
 
             self.verticalScrollBar().setValue(
                 self.intScrollPosition(scrollPosition) )
@@ -388,8 +388,8 @@ class AssetBrowser (QtWidgets.QListView):
 
     def saveScrollPosition (self, value):
 
-        with Settings.UIManager(update=True) as uiSettings:
-            uiSettings["scrollPosition"] = self.floatScrollPosition(value)
+        with Settings.Manager(update=True) as settings:
+            settings["scrollPosition"] = self.floatScrollPosition(value)
 
 
 

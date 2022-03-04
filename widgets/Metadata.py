@@ -37,6 +37,7 @@ class Metadata (object):
                 published=tools.getTimeCode(),
                 type="usdasset",
                 comments=dict(),
+                tags=[],
                 status="WIP" )
 
 
@@ -60,8 +61,11 @@ class Metadata (object):
         dataType = data.get("usdasset", "")
 
         if dataType == "usdasset":
-            if not data.get("comments", ""):
+
+            if not data.get("comments", None):
                 data["comments"] = dict()
+            elif not data.get("tags", None):
+                data["tags"] = []
 
         return data
 

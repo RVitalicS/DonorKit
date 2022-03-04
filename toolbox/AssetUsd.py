@@ -25,7 +25,7 @@ from pxr import Usd
 
 from Qt import QtGui, QtCore
 
-from widgets import ExportWidget
+from widgets import ExportDialog
 from widgets import Metadata
 from widgets import Settings
 from widgets import tools
@@ -302,7 +302,7 @@ def Export ():
 
 
 
-        widget = ExportWidget.ExportWidget()
+        widget = ExportDialog.ExportDialog()
         widget.exec()
 
         options = widget.getOptions()

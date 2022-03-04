@@ -9,7 +9,7 @@ from . import tools
 from Qt import QtCore, QtGui
 
 from . import Settings
-UIsettings = Settings.UIsettings
+UIGlobals = Settings.UIGlobals
 
 
 
@@ -43,7 +43,7 @@ def favorite (function):
 
             image = QtGui.QImage(":/icons/star.png")
 
-            offset = UIsettings.IconDelegate.space
+            offset = UIGlobals.IconDelegate.space
             position = QtCore.QPoint(
                 self.iconRect.x() + self.iconRect.width() - image.width() - offset,
                 self.iconRect.y() + offset )
@@ -114,8 +114,8 @@ class Icon (object):
         self.option  = option
         self.index   = index
 
-        self.space = UIsettings.IconDelegate.space
-        self.radius = UIsettings.IconDelegate.radius
+        self.space = UIGlobals.IconDelegate.space
+        self.radius = UIGlobals.IconDelegate.radius
 
         self.checked = self.index.data(QtCore.Qt.StatusTipRole)
 
@@ -189,7 +189,7 @@ class Icon (object):
                 QtCore.Qt.RoundCap,
                 QtCore.Qt.RoundJoin) )
 
-        self.painter.setFont( UIsettings.IconDelegate.fontLibraries )
+        self.painter.setFont( UIGlobals.IconDelegate.fontLibraries )
 
         text = self.data.get("text")
 
@@ -215,7 +215,7 @@ class Icon (object):
                 QtCore.Qt.RoundCap,
                 QtCore.Qt.RoundJoin) )
 
-        self.painter.setFont( UIsettings.IconDelegate.fontCategory )
+        self.painter.setFont( UIGlobals.IconDelegate.fontCategory )
 
         text = self.data.get("text")
 
@@ -282,7 +282,7 @@ class Icon (object):
                 QtCore.Qt.RoundJoin) )
 
         offsetText = 1
-        self.painter.setFont( UIsettings.IconDelegate.fontFolderName )
+        self.painter.setFont( UIGlobals.IconDelegate.fontFolderName )
 
         offsetName = libraryImage.width() + offsetIcon*2
         nameArea = QtCore.QRect(
@@ -341,7 +341,7 @@ class Icon (object):
                 QtCore.Qt.RoundJoin) )
 
         offsetText = 1
-        self.painter.setFont( UIsettings.IconDelegate.fontFolderName )
+        self.painter.setFont( UIGlobals.IconDelegate.fontFolderName )
 
         offsetName = folderImage.width() + folderOffset*2
         self.folderNameArea = QtCore.QRect(
@@ -372,7 +372,7 @@ class Icon (object):
                 QtCore.Qt.RoundCap,
                 QtCore.Qt.RoundJoin) )
 
-        self.painter.setFont( UIsettings.IconDelegate.fontFolderItems )
+        self.painter.setFont( UIGlobals.IconDelegate.fontFolderItems )
 
         offsetName = folderImage.width() + folderOffset*2
         countArea = QtCore.QRect(
@@ -406,7 +406,7 @@ class Icon (object):
             linkImage = QtGui.QImage(":/icons/link.png")
             linkImage = tools.recolor(linkImage, self.theme.kicker, opacity=0.25)
 
-            linkOffset = linkImage.width() + UIsettings.IconDelegate.offsetLink
+            linkOffset = linkImage.width() + UIGlobals.IconDelegate.offsetLink
 
             linkPosition = QtCore.QPoint(
                     self.iconRect.x() + self.iconRect.width()  - linkOffset,
@@ -468,10 +468,10 @@ class Icon (object):
 
         # GET SIZE
         iconSize = 1
-        with Settings.UIManager(update=False) as uiSettings:
-            iconSize = uiSettings["iconSize"]
+        with Settings.Manager(update=False) as settings:
+            iconSize = settings["iconSize"]
 
-        IconSettings = UIsettings.AssetBrowser.Icon
+        IconSettings = UIGlobals.AssetBrowser.Icon
 
         labelHeight = IconSettings.Asset.min.label
         if iconSize == 2:
@@ -587,13 +587,13 @@ class Icon (object):
             textOption.setWrapMode(QtGui.QTextOption.NoWrap)
             textOption.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
 
-            fontAnimation = UIsettings.IconDelegate.Animation.font
+            fontAnimation = UIGlobals.IconDelegate.Animation.font
             self.painter.setFont(fontAnimation)
             self.painter.setPen( QtGui.QColor(self.theme.paper) )
 
-            offsetTag = UIsettings.IconDelegate.Animation.offset
-            spaceTag  = UIsettings.IconDelegate.Animation.space
-            heightTag = UIsettings.IconDelegate.Animation.height
+            offsetTag = UIGlobals.IconDelegate.Animation.offset
+            spaceTag  = UIGlobals.IconDelegate.Animation.space
+            heightTag = UIGlobals.IconDelegate.Animation.height
             radiusTag = int(round(heightTag/2))
 
             animationWidth = tools.getStringWidth(textAnimation, fontAnimation)
@@ -678,13 +678,13 @@ class Icon (object):
 
         # PUBLISHED & STATUS LABELS
         self.painter.setPen( QtGui.QColor(self.theme.textlock) )
-        self.painter.setFont( UIsettings.IconDelegate.fontAssetLabel )
+        self.painter.setFont( UIGlobals.IconDelegate.fontAssetLabel )
 
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
         textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
 
-        statusHeight = UIsettings.AssetBrowser.Icon.Asset.statusHeight
+        statusHeight = UIGlobals.AssetBrowser.Icon.Asset.statusHeight
 
         if iconSize == 1:
             publishedWidth = int(labelArea.width()/2)
@@ -733,7 +733,7 @@ class Icon (object):
 
         # PUBLISHED DATE
         self.painter.setPen( QtGui.QColor(self.theme.text) )
-        self.painter.setFont( UIsettings.IconDelegate.fontAssetLabel )
+        self.painter.setFont( UIGlobals.IconDelegate.fontAssetLabel )
         
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
@@ -767,8 +767,8 @@ class Icon (object):
         path = QtGui.QPainterPath()
         path.addRoundedRect(
             buttonArea, 
-            UIsettings.IconDelegate.radiusStatus, 
-            UIsettings.IconDelegate.radiusStatus)
+            UIGlobals.IconDelegate.radiusStatus, 
+            UIGlobals.IconDelegate.radiusStatus)
 
         brush = QtGui.QBrush(statusColor)
 
@@ -779,7 +779,7 @@ class Icon (object):
 
         # STATUS TEXT
         self.painter.setPen( QtGui.QColor(self.theme.white) )
-        self.painter.setFont( UIsettings.IconDelegate.fontAssetStatus )
+        self.painter.setFont( UIGlobals.IconDelegate.fontAssetStatus )
 
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
@@ -798,7 +798,7 @@ class Icon (object):
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
         textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
 
-        fontName = UIsettings.IconDelegate.fontAssetName
+        fontName = UIGlobals.IconDelegate.fontAssetName
         self.painter.setFont(fontName)
 
         if self.hover or self.checked == 1:
@@ -884,7 +884,7 @@ class Icon (object):
 
 
         # VERSION
-        fontVersion = UIsettings.IconDelegate.fontAssetVersion
+        fontVersion = UIGlobals.IconDelegate.fontAssetVersion
         self.painter.setFont(fontVersion)
 
         # draw version text

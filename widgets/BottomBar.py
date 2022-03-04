@@ -8,10 +8,10 @@ from . import tools
 from Qt import QtWidgets, QtCore, QtGui
 
 from . import Settings
-UIsettings = Settings.UIsettings
+UIGlobals = Settings.UIGlobals
 
-SPACE  = UIsettings.IconDelegate.space * 2
-MARGIN = UIsettings.AssetBrowser.margin
+SPACE  = UIGlobals.IconDelegate.space * 2
+MARGIN = UIGlobals.AssetBrowser.margin
 
 
 
@@ -30,7 +30,7 @@ class FavoriteButton (QtWidgets.QPushButton):
         self.setMinimumWidth( self.image.width() )
         self.setMaximumWidth( self.image.width() )
 
-        offset = UIsettings.Bar.favoriteOffset
+        offset = UIGlobals.Bar.favoriteOffset
         self.setMinimumHeight( self.image.height() + offset )
         self.setMaximumHeight( self.image.height() + offset )
 
@@ -86,7 +86,7 @@ class BookmarkButton (QtWidgets.QPushButton):
         self.setMinimumWidth( self.image.width() )
         self.setMaximumWidth( self.image.width() )
 
-        offset = UIsettings.Bar.bookmarkOffset
+        offset = UIGlobals.Bar.bookmarkOffset
         self.setMinimumHeight( self.image.height() + offset )
         self.setMaximumHeight( self.image.height() + offset )
 
@@ -154,7 +154,7 @@ class ThemeButton (QtWidgets.QPushButton):
         self.setMinimumWidth( self.image.width() )
         self.setMaximumWidth( self.image.width() )
 
-        offset = UIsettings.Bar.bookmarkOffset
+        offset = UIGlobals.Bar.bookmarkOffset
         self.setMinimumHeight( self.image.height() + offset )
         self.setMaximumHeight( self.image.height() + offset )
 
@@ -220,7 +220,7 @@ class FavoriteGroup (QtWidgets.QWidget):
         self.mainLayout.setSpacing(SPACE)
 
         self.label = QtWidgets.QLabel("FAVORITES")
-        self.label.setFont(UIsettings.Bar.fontPreview)
+        self.label.setFont(UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
             QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label.setProperty("textcolor", "light")
@@ -246,7 +246,7 @@ class BookmarkGroup (QtWidgets.QWidget):
         self.mainLayout.setSpacing(SPACE)
 
         self.label = QtWidgets.QLabel("BOOKMARKS")
-        self.label.setFont(UIsettings.Bar.fontPreview)
+        self.label.setFont(UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
             QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label.setProperty("textcolor", "light")
@@ -275,7 +275,7 @@ class ThemeGroup (QtWidgets.QWidget):
         self.mainLayout.setSpacing(SPACE)
 
         self.label = QtWidgets.QLabel("THEME")
-        self.label.setFont(UIsettings.Bar.fontPreview)
+        self.label.setFont(UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
             QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label.setProperty("textcolor", "light")
@@ -295,8 +295,8 @@ class ThemeGroup (QtWidgets.QWidget):
         else:
             self.current = "dark"
 
-        with Settings.UIManager(update=True) as uiSettings:
-            uiSettings["theme"] = self.current
+        with Settings.Export(update=True) as settings:
+            settings["theme"] = self.current
 
         if self.current != self.theme.name:
             self.label.setText("RESTART")
@@ -318,7 +318,7 @@ class PreviewGroup (QtWidgets.QWidget):
         self.mainLayout.setSpacing(SPACE)
 
         self.label = QtWidgets.QLabel("PREVIEW")
-        self.label.setFont(UIsettings.Bar.fontPreview)
+        self.label.setFont(UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
             QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label.setProperty("textcolor", "light")
@@ -328,8 +328,8 @@ class PreviewGroup (QtWidgets.QWidget):
         self.slider.setRange(1, 3)
         self.slider.setTickInterval(1)
 
-        with Settings.UIManager(update=False) as uiSettings:
-            self.slider.setValue(uiSettings["iconSize"])
+        with Settings.Manager(update=False) as settings:
+            self.slider.setValue(settings["iconSize"])
 
         self.mainLayout.addWidget(self.label)
         self.mainLayout.addWidget(self.slider)
@@ -348,7 +348,7 @@ class BottomBar (QtWidgets.QWidget):
     def __init__ (self, theme):
         super(BottomBar, self).__init__()
 
-        height = UIsettings.Bar.height
+        height = UIGlobals.Bar.height
 
 
         self.setAutoFillBackground(True)
@@ -365,7 +365,7 @@ class BottomBar (QtWidgets.QWidget):
 
 
         self.bookmarkCombobox = QtWidgets.QComboBox()
-        self.bookmarkCombobox.setFont(UIsettings.Bar.fontBookmark)
+        self.bookmarkCombobox.setFont(UIGlobals.Bar.fontBookmark)
         self.bookmarkCombobox.setEditable(False)
         self.bookmarkCombobox.setFrame(False)
         self.bookmarkCombobox.setVisible(False)

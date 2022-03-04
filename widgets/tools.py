@@ -14,6 +14,7 @@ from . import Metadata
 
 
 RESERVED_TAGS = [
+    "Render",
     "Proxy",
     "RenderMan" ]
 
