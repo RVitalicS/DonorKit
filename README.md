@@ -25,12 +25,6 @@ importlib.reload(AssetUsd)
 
 
 
-### Known Limitations:
-+ It’s possible to export only UsdPreviewSurface and RenderMan shader networks (including Lama)
-+ Import/Render ready for Katana only
-
-
-
 ### Tested on:
 
 | Application       | Version        |
@@ -41,6 +35,19 @@ importlib.reload(AssetUsd)
 
 Operating System: CentOS 7
 
+
+
+### Python Requirements
+
+The following dependencies are required:
++ [Qt.py](https://github.com/mottosso/Qt.py)
++ used oslquery module from RenderMan library ([Open Shading Language](https://github.com/AcademySoftwareFoundation/OpenShadingLanguage) python bindings)
+
+
+
+### Limitations:
++ It’s possible to export only UsdPreviewSurface and RenderMan shader networks (including Lama)
++ Import/Render ready for Katana only
 
 
 
