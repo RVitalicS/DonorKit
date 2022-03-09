@@ -9,6 +9,7 @@
     "blue": "#0099ff",
     "text": "#bbbbbb",
     "textoff": "#707070",
+    "textdim": "#373839",
     "textlock": "#8b8b8b",
     "optionBackground": "#4e5052",
     "optionInput": "#464849",
@@ -35,7 +36,8 @@
     "iconBackground": "#4e5052",
     "iconHilight": "#545759",
     "iconSpace": "#545759",
-    "iconOutline": "#545759",
+    "iconOutlineHover": "#545759",
+    "iconOutline": "#4e5052",
     "iconAnimation": "#2a2a2a",
     "checkedHilight": "#58a5cc"
 }

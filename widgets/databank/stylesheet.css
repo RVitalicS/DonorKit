@@ -16,8 +16,9 @@
 
 *[textcolor="kicker"] { color: $KICKER; }
 *[textcolor="white"] { color: $WHITE_COLOR; }
-*[textcolor="light"] { color: $TEXT_ON; }
+*[textcolor="on"] { color: $TEXT_ON; }
 *[textcolor="off"] { color: $TEXT_OFF; }
+*[textcolor="dim"] { color: $TEXT_DIM; }
 *[textcolor="disabled"] { color: $OPTION_DISABLE; }
 *[textcolor="lock"] { color: $TEXT_LOCK; }
 *[textcolor="violet"] { color: $VIOLET_COLOR; }
@@ -208,29 +209,6 @@ QComboBox QAbstractItemView {
     background: $OPTION_INPUT;
     selection-background-color: $BLACK_COLOR;
 }
-
-
-
-
-
-QComboBox::drop-down[bookmark="true"] {
-    width: 20px;
-    background: $BROWSER_BACKGROUND;
-}
-
-QComboBox::down-arrow[bookmark="true"] {
-    image: none;
-}
-
-QComboBox[bookmark="true"],
-QAbstractItemView[bookmark="true"] {
-    border: none;
-    color: $TEXT_ON;
-    background: $BROWSER_BACKGROUND;
-    selection-color: $WHITE_COLOR;
-    selection-background-color: $BLACK_COLOR;
-}
-
 
 
 

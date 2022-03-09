@@ -54,14 +54,10 @@ def validJSON (path):
 
 def openFolder (path):
 
-    if sys.platform == "darwin":
-        subprocess.check_call(["open", "--", path])
-
-    elif sys.platform == "linux":
-        subprocess.check_call(["nautilus", path])
-
-    elif sys.platform == "win32":
-        subprocess.check_call(["explorer", path])
+    subprocess.Popen(["nautilus", path],
+        stdin  = None ,
+        stdout = None ,
+        stderr = None )
 
 
 
@@ -117,6 +113,19 @@ def recolor (image, color, opacity=1.0):
             image.setPixelColor(x, y, color)
 
     return image
+
+
+
+
+
+
+def nameFilter (text):
+
+    text = re.sub(
+        r"[^A-Za-z0-9_-]",
+        "", text )
+
+    return text
 
 
 

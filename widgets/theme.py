@@ -44,6 +44,7 @@ class Theme (object):
             "violet": "$VIOLET_COLOR",
             "text": "$TEXT_ON",
             "textoff": "$TEXT_OFF",
+            "textdim": "$TEXT_DIM",
             "textlock": "$TEXT_LOCK",
             "optionBackground": "$OPTION_BACKGROUND",
             "optionInput": "$OPTION_INPUT",

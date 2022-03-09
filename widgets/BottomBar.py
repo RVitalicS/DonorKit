@@ -6,12 +6,14 @@ import os
 from . import tools
 
 from Qt import QtWidgets, QtCore, QtGui
+from . import BookmarkDelegate
 
 from . import Settings
 UIGlobals = Settings.UIGlobals
 
 SPACE  = UIGlobals.IconDelegate.space * 2
 MARGIN = UIGlobals.AssetBrowser.margin
+
 
 
 
@@ -68,7 +70,7 @@ class FavoriteButton (QtWidgets.QPushButton):
         super(FavoriteButton, self).leaveEvent(event)
         self.buttonHover = False
         self.clearFocus()
-        
+
 
 
 
@@ -223,7 +225,7 @@ class FavoriteGroup (QtWidgets.QWidget):
         self.label.setFont(UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
             QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label.setProperty("textcolor", "light")
+        self.label.setProperty("textcolor", "on")
 
         self.button = FavoriteButton(theme)
 
@@ -249,7 +251,7 @@ class BookmarkGroup (QtWidgets.QWidget):
         self.label.setFont(UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
             QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label.setProperty("textcolor", "light")
+        self.label.setProperty("textcolor", "on")
 
         self.button = BookmarkButton(theme)
 
@@ -278,7 +280,7 @@ class ThemeGroup (QtWidgets.QWidget):
         self.label.setFont(UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
             QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label.setProperty("textcolor", "light")
+        self.label.setProperty("textcolor", "on")
 
         self.button = ThemeButton(theme)
         self.button.released.connect(self.change)
@@ -302,7 +304,7 @@ class ThemeGroup (QtWidgets.QWidget):
             self.label.setText("RESTART")
         else:
             self.label.setText("THEME")
-        
+
 
 
 
@@ -321,7 +323,7 @@ class PreviewGroup (QtWidgets.QWidget):
         self.label.setFont(UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
             QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label.setProperty("textcolor", "light")
+        self.label.setProperty("textcolor", "on")
 
         self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.slider.setFixedWidth(35)
@@ -334,7 +336,34 @@ class PreviewGroup (QtWidgets.QWidget):
         self.mainLayout.addWidget(self.label)
         self.mainLayout.addWidget(self.slider)
         self.setLayout(self.mainLayout)
-        
+
+
+
+
+
+
+class ComboBox (QtWidgets.QComboBox):
+
+    def __init__ (self, theme):
+        super(ComboBox, self).__init__()
+
+        self.view().window().setAttribute(
+            QtCore.Qt.WA_TranslucentBackground )
+
+        self.setEditable(False)
+        self.setFrame(False)
+        self.setVisible(False)
+        self.setFixedHeight(0)
+
+
+    def showPopup (self):
+        super(ComboBox, self).showPopup()
+
+        popup = self.findChild(QtWidgets.QFrame)
+        popup.move(
+            popup.x(),
+            popup.y() - popup.height())
+
 
 
 
@@ -364,15 +393,18 @@ class BottomBar (QtWidgets.QWidget):
         self.mainLayout.setSpacing(0)
 
 
-        self.bookmarkCombobox = QtWidgets.QComboBox()
-        self.bookmarkCombobox.setFont(UIGlobals.Bar.fontBookmark)
-        self.bookmarkCombobox.setEditable(False)
-        self.bookmarkCombobox.setFrame(False)
-        self.bookmarkCombobox.setVisible(False)
-        self.bookmarkCombobox.setFixedHeight(0)
-        self.bookmarkCombobox.setProperty("bookmark", "true")
+        self.bookmarkLayout = QtWidgets.QVBoxLayout()
+        self.bookmarkLayout.setContentsMargins(
+            int(SPACE/2),0,
+            int(SPACE/2),0)
+        self.bookmarkLayout.setSpacing(0)
+        self.mainLayout.addLayout(self.bookmarkLayout)
+
+        self.bookmarkCombobox = ComboBox(theme)
+        self.bookmarkCombobox.setItemDelegate(
+            BookmarkDelegate.Delegate(self.bookmarkCombobox.view(), theme) )
         self.bookmarkCombobox.activated.connect(self.getData)
-        self.mainLayout.addWidget(self.bookmarkCombobox)
+        self.bookmarkLayout.addWidget(self.bookmarkCombobox)
 
 
         self.groupsLayout = QtWidgets.QHBoxLayout()

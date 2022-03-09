@@ -10,6 +10,9 @@ from Qt import QtWidgets, QtCore, QtGui
 from . import Settings
 UIGlobals = Settings.UIGlobals
 
+SPACE  = UIGlobals.IconDelegate.space
+MARGIN = UIGlobals.AssetBrowser.margin
+
 
 
 
@@ -62,6 +65,7 @@ class BackButton (QtWidgets.QPushButton):
 
     def mousePressEvent (self, event):
         super(BackButton, self).mousePressEvent(event)
+        self.setFocus(QtCore.Qt.MouseFocusReason)
         self.buttonPressed = True
         self.repaint()
 
@@ -78,6 +82,7 @@ class BackButton (QtWidgets.QPushButton):
     def leaveEvent (self, event):
         super(BackButton, self).leaveEvent(event)
         self.buttonPressed = False
+        self.clearFocus()
 
 
 
@@ -95,11 +100,9 @@ class BookmarkButton (QtWidgets.QPushButton):
 
         self.offset = UIGlobals.Path.bookmarkOffset
 
-        self.setMinimumWidth( self.image.width() + self.offset )
-        self.setMaximumWidth( self.image.width() + self.offset )
-
-        self.setMinimumHeight( UIGlobals.AssetBrowser.margin )
-        self.setMaximumHeight( UIGlobals.AssetBrowser.margin )
+        self.setFixedSize(
+            self.image.width() + self.offset,
+            MARGIN )
 
         self.buttonHover = False
 
@@ -156,11 +159,10 @@ class PathBar (QtWidgets.QWidget):
         self.root = str()
 
 
-        height  = UIGlobals.AssetBrowser.margin
+        height  = MARGIN
         height += UIGlobals.Path.height
 
-        self.setMaximumHeight( height )
-        self.setMinimumHeight( height )
+        self.setFixedHeight( height )
 
 
         self.setAutoFillBackground(True)
@@ -173,31 +175,17 @@ class PathBar (QtWidgets.QWidget):
 
 
         self.mainLayout = QtWidgets.QHBoxLayout()
-        self.mainLayout.setSpacing(UIGlobals.IconDelegate.space*2)
+        self.mainLayout.setSpacing(SPACE*2)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
 
 
         self.rootLayout = QtWidgets.QHBoxLayout()
         self.rootLayout.setContentsMargins(
-            UIGlobals.AssetBrowser.margin + UIGlobals.IconDelegate.space,
-            UIGlobals.AssetBrowser.margin,
-            UIGlobals.IconDelegate.space, 0 )
-        self.rootLayout.setSpacing(UIGlobals.IconDelegate.space*2)
+            MARGIN + SPACE,
+            MARGIN, SPACE, 0 )
+        self.rootLayout.setSpacing(SPACE*2)
         self.mainLayout.addLayout(self.rootLayout)
-
-
-        self.subdirLayout = QtWidgets.QVBoxLayout()
-        self.subdirLayout.setContentsMargins( 0, 0,
-            UIGlobals.AssetBrowser.margin + UIGlobals.IconDelegate.space, 0 )
-        self.subdirLayout.setSpacing(0)
-        self.mainLayout.addLayout(self.subdirLayout)
-
-
-        self.bookmarkButton = BookmarkButton(theme)
-        self.bookmarkButton.setCheckable(True)
-        self.bookmarkButton.clicked.connect(self.actionBookmark)
-        self.subdirLayout.addWidget(self.bookmarkButton)
 
         
         self.backButton = BackButton(theme)
@@ -217,6 +205,19 @@ class PathBar (QtWidgets.QWidget):
         self.pathRoot.clicked.connect(self.resetRoot)
 
 
+        self.subdirLayout = QtWidgets.QVBoxLayout()
+        self.subdirLayout.setContentsMargins( 0, 0,
+            MARGIN + SPACE, 0 )
+        self.subdirLayout.setSpacing(0)
+        self.mainLayout.addLayout(self.subdirLayout)
+
+
+        self.bookmarkButton = BookmarkButton(theme)
+        self.bookmarkButton.setCheckable(True)
+        self.bookmarkButton.clicked.connect(self.actionBookmark)
+        self.subdirLayout.addWidget(self.bookmarkButton)
+
+
         self.pathLine = QtWidgets.QLineEdit()
         self.pathLine.setObjectName("pathLine")
         self.pathLine.setProperty("background", "browser")
@@ -227,7 +228,34 @@ class PathBar (QtWidgets.QWidget):
         self.subdirLayout.addWidget(self.pathLine)
         self.pathLine.editingFinished.connect(self.changeSubdir)
 
+        self.mainLayout.setStretch(0, 0)
+        self.mainLayout.setStretch(1, 1)
         self.setLayout(self.mainLayout)
+
+
+
+    def resizeEvent (self, event):
+        super(PathBar, self).resizeEvent(event)
+
+        self.bookmarkButton.hide()
+        self.pathLine.hide()
+
+        width = self.width() - MARGIN * 2 - SPACE * 2
+
+        font = UIGlobals.Path.fontPath
+        text = self.pathLine.text()
+        textWidth  = tools.getStringWidth(text, font)
+        textWidth += SPACE
+
+        sumwidth = (
+            self.backButton.width()
+            + self.pathRoot.width()
+            + SPACE * 3
+            + textWidth )
+
+        if width > sumwidth:
+            self.bookmarkButton.show()
+            self.pathLine.show()
 
 
 
@@ -237,7 +265,7 @@ class PathBar (QtWidgets.QWidget):
 
 
 
-    def setRoot (self, name, path):
+    def setRoot (self, name, path, finish=True):
 
         self.pathRoot.setText(name)
         self.root = path
@@ -251,8 +279,9 @@ class PathBar (QtWidgets.QWidget):
                 settings["subdirLibrary"] = ""
                 self.pathLine.setText("")
 
-        path = os.path.join(self.root, self.pathLine.text())
-        self.pathChanged.emit(path)
+        if finish:
+            path = os.path.join(self.root, self.pathLine.text())
+            self.pathChanged.emit(path)
 
 
 
@@ -307,7 +336,7 @@ class PathBar (QtWidgets.QWidget):
 
         success = True
 
-        if not text is None:
+        if text is not None:
             self.pathLine.setText(text)
         else:
             text = self.pathLine.text()

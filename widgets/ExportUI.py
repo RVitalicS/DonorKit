@@ -323,7 +323,7 @@ class AnimationOpions (QtWidgets.QWidget):
         self.animationNameLabel.setFont(UIGlobals.Options.fontLabel)
         self.animationNameLabel.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.animationNameLabel.setObjectName("animationNameLabel")
-        self.animationNameLabel.setProperty("textcolor", "light")
+        self.animationNameLabel.setProperty("textcolor", "on")
         self.animationNameLayout.addWidget(self.animationNameLabel)
 
         self.animationNameCombobox = OptionComboBox(theme)
@@ -353,7 +353,7 @@ class AnimationOpions (QtWidgets.QWidget):
         self.animationRangeLabel.setFont(UIGlobals.Options.fontLabel)
         self.animationRangeLabel.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.animationRangeLabel.setObjectName("animationRangeLabel")
-        self.animationRangeLabel.setProperty("textcolor", "light")
+        self.animationRangeLabel.setProperty("textcolor", "on")
         self.animationRangeLayout.addWidget(self.animationRangeLabel)
 
         self.rangeGroupLayout = QtWidgets.QHBoxLayout()
@@ -381,7 +381,7 @@ class AnimationOpions (QtWidgets.QWidget):
         self.rangeStartSpinbox.setObjectName("rangeFromSpinbox")
         self.rangeStartSpinbox.setProperty("background", "input")
         self.rangeStartSpinbox.setProperty("border", "none")
-        self.rangeStartSpinbox.setProperty("textcolor", "light")
+        self.rangeStartSpinbox.setProperty("textcolor", "on")
         self.rangeGroupLayout.addWidget(self.rangeStartSpinbox)
 
         self.rangeEndSpinbox = QtWidgets.QSpinBox()
@@ -406,7 +406,7 @@ class AnimationOpions (QtWidgets.QWidget):
         self.rangeEndSpinbox.setObjectName("rangeToSpinbox")
         self.rangeEndSpinbox.setProperty("background", "input")
         self.rangeEndSpinbox.setProperty("border", "none")
-        self.rangeEndSpinbox.setProperty("textcolor", "light")
+        self.rangeEndSpinbox.setProperty("textcolor", "on")
         self.rangeGroupLayout.addWidget(self.rangeEndSpinbox)
 
         rangeSpacer = QtWidgets.QSpacerItem(6, 6, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -457,7 +457,7 @@ class MainOpions (QtWidgets.QWidget):
         self.variantLabel.setFont(UIGlobals.Options.fontLabel)
         self.variantLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.variantLabel.setObjectName("variantLabel")
-        self.variantLabel.setProperty("textcolor", "light")
+        self.variantLabel.setProperty("textcolor", "on")
         self.variantLayout.addWidget(self.variantLabel)
 
         self.variantCombobox = OptionComboBox(theme)
@@ -474,7 +474,7 @@ class MainOpions (QtWidgets.QWidget):
         self.variantCombobox.setMaxCount(100)
         self.variantCombobox.setFrame(False)
         self.variantCombobox.setObjectName("variantCombobox")
-        self.variantCombobox.setProperty("textcolor", "light")
+        self.variantCombobox.setProperty("textcolor", "on")
         self.variantLayout.addWidget(self.variantCombobox)
 
         self.mainLayout.addLayout(self.variantLayout)
@@ -489,7 +489,7 @@ class MainOpions (QtWidgets.QWidget):
         self.versionLabel.setFont(UIGlobals.Options.fontLabel)
         self.versionLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.versionLabel.setObjectName("versionLabel")
-        self.versionLabel.setProperty("textcolor", "light")
+        self.versionLabel.setProperty("textcolor", "on")
         self.versionLayout.addWidget(self.versionLabel)
 
         self.linkLayout = QtWidgets.QHBoxLayout()
@@ -545,7 +545,7 @@ class CommentEdit (QtWidgets.QTextEdit):
         self.defaultName = text
         self.setPlainText(text)
 
-        self.setProperty("textcolor", "disabled")
+        self.setProperty("textcolor", "dim")
 
 
     def get (self):
@@ -559,14 +559,14 @@ class CommentEdit (QtWidgets.QTextEdit):
     def set (self, text):
 
         self.setPlainText(text)
-        self.setProperty("textcolor", "light")
+        self.setProperty("textcolor", "on")
         self.setStyleSheet("")
 
 
     def setDefault (self):
 
         self.setPlainText(self.defaultName)
-        self.setProperty("textcolor", "disabled")
+        self.setProperty("textcolor", "dim")
         self.setStyleSheet("")
 
 
@@ -895,7 +895,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.modelingLabel.setMaximumSize(QtCore.QSize(55, 18))
     parent.modelingLabel.setFont(UIGlobals.Options.fontLabel)
     parent.modelingLabel.setObjectName("modelingLabel")
-    parent.modelingLabel.setProperty("textcolor", "light")
+    parent.modelingLabel.setProperty("textcolor", "on")
     parent.modelingLayout.addWidget(parent.modelingLabel)
 
     parent.modelingSwitch = SwitchButton(theme)
@@ -921,7 +921,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.surfacingLabel.setMaximumSize(QtCore.QSize(55, 18))
     parent.surfacingLabel.setFont(UIGlobals.Options.fontLabel)
     parent.surfacingLabel.setObjectName("surfacingLabel")
-    parent.surfacingLabel.setProperty("textcolor", "light")
+    parent.surfacingLabel.setProperty("textcolor", "on")
     parent.surfacingLayout.addWidget(parent.surfacingLabel)
 
     parent.surfacingSwitch = SwitchButton(theme)
@@ -949,7 +949,7 @@ def setupUi (parent, ListViewLayout, theme):
     parent.animationLabel.setMaximumSize(QtCore.QSize(55, 18))
     parent.animationLabel.setFont(UIGlobals.Options.fontLabel)
     parent.animationLabel.setObjectName("animationLabel")
-    parent.animationLabel.setProperty("textcolor", "light")
+    parent.animationLabel.setProperty("textcolor", "on")
     parent.animationLayout.addWidget(parent.animationLabel)
 
     parent.animationSwitch = SwitchButton(theme)

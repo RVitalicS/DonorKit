@@ -12,8 +12,12 @@ from . import tools
 
 from Qt import QtWidgets, QtCore, QtGui
 
+from . import LibraryDelegate
+from . import DirectoryDelegate
+from . import FolderDelegate
+from . import AssetUsdDelegate
+
 from . import AssetBrowser
-from . import IconDelegate
 from . import PathBar
 from . import BottomBar
 
@@ -86,7 +90,7 @@ class ExportDialog (QtWidgets.QDialog):
 
         self.AssetBrowser.iconClicked.connect(self.iconClicked)
         self.AssetBrowser.favoriteClicked.connect(self.favoriteClicked)
-        self.AssetBrowser.folderLink.connect(self.openFolder)
+        self.AssetBrowser.link.connect(self.openFolder)
         self.AssetBrowser.createFolderQuery.connect(self.createFolderQuery)
         self.AssetBrowser.createFolder.connect(self.createFolder)
 
@@ -199,7 +203,18 @@ class ExportDialog (QtWidgets.QDialog):
         if not bookmark is None:
             library, subdir = bookmark
 
-            self.setLibrary(library)
+            newRoot = False
+            if library != self.AssetPath.pathRoot.text():
+                newRoot = True
+
+            newSubd = False
+            if subdir != self.AssetPath.pathLine.text():
+                newSubd = True
+
+            if not newRoot and not newSubd:
+                return
+
+            self.setLibrary(library, finish=False)
             success = self.AssetPath.changeSubdir(subdir)
 
             if not success:
@@ -365,9 +380,9 @@ class ExportDialog (QtWidgets.QDialog):
             self.mainOpions.variantCombobox.setStyleSheet("")
             self.mainOpions.linkButton.setProperty("overwrite", "true")
         else:
-            self.animationOpions.animationNameCombobox.setProperty("textcolor", "light")
+            self.animationOpions.animationNameCombobox.setProperty("textcolor", "on")
             self.animationOpions.animationNameCombobox.setStyleSheet("")
-            self.mainOpions.variantCombobox.setProperty("textcolor", "light")
+            self.mainOpions.variantCombobox.setProperty("textcolor", "on")
             self.mainOpions.variantCombobox.setStyleSheet("")
             self.mainOpions.linkButton.setProperty("overwrite", "false")
 
@@ -405,7 +420,7 @@ class ExportDialog (QtWidgets.QDialog):
 
             versionList = tools.getVersionList(path)
             if version not in versionList:
-                self.mainOpions.versionCombobox.setProperty("textcolor", "light")
+                self.mainOpions.versionCombobox.setProperty("textcolor", "on")
             else:
                 self.mainOpions.versionCombobox.setProperty("textcolor", "violet")
 
@@ -560,15 +575,7 @@ class ExportDialog (QtWidgets.QDialog):
 
     def setName (self, text):
 
-        for char in [
-            " ", "+", "=", "*"
-            ".", ",",
-            ":", ";",
-            "'", '"',
-            "\\", "/", "|" ]:
-
-            text = text.replace(char, "")
-
+        text = tools.nameFilter(text)
         self.nameEdit.setText(text)
 
 
@@ -734,20 +741,20 @@ class ExportDialog (QtWidgets.QDialog):
 
 
 
-    def setLibrary (self, name=None):
+    def setLibrary (self, name=None, finish=True):
 
         self.setIsolation(False)
 
         if name:
 
             path = self.libraries.get(name, None)
-            if not path is None:
+            if path is not None:
 
                 with Settings.Manager(update=True) as settings:
 
                     settings["subdirLibrary"] = ""
                     settings["focusLibrary"]  = name
-                    self.AssetPath.setRoot(name, path)
+                    self.AssetPath.setRoot(name, path, finish)
                     return
 
 
@@ -756,9 +763,9 @@ class ExportDialog (QtWidgets.QDialog):
             name = settings["focusLibrary"]
             
             path = self.libraries.get(name, None)
-            if not path is None:
+            if path is not None:
 
-                self.AssetPath.setRoot(name, path)
+                self.AssetPath.setRoot(name, path, finish)
                 return
 
             elif name == "":
@@ -772,11 +779,11 @@ class ExportDialog (QtWidgets.QDialog):
                 settings["subdirLibrary"] = ""
                 settings["focusLibrary"]  = name
             
-            self.AssetPath.setRoot(name, path)
+            self.AssetPath.setRoot(name, path, finish)
             return
 
 
-        self.AssetPath.setRoot("", "")
+        self.AssetPath.setRoot("", "", finish)
 
 
 
@@ -1023,8 +1030,22 @@ class ExportDialog (QtWidgets.QDialog):
 
 
         self.AssetBrowser.setModel(iconModel)
-        self.AssetBrowser.setItemDelegate(
-            IconDelegate.Delegate(self.AssetBrowser, self.theme) )
+
+        if hasLibrary:
+            self.AssetBrowser.setItemDelegate(
+                LibraryDelegate.Delegate(self.AssetBrowser, self.theme) )
+
+        elif not hasAsset:
+            self.AssetBrowser.setItemDelegate(
+                FolderDelegate.Delegate(self.AssetBrowser, self.theme) )
+
+        elif not hasFolder:
+            self.AssetBrowser.setItemDelegate(
+                AssetUsdDelegate.Delegate(self.AssetBrowser, self.theme) )
+
+        else:
+            self.AssetBrowser.setItemDelegate(
+                DirectoryDelegate.Delegate(self.AssetBrowser, self.theme) )
 
 
         self.AssetBrowser.setGrid()
