@@ -16,7 +16,8 @@ if not os.getenv("ASSETLIBS", ""):
         "examples", "library" )
 
 # use this font in UI
-os.environ["FONT_FAMILY"] = "Cantarell"
+if not os.getenv("FONT_FAMILY", ""):
+    os.environ["FONT_FAMILY"] = "Cantarell"
 
 
 

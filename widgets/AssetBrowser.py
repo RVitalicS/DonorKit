@@ -17,7 +17,7 @@ class AssetBrowser (QtWidgets.QListView):
 
     createFolderQuery = QtCore.Signal(QtCore.QModelIndex)
     createFolder      = QtCore.Signal(QtCore.QModelIndex, str)
-    folderLink        = QtCore.Signal(QtCore.QModelIndex)
+    link            = QtCore.Signal(QtCore.QModelIndex)
     favoriteClicked = QtCore.Signal(QtCore.QModelIndex)
     iconClicked  = QtCore.Signal(QtCore.QModelIndex)
 
@@ -417,6 +417,6 @@ class AssetBrowser (QtWidgets.QListView):
 
 
 
-    def folderLinkBridge (self, index):
+    def linkBridge (self, index):
 
-        self.folderLink.emit(index)
+        self.link.emit(index)
