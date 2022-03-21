@@ -3,6 +3,7 @@
 
 
 import os
+import re
 from . import tools
 
 
@@ -27,17 +28,17 @@ class Metadata (object):
 
         if metatype == "root":
             self.default_data = dict(
+                type="root",
                 info="",
-                name=os.path.basename(path),
-                type="root" )
+                name=os.path.basename(path) )
 
         elif metatype == "usdasset":
             self.default_data = dict(
-                info="",
-                published=tools.getTimeCode(),
+                generation=4,
                 type="usdasset",
-                comments=dict(),
+                info="",
                 tags=[],
+                items=dict(),
                 status="WIP" )
 
 
@@ -51,27 +52,111 @@ class Metadata (object):
             self.default_settings(self.path)
 
 
+
     def default_settings (self, path):
         tools.datawrite(path, self.default_data)
+
 
 
     def load (self):
 
         data = tools.dataread(self.path)
-        dataType = data.get("usdasset", "")
-
-        if dataType == "usdasset":
-
-            if not data.get("comments", None):
-                data["comments"] = dict()
-            elif not data.get("tags", None):
-                data["tags"] = []
+        data = self.restructure(data)
 
         return data
 
 
+
     def save (self, data):
         tools.datawrite(self.path, data)
+
+
+
+    def getGeneration (self, data):
+
+        if data.get("generation"):
+            generation = data.get("generation")
+        elif type(data.get("tags", None)) is list:
+            generation = 3
+        elif type(data.get("comments", None)) is dict:
+            generation = 2
+        else:
+            generation = 1
+
+        return generation
+
+
+
+    def restructure (self, data):
+
+        generation = self.getGeneration(data)
+        toNextGen = False
+
+        if generation == 1:
+            data = self.toSecondGen(data)
+            toNextGen = True
+            generation = 2
+
+        if generation == 2:
+            data = self.toThirdGen(data)
+            toNextGen = True
+            generation = 3
+
+        if generation == 3:
+            data = self.toFourthGen(data)
+            toNextGen = True
+            generation = 4
+
+        if toNextGen:
+            self.save(data)
+
+        return data
+
+
+
+    def toSecondGen (self, data):
+
+        if data.get("type") == "usdasset":
+            if not data.get("comments", None):
+                data["comments"] = dict()
+        return data
+
+
+
+    def toThirdGen (self, data):
+
+        if data.get("type") == "usdasset":
+            if not data.get("tags", None):
+                data["tags"] = []
+        return data
+
+
+
+    def toFourthGen (self, data):
+        
+        data["generation"] = 4
+
+        if data.get("type") == "usdasset":
+
+            items = dict()
+            path = os.path.dirname(self.path)
+            for name in os.listdir(path):
+                if re.search(r"\.usd[ac]*$", name):
+                    if not re.search(r"\.Final[-\.]{1}", name):
+                        item = dict()
+                        comment = data.get(
+                            "comments", dict()).get(name, "")
+                        timecode = data.get(
+                            "published", tools.getTimeCode())
+                        item["comment"] = comment
+                        item["published"] = timecode
+                        items[name] = item
+            data["items"] = items
+
+            data.pop("published")
+            data.pop("comments")
+
+        return data
 
 
 

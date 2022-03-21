@@ -4,12 +4,12 @@
 
 from Qt import QtWidgets, QtCore, QtGui
 
-from . import tools
+from .. import tools
 
-from . import ItemBase
+from . import BaseItem
 from . import FolderPainter
 
-from . import Settings
+from .. import Settings
 UIGlobals = Settings.UIGlobals
 
 
@@ -25,7 +25,7 @@ class NameLine (QtWidgets.QLineEdit):
         self.setProperty("background", "transparent")
         self.setProperty("border", "none")
         self.setProperty("textcolor", "on")
-        self.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignBottom)
+        self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)
         self.setFont(UIGlobals.IconDelegate.fontFolderName)
         self.setContentsMargins( 0, 0, 0, 0)
         self.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
@@ -42,7 +42,7 @@ class NameLine (QtWidgets.QLineEdit):
 
 
 
-class Editor (ItemBase.Editor):
+class Editor (BaseItem.Editor):
 
 
     def __init__ (self, parent, index, theme):

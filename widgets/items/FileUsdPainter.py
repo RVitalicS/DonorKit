@@ -2,7 +2,6 @@
 
 
 
-from . import tools
 from .paintblock import (
     clear,
     label,
@@ -11,19 +10,14 @@ from .paintblock import (
     usdColorAccent,
     usdPreview,
     usdAnimation,
-    usdLink,
     usdIcon,
-    usdStatus,
     usdName,
-    favorite,
     checked
 )
 
+from . import BaseItem
 
-from Qt import QtCore, QtGui
-from . import ItemBase
-
-from . import Settings
+from .. import Settings
 UIGlobals = Settings.UIGlobals
 
 
@@ -31,17 +25,6 @@ UIGlobals = Settings.UIGlobals
 
 
 class Base (object):
-
-
-
-    def __init__ (self):
-
-        self.linkArea = QtCore.QRect()
-
-        self.favorite = False
-        self.favoriteArea = QtCore.QRect()
-
-        self.controlMode = False
 
 
 
@@ -53,29 +36,25 @@ class Base (object):
 
 
     @checked
-    @favorite
-    @usdName(hasCount=True)
-    @usdStatus
+    @usdName(hasCount=False)
     @usdIcon
-    @usdLink
     @usdAnimation
     @usdPreview
     @background
     @usdInitialize
-    @usdColorAccent(status=True)
-    def paintAssetUsd (self):
+    @usdColorAccent(status=False)
+    def paintFileUsd (self):
         pass
 
 
 
 
 
-class Item (ItemBase.Painter, Base):
+class Item (BaseItem.Painter, Base):
 
 
     def __init__ (self, theme):
-        ItemBase.Painter.__init__(self, theme)
-        Base.__init__(self)
+        BaseItem.Painter.__init__(self, theme)
 
 
     def paint (self, painter, option, index):
@@ -85,5 +64,5 @@ class Item (ItemBase.Painter, Base):
             self.paintLabel()
 
         elif self.type == "asset":
-            self.favorite = self.data.get("favorite", False)
-            self.paintAssetUsd()
+            if self.data.get("type") == "usdfile":
+                self.paintFileUsd()

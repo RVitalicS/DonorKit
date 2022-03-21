@@ -1,6 +1,17 @@
 {
     "info": "",
-    "published": "12.02.2022 02.05",
     "type": "usdasset",
-    "status": "Completed"
+    "status": "Completed",
+    "tags": [],
+    "generation": 4,
+    "items": {
+        "Hammer.v01.usda": {
+            "comment": "",
+            "published": "12.02.2022 02.05"
+        },
+        "Hammer.v02.usda": {
+            "comment": "",
+            "published": "12.02.2022 02.05"
+        }
+    }
 }

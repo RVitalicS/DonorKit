@@ -2,24 +2,24 @@
 
 
 
-from . import ItemBase
+from . import BaseItem
 
-from . import BookmarkEditor
-from . import BookmarkPainter
-
-
+from . import PopupEditor
+from . import PopupPainter
 
 
 
 
 
-class Delegate (ItemBase.Delegate):
+
+
+class Delegate (BaseItem.Delegate):
 
 
     def __init__ (self, parent, theme):
         super(Delegate, self).__init__(parent, theme)
 
-        self.Item = BookmarkPainter.Item(theme)
+        self.Item = PopupPainter.Item(theme)
 
 
 
@@ -31,7 +31,7 @@ class Delegate (ItemBase.Delegate):
 
     def createEditor (self, parent, option, index):
 
-        editor = BookmarkEditor.Editor(parent, index, self.theme)
-        editor.leaveEditor.connect(self.leaveAcion)
+        editor = PopupEditor.Editor(parent, index, self.theme)
+        editor.leaveEditor.connect(self.leaveAction)
 
         return editor

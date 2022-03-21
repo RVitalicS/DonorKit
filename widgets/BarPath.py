@@ -50,13 +50,13 @@ class BackButton (QtWidgets.QPushButton):
             )/2) )
         position = QtCore.QPoint( buttonRect.x(), positionY)
 
-        color = QtGui.QColor(self.theme.browserBackground)
+        color = QtGui.QColor(self.theme.color.browserBackground)
         painter.fillRect(buttonRect, color)
 
         if self.buttonPressed:
-            image = tools.recolor(self.image, self.theme.kicker)
+            image = tools.recolor(self.image, self.theme.color.kicker)
         else:
-            image = tools.recolor(self.image, self.theme.text)
+            image = tools.recolor(self.image, self.theme.color.text)
 
         painter.drawImage(position, image)
         painter.end()
@@ -70,7 +70,7 @@ class BackButton (QtWidgets.QPushButton):
         self.repaint()
 
     def mouseReleaseEvent (self, event):
-        super(BackButton, self).mousePressEvent(event)
+        super(BackButton, self).mouseReleaseEvent(event)
         self.buttonPressed = False
         self.repaint()
         self.clearFocus()
@@ -110,24 +110,26 @@ class BookmarkButton (QtWidgets.QPushButton):
 
     def paintEvent (self, event):
 
-        painter = QtGui.QPainter(self)
-        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        if self.isEnabled():
 
-        buttonRect = self.contentsRect()
-        position = QtCore.QPoint( buttonRect.x()+self.offset, buttonRect.y())
+            painter = QtGui.QPainter(self)
+            painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
 
-        color = QtGui.QColor(self.theme.browserBackground)
-        painter.fillRect(buttonRect, color)
+            buttonRect = self.contentsRect()
+            position = QtCore.QPoint( buttonRect.x()+self.offset, buttonRect.y())
 
-        if self.isChecked():
-            image = tools.recolor(self.image, self.theme.purple)
-        elif self.buttonHover:
-            image = tools.recolor(self.image, self.theme.browserSocketHover)
-        else:
-            image = tools.recolor(self.image, self.theme.browserSocket)
+            color = QtGui.QColor(self.theme.color.browserBackground)
+            painter.fillRect(buttonRect, color)
 
-        painter.drawImage(position, image)
-        painter.end()
+            if self.isChecked():
+                image = tools.recolor(self.image, self.theme.color.purple)
+            elif self.buttonHover:
+                image = tools.recolor(self.image, self.theme.color.browserSocketHover)
+            else:
+                image = tools.recolor(self.image, self.theme.color.browserSocket)
+
+            painter.drawImage(position, image)
+            painter.end()
 
 
 
@@ -147,16 +149,17 @@ class BookmarkButton (QtWidgets.QPushButton):
 
 
 
-class PathBar (QtWidgets.QWidget):
+class Bar (QtWidgets.QWidget):
 
     bookmarkClicked = QtCore.Signal()
     pathChanged  = QtCore.Signal(str)
 
 
     def __init__ (self, theme):
-        super(PathBar, self).__init__()
+        super(Bar, self).__init__()
 
-        self.root = str()
+        self.root   = str()
+        self.group  = str()
 
 
         height  = MARGIN
@@ -170,7 +173,7 @@ class PathBar (QtWidgets.QWidget):
         palette = QtGui.QPalette()
         palette.setColor(
             QtGui.QPalette.Background,
-            theme.browserBackground )
+            theme.color.browserBackground )
         self.setPalette(palette)
 
 
@@ -235,10 +238,12 @@ class PathBar (QtWidgets.QWidget):
 
 
     def resizeEvent (self, event):
-        super(PathBar, self).resizeEvent(event)
+        super(Bar, self).resizeEvent(event)
+        self.uiVisibility()
 
-        self.bookmarkButton.hide()
-        self.pathLine.hide()
+
+
+    def uiVisibility (self):
 
         width = self.width() - MARGIN * 2 - SPACE * 2
 
@@ -256,6 +261,10 @@ class PathBar (QtWidgets.QWidget):
         if width > sumwidth:
             self.bookmarkButton.show()
             self.pathLine.show()
+            
+        else:
+            self.pathLine.hide()
+            self.bookmarkButton.hide()
 
 
 
@@ -312,6 +321,15 @@ class PathBar (QtWidgets.QWidget):
 
     def moveBack (self):
 
+        if self.group:
+            self.group = str()
+
+            path = os.path.join(
+                self.root, self.pathLine.text())
+            self.pathChanged.emit(path)
+            return
+
+
         if not self.pathLine.text():
             with Settings.Manager(update=True) as settings:
                 settings["focusLibrary"] = ""
@@ -343,18 +361,18 @@ class PathBar (QtWidgets.QWidget):
 
         with Settings.Manager(update=True) as settings:
 
-                path = os.path.join(self.root, text)
-                if os.path.exists(path):
+            path = os.path.join(self.root, text)
+            if os.path.exists(path):
 
-                    settings["subdirLibrary"] = text
-                    self.pathChanged.emit(path)
+                settings["subdirLibrary"] = text
+                self.pathChanged.emit(path)
 
-                else:
-                    subdir = settings["subdirLibrary"]
-                    self.pathLine.setText(subdir)
-                    settings["subdirLibrary"] = subdir
+            else:
+                subdir = settings["subdirLibrary"]
+                self.pathLine.setText(subdir)
+                settings["subdirLibrary"] = subdir
 
-                    success = False
+                success = False
 
         return success
 

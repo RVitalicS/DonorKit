@@ -1,6 +1,13 @@
 {
     "info": "",
-    "published": "02.06.2020 20.20",
     "type": "usdasset",
-    "status": "WIP"
+    "status": "WIP",
+    "tags": [],
+    "generation": 4,
+    "items": {
+        "Shovel.v01-Silver.Dance.usda": {
+            "comment": "",
+            "published": "02.06.2020 20.20"
+        }
+    }
 }

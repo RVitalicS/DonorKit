@@ -2,11 +2,10 @@
 
 
 
-import os
 from . import tools
 
 from Qt import QtWidgets, QtCore, QtGui
-from . import BookmarkDelegate
+from .items import PopupDelegate
 
 from . import Settings
 UIGlobals = Settings.UIGlobals
@@ -47,15 +46,15 @@ class FavoriteButton (QtWidgets.QPushButton):
         buttonRect = self.contentsRect()
         position = QtCore.QPoint(buttonRect.x(), buttonRect.y())
 
-        color = QtGui.QColor(self.theme.browserBackground)
+        color = QtGui.QColor(self.theme.color.browserBackground)
         painter.fillRect(buttonRect, color)
 
         if self.isChecked():
-            image = tools.recolor(self.image, self.theme.browserSocketPressed)
+            image = tools.recolor(self.image, self.theme.color.browserSocketPressed)
         elif self.buttonHover:
-            image = tools.recolor(self.image, self.theme.browserSocketHover)
+            image = tools.recolor(self.image, self.theme.color.browserSocketHover)
         else:
-            image = tools.recolor(self.image, self.theme.browserSocket)
+            image = tools.recolor(self.image, self.theme.color.browserSocket)
 
         painter.drawImage(position, image)
         painter.end()
@@ -104,15 +103,15 @@ class BookmarkButton (QtWidgets.QPushButton):
         buttonRect = self.contentsRect()
         position = QtCore.QPoint(buttonRect.x(), buttonRect.y())
 
-        color = QtGui.QColor(self.theme.browserBackground)
+        color = QtGui.QColor(self.theme.color.browserBackground)
         painter.fillRect(buttonRect, color)
 
         if self.buttonPressed:
-            image = tools.recolor(self.image, self.theme.browserSocketPressed)
+            image = tools.recolor(self.image, self.theme.color.browserSocketPressed)
         elif self.buttonHover:
-            image = tools.recolor(self.image, self.theme.browserSocketHover)
+            image = tools.recolor(self.image, self.theme.color.browserSocketHover)
         else:
-            image = tools.recolor(self.image, self.theme.browserSocket)
+            image = tools.recolor(self.image, self.theme.color.browserSocket)
 
         painter.drawImage(position, image)
         painter.end()
@@ -124,7 +123,7 @@ class BookmarkButton (QtWidgets.QPushButton):
         self.repaint()
 
     def mouseReleaseEvent (self, event):
-        super(BookmarkButton, self).mousePressEvent(event)
+        super(BookmarkButton, self).mouseReleaseEvent(event)
         self.buttonPressed = False
         self.repaint()
         self.clearFocus()
@@ -151,14 +150,21 @@ class ThemeButton (QtWidgets.QPushButton):
         super(ThemeButton, self).__init__()
 
         self.theme = theme
-        self.image = QtGui.QImage(":/icons/theme.png")
 
-        self.setMinimumWidth( self.image.width() )
-        self.setMaximumWidth( self.image.width() )
+        if theme.name == "dark":
+            self.dark = True
+        else:
+            self.dark = False
+
+        self.moon = QtGui.QImage(":/icons/thememoon.png")
+        self.sun  = QtGui.QImage(":/icons/themesun.png")
+
+        self.setMinimumWidth( self.moon.width() )
+        self.setMaximumWidth( self.moon.width() )
 
         offset = UIGlobals.Bar.bookmarkOffset
-        self.setMinimumHeight( self.image.height() + offset )
-        self.setMaximumHeight( self.image.height() + offset )
+        self.setMinimumHeight( self.moon.height() + offset )
+        self.setMaximumHeight( self.moon.height() + offset )
 
         self.buttonPressed = False
         self.buttonHover = False
@@ -172,15 +178,20 @@ class ThemeButton (QtWidgets.QPushButton):
         buttonRect = self.contentsRect()
         position = QtCore.QPoint(buttonRect.x(), buttonRect.y())
 
-        color = QtGui.QColor(self.theme.browserBackground)
+        color = QtGui.QColor(self.theme.color.browserBackground)
         painter.fillRect(buttonRect, color)
 
-        if self.buttonPressed:
-            image = tools.recolor(self.image, self.theme.browserSocketPressed)
-        elif self.buttonHover:
-            image = tools.recolor(self.image, self.theme.browserSocketHover)
+        if self.dark:
+            image = self.moon
         else:
-            image = tools.recolor(self.image, self.theme.browserSocket)
+            image = self.sun
+
+        if self.buttonPressed:
+            image = tools.recolor(image, self.theme.color.browserSocketPressed)
+        elif self.buttonHover:
+            image = tools.recolor(image, self.theme.color.browserSocketHover)
+        else:
+            image = tools.recolor(image, self.theme.color.browserSocket)
 
         painter.drawImage(position, image)
         painter.end()
@@ -192,7 +203,7 @@ class ThemeButton (QtWidgets.QPushButton):
         self.repaint()
 
     def mouseReleaseEvent (self, event):
-        super(ThemeButton, self).mousePressEvent(event)
+        super(ThemeButton, self).mouseReleaseEvent(event)
         self.buttonPressed = False
         self.repaint()
         self.clearFocus()
@@ -266,6 +277,7 @@ class BookmarkGroup (QtWidgets.QWidget):
 
 class ThemeGroup (QtWidgets.QWidget):
 
+
     def __init__ (self, theme):
         super(ThemeGroup, self).__init__()
 
@@ -290,15 +302,24 @@ class ThemeGroup (QtWidgets.QWidget):
         self.setLayout(self.mainLayout)
 
 
+
     def change (self):
 
         if self.current == "dark":
             self.current = "light"
+            self.button.dark = False
+            self.button.repaint()
         else:
             self.current = "dark"
+            self.button.dark = True
+            self.button.repaint()
 
-        with Settings.Export(update=True) as settings:
-            settings["theme"] = self.current
+        if self.theme.application == "export":
+            with Settings.Export(update=True) as settings:
+                settings["theme"] = self.current
+        else:
+            with Settings.Manager(update=True) as settings:
+                settings["theme"] = self.current
 
         if self.current != self.theme.name:
             self.label.setText("RESTART")
@@ -369,13 +390,13 @@ class ComboBox (QtWidgets.QComboBox):
 
 
 
-class BottomBar (QtWidgets.QWidget):
+class Bar (QtWidgets.QWidget):
 
-    bookmarkChoosed = QtCore.Signal(str)
+    bookmarkChosen = QtCore.Signal(str)
 
 
     def __init__ (self, theme):
-        super(BottomBar, self).__init__()
+        super(Bar, self).__init__()
 
         height = UIGlobals.Bar.height
 
@@ -384,7 +405,7 @@ class BottomBar (QtWidgets.QWidget):
         palette = QtGui.QPalette()
         palette.setColor(
             QtGui.QPalette.Background,
-            theme.browserBackground )
+            theme.color.browserBackground )
         self.setPalette(palette)
 
 
@@ -402,7 +423,7 @@ class BottomBar (QtWidgets.QWidget):
 
         self.bookmarkCombobox = ComboBox(theme)
         self.bookmarkCombobox.setItemDelegate(
-            BookmarkDelegate.Delegate(self.bookmarkCombobox.view(), theme) )
+            PopupDelegate.Delegate(self.bookmarkCombobox.view(), theme) )
         self.bookmarkCombobox.activated.connect(self.getData)
         self.bookmarkLayout.addWidget(self.bookmarkCombobox)
 
@@ -415,10 +436,12 @@ class BottomBar (QtWidgets.QWidget):
         self.mainLayout.addLayout(self.groupsLayout)
 
 
+        self.favoriteHideForce = False
         self.favorite = FavoriteGroup(theme)
         self.favorite.setFixedHeight(height)
         self.groupsLayout.addWidget(self.favorite)
 
+        self.bookmarkHideForce = False
         self.bookmark = BookmarkGroup(theme)
         self.bookmark.setFixedHeight(height)
         self.bookmark.button.pressed.connect(self.showBookmarks)
@@ -431,10 +454,12 @@ class BottomBar (QtWidgets.QWidget):
         self.groupsLayout.addItem(spacer)
 
 
+        self.themeHideForce = False
         self.theme = ThemeGroup(theme)
         self.theme.setFixedHeight(height)
         self.groupsLayout.addWidget(self.theme)
 
+        self.previewHideForce = False
         self.preview = PreviewGroup(theme)
         self.preview.setFixedHeight(height)
         self.groupsLayout.addWidget(self.preview)
@@ -457,13 +482,18 @@ class BottomBar (QtWidgets.QWidget):
 
     def getData (self, index):
         data = self.bookmarkCombobox.itemData(index)
-        self.bookmarkChoosed.emit(data)
+        self.bookmarkChosen.emit(data)
         self.bookmarkCombobox.setVisible(False)
 
 
 
     def resizeEvent (self, event):
-        super(BottomBar, self).resizeEvent(event)
+        super(Bar, self).resizeEvent(event)
+        self.uiVisibility()
+
+
+
+    def uiVisibility (self):
 
         self.favorite.hide()
         self.bookmark.hide()
@@ -471,19 +501,32 @@ class BottomBar (QtWidgets.QWidget):
         self.theme.hide()
 
         width = self.width() - MARGIN * 2 - SPACE
-        sumwidth = self.favorite.width()
+        sumwidth = 0
 
+
+        if not self.favoriteHideForce:
+            sumwidth += self.favorite.width()
         if width > sumwidth:
-            self.favorite.show()
+            if not self.favoriteHideForce:
+                self.favorite.show()
 
-            sumwidth += self.bookmark.width()
+
+            if not self.bookmarkHideForce:
+                sumwidth += self.bookmark.width()
             if width > sumwidth:
-                self.bookmark.show()
+                if not self.bookmarkHideForce:
+                    self.bookmark.show()
 
-                sumwidth += self.preview.width()
+
+                if not self.previewHideForce:
+                    sumwidth += self.preview.width()
                 if width > sumwidth:
-                    self.preview.show()
+                    if not self.previewHideForce:
+                        self.preview.show()
 
-                    sumwidth += self.theme.width()
+
+                    if not self.themeHideForce:
+                        sumwidth += self.theme.width()
                     if width > sumwidth:
-                        self.theme.show()
+                        if not self.themeHideForce:
+                            self.theme.show()

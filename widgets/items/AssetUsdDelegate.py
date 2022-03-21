@@ -2,7 +2,7 @@
 
 
 
-from . import ItemBase
+from . import BaseItem
 
 from . import AssetUsdPainter
 from . import AssetUsdEditor
@@ -13,7 +13,7 @@ from . import AssetUsdEditor
 
 
 
-class Delegate (ItemBase.Delegate):
+class Delegate (BaseItem.Delegate):
 
 
     def __init__ (self, parent, theme):
@@ -28,7 +28,7 @@ class Delegate (ItemBase.Delegate):
         editor.Item.controlMode = self.parent().controlMode
 
         editor.clicked.connect(self.clickAction)
-        editor.leaveEditor.connect(self.leaveAcion)
+        editor.leaveEditor.connect(self.leaveAction)
         
         editor.link.connect(self.linkAction)
         editor.favoriteClicked.connect(self.favoriteAction)

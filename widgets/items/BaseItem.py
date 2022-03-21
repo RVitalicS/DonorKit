@@ -4,7 +4,7 @@
 
 from Qt import QtWidgets, QtCore, QtGui
 
-from . import Settings
+from .. import Settings
 UIGlobals = Settings.UIGlobals
 
 
@@ -74,6 +74,8 @@ class Painter (object):
             self.iconRect.width() , self.iconRect.height() ,
             self.radius           , self.radius            ,
             mode=QtCore.Qt.AbsoluteSize                    )
+
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         self.painter.setClipPath(clipPath)
 
 
@@ -205,7 +207,7 @@ class Delegate (QtWidgets.QStyledItemDelegate):
 
 
 
-    def leaveAcion (self):
+    def leaveAction (self):
 
         self.setModelData(
             self.sender(),

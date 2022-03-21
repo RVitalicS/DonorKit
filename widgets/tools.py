@@ -3,7 +3,7 @@
 
 
 import os, re
-import sys, json
+import json
 import time, datetime
 import subprocess
 
@@ -66,7 +66,7 @@ def openFolder (path):
 
 def getStringWidth (string, font):
 
-    '''
+    """
         Calculates  string width in pixels
         for the specific font
 
@@ -78,7 +78,7 @@ def getStringWidth (string, font):
 
         :rtype : int
         :return: width in pixels
-    '''
+    """
 
 
     # scale font for accuracy
@@ -228,7 +228,7 @@ def getTimeDifference (timeString):
 def isFinalVersion (path, name):
 
     for item in os.listdir(path):
-        if re.search(r"\.Final", item):
+        if re.search(r"\.Final[-\.]{1}", item):
 
             itempath = os.path.join(path, item)
             realpath = os.path.realpath(itempath)
@@ -288,6 +288,22 @@ def getVersion (name):
 
 
 
+def getInfo (path):
+
+    info = ""
+    metadataPath = os.path.join(path, Metadata.NAME)
+
+    if os.path.exists(metadataPath):
+        data = dataread(metadataPath)
+        info = data.get("info", "")
+
+    return info
+
+
+
+
+
+
 def getComment (path, filename):
 
     comment = ""
@@ -296,8 +312,9 @@ def getComment (path, filename):
     if os.path.exists(metadataPath):
         data = dataread(metadataPath)
 
-        comments = data.get("comments", dict())
-        comment = comments.get(filename, "")
+        items = data.get("items", dict())
+        itemdata = items.get(filename, dict())
+        comment = itemdata.get("comment", "")
 
     return comment
 
@@ -469,10 +486,10 @@ def getUsdPreviews (root, name):
 
 def chooseAssetItem (path):
 
-    '''
+    """
         Chooses one version of asset items
         to use it for preview
-    '''
+    """
 
 
     chosenItem  = str()
@@ -491,24 +508,24 @@ def chooseAssetItem (path):
 
             # get data to compare current iteration item
             # with previously chosen one
-            chosenHasPreivews = getUsdPreviews(path, chosenItem)
+            chosenHasPreviews = getUsdPreviews(path, chosenItem)
             chosenIsFinal  = isFinalVersion(path, chosenItem)
             chosenVersion  = getVersion(chosenItem)
 
-            assetHasPreivews = getUsdPreviews(path, assetItem)
+            assetHasPreviews = getUsdPreviews(path, assetItem)
             assetIsFinal  = isFinalVersion(path, assetItem)
             assetVersion  = getVersion(assetItem)
 
-            noPreivews = not chosenHasPreivews and not assetHasPreivews
-            bothHasPreivews = chosenHasPreivews and assetHasPreivews
+            noPreviews = not chosenHasPreviews and not assetHasPreviews
+            bothHasPreviews = chosenHasPreviews and assetHasPreviews
 
 
-            # first of all choose that one with previews
-            if not chosenHasPreivews and assetHasPreivews:
+            # first choose that one with previews
+            if not chosenHasPreviews and assetHasPreviews:
                 chosenItem = assetItem
             
             # then that one that is final version
-            elif noPreivews or bothHasPreivews:
+            elif noPreviews or bothHasPreviews:
                 if assetIsFinal:
                     chosenItem = assetItem
 
@@ -530,7 +547,9 @@ def getItemsCount (path):
     count = int()
 
     for item in os.listdir(path):
-        if re.match(r"^\..+", item):
+
+        itempath = os.path.join(path, item)
+        if not os.path.isdir(itempath):
             continue
         count += 1
 

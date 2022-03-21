@@ -4,7 +4,7 @@
 
 from Qt import QtCore
 
-from . import ItemBase
+from . import BaseItem
 from . import LibraryPainter
 
 
@@ -13,7 +13,7 @@ from . import LibraryPainter
 
 
 
-class Editor (ItemBase.Editor):
+class Editor (BaseItem.Editor):
 
 
     def __init__ (self, parent, index, theme):

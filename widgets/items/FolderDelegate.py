@@ -2,9 +2,7 @@
 
 
 
-from Qt import QtWidgets, QtCore
-
-from . import ItemBase
+from . import BaseItem
 
 from . import FolderPainter
 from . import FolderEditor
@@ -15,7 +13,7 @@ from . import FolderEditor
 
 
 
-class Delegate (ItemBase.Delegate):
+class Delegate (BaseItem.Delegate):
 
 
     def __init__ (self, parent, theme):
@@ -30,7 +28,7 @@ class Delegate (ItemBase.Delegate):
         editor.Item.controlMode = self.parent().controlMode
 
         editor.clicked.connect(self.clickAction)
-        editor.leaveEditor.connect(self.leaveAcion)
+        editor.leaveEditor.connect(self.leaveAction)
         
         editor.createFolderQuery.connect(self.createFolderQuery)
         editor.createFolder.connect(self.createFolderAction)
@@ -42,7 +40,7 @@ class Delegate (ItemBase.Delegate):
 
     def createFolderQuery (self, index):
         
-        self.leaveAcion()
+        self.leaveAction()
         self.parent().createFolderQueryBridge(index)
 
 

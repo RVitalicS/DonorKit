@@ -2,16 +2,16 @@
 
 
 
-from . import tools
+from .. import tools
 from .paintblock import (
     clear,
     label
 )
 
 from Qt import QtCore, QtGui
-from . import ItemBase
+from . import BaseItem
 
-from . import Settings
+from .. import Settings
 UIGlobals = Settings.UIGlobals
 
 
@@ -20,7 +20,7 @@ UIGlobals = Settings.UIGlobals
 
 
 
-class Item (ItemBase.Painter):
+class Item (BaseItem.Painter):
 
 
     def paint (self, painter, option, index):
@@ -47,18 +47,18 @@ class Item (ItemBase.Painter):
 
         libraryImage = QtGui.QImage(":/icons/library.png")
         if self.hover:
-            colorBackground = QtGui.QColor(self.theme.libraryHover)
-            colorText = self.theme.kicker
-            libraryImage = tools.recolor(libraryImage, self.theme.violet)
+            colorBackground = QtGui.QColor(self.theme.color.libraryHover)
+            colorText = self.theme.color.kicker
+            libraryImage = tools.recolor(libraryImage, self.theme.color.violet)
 
         else:
-            colorBackground = QtGui.QColor(self.theme.libraryBackground)
-            colorText = self.theme.text
-            libraryImage = tools.recolor(libraryImage, self.theme.text)
+            colorBackground = QtGui.QColor(self.theme.color.libraryBackground)
+            colorText = self.theme.color.text
+            libraryImage = tools.recolor(libraryImage, self.theme.color.text)
 
 
         # BACKGROUND
-        colorOutline = QtGui.QColor(self.theme.libraryOutline)
+        colorOutline = QtGui.QColor(self.theme.color.libraryOutline)
         self.painter.fillRect(self.option.rect, colorOutline)
 
         borderWidth = 1
@@ -93,7 +93,7 @@ class Item (ItemBase.Painter):
                 QtCore.Qt.RoundJoin) )
 
         offsetText = 1
-        self.painter.setFont( UIGlobals.IconDelegate.fontFolderName )
+        self.painter.setFont( UIGlobals.IconDelegate.fontLibraryName )
 
         offsetName = libraryImage.width() + offsetIcon*2
         nameArea = QtCore.QRect(

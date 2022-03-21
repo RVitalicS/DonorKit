@@ -12,19 +12,12 @@ from . import tools
 
 from Qt import QtWidgets, QtCore, QtGui
 
-from . import LibraryDelegate
-from . import DirectoryDelegate
-from . import FolderDelegate
-from . import AssetUsdDelegate
-
-from . import AssetBrowser
-from . import PathBar
-from . import BottomBar
-
+from . import BaseWidget
 from . import ExportUI
 
 from . import Metadata
 from . import Settings
+UIGlobals = Settings.UIGlobals
 
 
 
@@ -35,54 +28,51 @@ from . import Settings
 
 
 
-class ExportDialog (QtWidgets.QDialog):
+class ExportBase (QtWidgets.QDialog):
+
+
+    def __init__(self, parent=None):
+        super(ExportBase, self).__init__(parent)
+
+        self.theme = theme.Theme(application="export")
+        self.setStyleSheet( self.theme.getStyleSheet() )
+
+
+
+
+
+
+
+
+class ExportDialog (
+        ExportBase,
+        BaseWidget.Library,
+        BaseWidget.Browser,
+        BaseWidget.Bookmark,
+        BaseWidget.Favorite,
+        BaseWidget.Slider,
+        BaseWidget.Folder ):
+
 
 
     def __init__(self, parent=None):
         super(ExportDialog, self).__init__(parent)
-
-        self.theme = theme.Theme(application="export")
-        
-        self.metadata  = Metadata.NAME
-        self.libraries = self.getAssetRoots()
-
-        self.assetsNames = []
-        self.exported = False
-
-        self.setStyleSheet( self.theme.getStyleSheet() )
-
-        self.browserLayout = QtWidgets.QVBoxLayout()
-        self.browserLayout.setContentsMargins(0, 0, 0, 0)
-        self.browserLayout.setSpacing(0)
-
-        self.AssetPath = PathBar.PathBar(self.theme)
-        self.browserLayout.addWidget(self.AssetPath)
-
-        self.AssetBrowser = AssetBrowser.AssetBrowser()
-        self.browserLayout.addWidget(self.AssetBrowser)
-
-        self.BottomBar = BottomBar.BottomBar(self.theme)
-        self.browserLayout.addWidget(self.BottomBar)
-
-        ExportUI.setupUi(self, self.browserLayout, self.theme)
+        ExportUI.setupUi(self, self.theme)
         self.connectUi()
+        
+        self.metafile    = Metadata.NAME
+        self.libraries   = self.getAssetRoots()
+        self.assetsNames = []
+        self.exported    = False
+
         self.applySettings()
+        self.setLibrary()
 
         self.setWindowTitle("Asset Export")
         self.setObjectName("ExportDialog")
-        self.resize(820, 580)
+        self.resize(745, 485)
 
-        self.setLibrary()
         self.AssetBrowser.setFocus(QtCore.Qt.MouseFocusReason)
-
-
-
-    def setIsolation (self, flag):
-
-        flag = not flag
-
-        self.AssetPath.setVisible(flag)
-        self.BottomBar.setVisible(flag)
 
 
 
@@ -97,172 +87,58 @@ class ExportDialog (QtWidgets.QDialog):
         self.AssetPath.pathChanged.connect(self.drawBrowserItems)
         self.AssetPath.bookmarkClicked.connect(self.actionBookmark)
 
-        self.BottomBar.preview.slider.valueChanged.connect(self.sliderAction)
-        self.BottomBar.favorite.button.released.connect(self.favoriteFilter)
-        self.BottomBar.bookmarkChoosed.connect(self.jumpBookmark)
+        self.BarBottom.preview.slider.valueChanged.connect(self.sliderAction)
+        self.BarBottom.favorite.button.released.connect(self.favoriteFilter)
+        self.BarBottom.bookmarkChosen.connect(self.jumpBookmark)
 
-        self.nameEdit.textChanged.connect(self.setName)
+        self.UsdExportOptions.nameEdit.textChanged.connect(self.setName)
 
-        self.modelingSwitch.released.connect(self.partitionExport)
-        self.surfacingSwitch.released.connect(self.partitionExport)
-        self.animationSwitch.released.connect(self.partitionExport)
+        self.UsdExportOptions.modelingSwitch.released.connect(self.partitionExport)
+        self.UsdExportOptions.surfacingSwitch.released.connect(self.partitionExport)
+        self.UsdExportOptions.animationSwitch.released.connect(self.partitionExport)
 
-        self.modelingOverwrite.released.connect(self.overwriteState)
-        self.surfacingOverwrite.released.connect(self.overwriteState)
-        self.animationOverwrite.released.connect(self.overwriteState)
+        self.UsdExportOptions.modelingOverwrite.released.connect(self.overwriteState)
+        self.UsdExportOptions.surfacingOverwrite.released.connect(self.overwriteState)
+        self.UsdExportOptions.animationOverwrite.released.connect(self.overwriteState)
 
-        self.modelingOverwrite.released.connect(
+        self.UsdExportOptions.modelingOverwrite.released.connect(
             self.modelingOverwriteSetting )
-        self.surfacingOverwrite.released.connect(
+        self.UsdExportOptions.surfacingOverwrite.released.connect(
             self.surfacingOverwriteSetting )
-        self.animationOverwrite.released.connect(
+        self.UsdExportOptions.animationOverwrite.released.connect(
             self.animationOverwriteSetting )
 
-        self.animationOpions.animationNameCombobox.currentTextChanged.connect(self.interpretTags)
-        self.animationOpions.rangeStartSpinbox.valueChanged.connect(self.setRangeStart)
-        self.animationOpions.rangeEndSpinbox.valueChanged.connect(self.setRangeEnd)
+        self.UsdExportOptions.animationOptions.animationNameCombobox.selectionChanged.connect(self.interpretTags)
+        self.UsdExportOptions.animationOptions.range.start.valueChanged.connect(self.setRangeStart)
+        self.UsdExportOptions.animationOptions.range.end.valueChanged.connect(self.setRangeEnd)
 
-        self.animationOpions.rangeButton.released.connect(self.getRange)
+        self.UsdExportOptions.animationOptions.rangeButton.released.connect(self.getRange)
 
-        self.mainOpions.variantCombobox.currentTextChanged.connect(self.interpretTags)
-        self.mainOpions.versionCombobox.currentTextChanged.connect(self.versionChoice)
+        self.UsdExportOptions.mainOptions.variantCombobox.selectionChanged.connect(self.interpretTags)
+        self.UsdExportOptions.mainOptions.versionCombobox.selectionChanged.connect(self.versionChoice)
 
-        self.mainOpions.linkButton.released.connect(self.linkWrap)
+        self.UsdExportOptions.mainOptions.linkButton.released.connect(self.linkWrap)
 
-        self.exportButton.pressed.connect(self.exportQuery)
-        self.exportButton.released.connect(self.exportAction)
-
-
-
-    def bookmarkIndex (self):
-
-        pathUI = self.getPathUI()
-        count = self.BottomBar.bookmarkCombobox.count()
-
-        for index in range(count):
-            text = self.BottomBar.bookmarkCombobox.itemText(index)
-
-            if pathUI == text:
-                return index
+        self.UsdExportOptions.exportButton.pressed.connect(self.exportQuery)
+        self.UsdExportOptions.exportButton.released.connect(self.exportAction)
 
 
+    def drawBrowserItems (self, path):
+        super(ExportDialog, self).drawBrowserItems(path)
 
-    def actionBookmark (self):
+        hasCheckedName = False
+        model = self.AssetBrowser.model()
+        for index in range(model.rowCount()):
 
-        index = self.bookmarkIndex()
-        if not index is None:
+            item = model.item(index)
+            data = item.data(QtCore.Qt.StatusTipRole)
+            if data == 1:
+                hasCheckedName = True
+                break
 
-            pathID = self.BottomBar.bookmarkCombobox.itemData(index)
-            with Settings.Manager(update=True) as settings:
-                if pathID in settings["bookmarks"]:
-                    settings["bookmarks"].remove(pathID)
-
-            self.BottomBar.bookmarkCombobox.removeItem(index)
-
-        else:
-            pathUI = self.getPathUI()
-            pathID = self.getPathID()
-
-            with Settings.Manager(update=True) as settings:
-                settings["bookmarks"] += [pathID]
-
-            self.BottomBar.bookmarkCombobox.addItem(pathUI, pathID)
-            self.sortBookmarks()
-
-
-
-    def getPathUI (self):
-
-        root   = self.AssetPath.pathRoot.text()
-        subdir = self.AssetPath.pathLine.text()
-
-        if subdir:
-            return root +"/"+ subdir
-        else:
-            return root
-
-
-
-    def getPathID (self, asset=None):
-
-        library = self.AssetPath.pathRoot.text()
-        subdir  = self.AssetPath.pathLine.text()
-
-        path = "{"+ library +"}" + subdir
-
-        if not asset is None:
-            path += "/" + asset
-
-        return path
-
-
-
-    def jumpBookmark (self, pathID):
-
-        bookmark = self.interpretID(pathID)
-        if not bookmark is None:
-            library, subdir = bookmark
-
-            newRoot = False
-            if library != self.AssetPath.pathRoot.text():
-                newRoot = True
-
-            newSubd = False
-            if subdir != self.AssetPath.pathLine.text():
-                newSubd = True
-
-            if not newRoot and not newSubd:
-                return
-
-            self.setLibrary(library, finish=False)
-            success = self.AssetPath.changeSubdir(subdir)
-
-            if not success:
-                with Settings.Manager(update=True) as settings:
-                    if pathID in settings["bookmarks"]:
-                        settings["bookmarks"].remove(pathID)
-
-                count = self.BottomBar.bookmarkCombobox.count()
-                for index in range(count):
-                    data = self.BottomBar.bookmarkCombobox.itemData(index)
-                    if pathID == data:
-                        self.BottomBar.bookmarkCombobox.removeItem(index)
-                        break
-
-            self.BottomBar.bookmarkCombobox.setCurrentIndex(-1)
-
-
-
-    def interpretID (self, pathID):
-
-        key = re.search(r"\{.*\}", pathID)
-        if key:
-            key = key.group()
-
-            library = re.sub(r"[\{\}]", "", key)
-            subdir = re.sub(key, "", pathID)
-
-            return (library, subdir)
-
-
-
-    def translateID (self, pathID):
-
-        path = ""
-        bookmark = self.interpretID(pathID)
-
-        if not bookmark is None:
-            root, subdir = bookmark
-
-            root = self.libraries.get(root)
-            if not root is None:
-
-                if subdir:
-                    path = root +"/"+ subdir
-                else:
-                    path = root
-
-        return path
+        if not hasCheckedName:
+            self.checkedName = ""
+            self.setOptions()
 
 
 
@@ -271,9 +147,9 @@ class ExportDialog (QtWidgets.QDialog):
         with Settings.Export(update=True) as settings:
             settings["rangeStart"] = valueStart
 
-        valueEnd = self.animationOpions.rangeEndSpinbox.value()
+        valueEnd = self.UsdExportOptions.animationOptions.range.end.value()
         if valueStart > valueEnd:
-            self.animationOpions.rangeEndSpinbox.setValue(valueStart)
+            self.UsdExportOptions.animationOptions.range.end.setValue(valueStart)
 
 
 
@@ -282,9 +158,9 @@ class ExportDialog (QtWidgets.QDialog):
         with Settings.Export(update=True) as settings:
             settings["rangeEnd"] = valueEnd
 
-        valueStart =  self.animationOpions.rangeStartSpinbox.value()
+        valueStart =  self.UsdExportOptions.animationOptions.range.start.value()
         if valueStart > valueEnd:
-            self.animationOpions.rangeStartSpinbox.setValue(valueEnd)
+            self.UsdExportOptions.animationOptions.range.start.setValue(valueEnd)
 
 
 
@@ -295,48 +171,48 @@ class ExportDialog (QtWidgets.QDialog):
         valueStart = MAnimControl.minTime().value()
         valueEnd   = MAnimControl.maxTime().value()
         
-        self.animationOpions.rangeStartSpinbox.setValue(valueStart)
-        self.animationOpions.rangeEndSpinbox.setValue(valueEnd)
+        self.UsdExportOptions.animationOptions.range.start.setValue(valueStart)
+        self.UsdExportOptions.animationOptions.range.end.setValue(valueEnd)
 
 
 
     def overwriteState (self):
 
         lockVersion = True
-        if self.modelingOverwrite.isEnabled():
-            if self.modelingOverwrite.isChecked():
+        if self.UsdExportOptions.modelingOverwrite.isEnabled():
+            if self.UsdExportOptions.modelingOverwrite.isChecked():
                 lockVersion = False
 
-        if self.surfacingOverwrite.isEnabled():
-            if self.surfacingOverwrite.isChecked():
+        if self.UsdExportOptions.surfacingOverwrite.isEnabled():
+            if self.UsdExportOptions.surfacingOverwrite.isChecked():
                 lockVersion = False
 
-        if self.animationOverwrite.isEnabled():
-            if self.animationOverwrite.isChecked():
+        if self.UsdExportOptions.animationOverwrite.isEnabled():
+            if self.UsdExportOptions.animationOverwrite.isChecked():
                 lockVersion = False
 
         if lockVersion:
-            itemCount = self.mainOpions.versionCombobox.count()
+            itemCount = self.UsdExportOptions.mainOptions.versionCombobox.count()
 
             lastVersion = 0
             for index in range(itemCount):
-                version = self.mainOpions.versionCombobox.itemText(index)
+                version = self.UsdExportOptions.mainOptions.versionCombobox.itemText(index)
                 version = int(version)
 
                 if version > lastVersion:
                     lastVersion = version
-                    self.mainOpions.versionCombobox.setCurrentIndex(index)
+                    self.UsdExportOptions.mainOptions.versionCombobox.setCurrentIndex(index)
 
-            self.mainOpions.versionCombobox.setEnabled(False)
+            self.UsdExportOptions.mainOptions.versionCombobox.setEnabled(False)
         else:
-            self.mainOpions.versionCombobox.setEnabled(True)
+            self.UsdExportOptions.mainOptions.versionCombobox.setEnabled(True)
 
 
 
     def linkWrap (self):
 
         with Settings.Export(update=True) as settings:
-            settings["link"] = self.mainOpions.linkButton.isChecked()
+            settings["link"] = self.UsdExportOptions.mainOptions.linkButton.isChecked()
 
         self.interpretTags("")
 
@@ -344,49 +220,70 @@ class ExportDialog (QtWidgets.QDialog):
 
     def interpretTags (self, choice):
 
-        hilight = False
+        highlightAnimation = False
+        highlightVariant   = False
+        highlightLink      = False
 
 
         assetpath = self.getAssetPath()
-        assetname = self.getAssetName()
+        assetname = self.getAssetName(final=False)
+
+        self.UsdExportOptions.commentEdit.hide()
+        comment = tools.getComment(assetpath, assetname)
+        if not comment:
+            self.UsdExportOptions.commentEdit.setDefault()
+        else:
+            self.UsdExportOptions.commentEdit.set(comment)
+        self.UsdExportOptions.commentEdit.show()
+
 
         path = os.path.join(assetpath, assetname)
         if os.path.exists(path):
 
-            realpath = os.path.realpath(path)
-            realname = os.path.basename(realpath)
+            animationPart = tools.getAnimationName(assetname)
+            animationName = self.UsdExportOptions.animationOptions.animationNameCombobox.getName()
+            if animationPart == animationName != "":
+                highlightAnimation = True
 
-            comboVersion = self.mainOpions.versionCombobox.currentText()
-            comboVersion = int(comboVersion)
+            variantPart = tools.getVariantName(assetname)
+            variantName = self.UsdExportOptions.mainOptions.variantCombobox.getName()
+            if variantPart == variantName != "":
+                highlightVariant = True
 
-            nameVersion  = tools.getVersion(realname)
+            finalname = re.sub(r"\.v\d+\.", ".Final.", assetname)
+            finalname = re.sub(r"\.v\d+-" , ".Final-", finalname)
+            finalpath = os.path.join(assetpath, finalname)
+            if os.path.exists(finalpath):
+                realpath = os.path.realpath(finalpath)
+                realname = os.path.basename(realpath)
+                if realname == assetname:
+                    highlightLink = True
 
-            if nameVersion == comboVersion:
-                hilight = True
 
-
-        filename = self.getAssetName(final=False)
-        comment = tools.getComment(assetpath, filename)
-        if not comment:
-            self.commentEdit.setDefault()
+        if highlightAnimation:
+            if self.UsdExportOptions.animationOptions.animationNameCombobox.notSet():
+                self.UsdExportOptions.animationOptions.animationNameCombobox.setProperty("textcolor", "error")
+            else:
+                self.UsdExportOptions.animationOptions.animationNameCombobox.setProperty("textcolor", "violet")
         else:
-            self.commentEdit.set(comment)
+            if self.UsdExportOptions.animationOptions.animationNameCombobox.notSet():
+                self.UsdExportOptions.animationOptions.animationNameCombobox.setProperty("textcolor", "error")
+            else:
+                self.UsdExportOptions.animationOptions.animationNameCombobox.setProperty("textcolor", "on")
 
-
-        if hilight:
-            self.animationOpions.animationNameCombobox.setProperty("textcolor", "violet")
-            self.animationOpions.animationNameCombobox.setStyleSheet("")
-            self.mainOpions.variantCombobox.setProperty("textcolor", "violet")
-            self.mainOpions.variantCombobox.setStyleSheet("")
-            self.mainOpions.linkButton.setProperty("overwrite", "true")
+        if highlightVariant:
+            self.UsdExportOptions.mainOptions.variantCombobox.setProperty("textcolor", "violet")
         else:
-            self.animationOpions.animationNameCombobox.setProperty("textcolor", "on")
-            self.animationOpions.animationNameCombobox.setStyleSheet("")
-            self.mainOpions.variantCombobox.setProperty("textcolor", "on")
-            self.mainOpions.variantCombobox.setStyleSheet("")
-            self.mainOpions.linkButton.setProperty("overwrite", "false")
+            self.UsdExportOptions.mainOptions.variantCombobox.setProperty("textcolor", "on")
 
-        self.mainOpions.linkButton.setStyleSheet("")
+        if highlightLink:
+            self.UsdExportOptions.mainOptions.linkButton.setProperty("overwrite", "true")
+        else:
+            self.UsdExportOptions.mainOptions.linkButton.setProperty("overwrite", "false")
+
+        self.UsdExportOptions.animationOptions.animationNameCombobox.setStyleSheet("")
+        self.UsdExportOptions.mainOptions.variantCombobox.setStyleSheet("")
+        self.UsdExportOptions.mainOptions.linkButton.repaint()
 
 
 
@@ -394,50 +291,41 @@ class ExportDialog (QtWidgets.QDialog):
 
         if text:
             directory = self.AssetPath.get()
-            name = self.nameEdit.text()
+            name = self.UsdExportOptions.nameEdit.text()
             path = os.path.join(directory, name)
 
             version = int(text)
 
 
-            self.animationOpions.animationNameCombobox.clear()
-
+            self.UsdExportOptions.animationOptions.animationNameCombobox.stealth = True
+            self.UsdExportOptions.animationOptions.animationNameCombobox.clear()
             animationList = tools.getAnimationList(path, version=version)
             for animation in animationList:
-                self.animationOpions.animationNameCombobox.addItem(
+                self.UsdExportOptions.animationOptions.animationNameCombobox.addItem(
                      animation )
-            self.animationOpions.animationNameCombobox.setCurrentIndex(-1)
+            self.UsdExportOptions.animationOptions.animationNameCombobox.setCurrentIndex(-1)
+            self.UsdExportOptions.animationOptions.animationNameCombobox.stealth = False
 
 
-            self.mainOpions.variantCombobox.clear()
-
+            self.UsdExportOptions.mainOptions.variantCombobox.stealth = True
+            self.UsdExportOptions.mainOptions.variantCombobox.clear()
             variantList = tools.getVariantList(path, version=version)
             for variant in variantList:
-                self.mainOpions.variantCombobox.addItem(
+                self.UsdExportOptions.mainOptions.variantCombobox.addItem(
                      variant )
-            self.mainOpions.variantCombobox.setCurrentIndex(-1)
+            self.UsdExportOptions.mainOptions.variantCombobox.setCurrentIndex(-1)
+            self.UsdExportOptions.mainOptions.variantCombobox.stealth = False
 
 
             versionList = tools.getVersionList(path)
             if version not in versionList:
-                self.mainOpions.versionCombobox.setProperty("textcolor", "on")
+                self.UsdExportOptions.mainOptions.versionCombobox.setProperty("textcolor", "on")
             else:
-                self.mainOpions.versionCombobox.setProperty("textcolor", "violet")
+                self.UsdExportOptions.mainOptions.versionCombobox.setProperty("textcolor", "violet")
 
-            self.mainOpions.versionCombobox.setStyleSheet("")
-
+            self.UsdExportOptions.mainOptions.versionCombobox.setStyleSheet("")
 
             self.interpretTags("")
-
-
-
-    def sliderAction (self, value):
-
-        with Settings.Manager(update=True) as settings:
-            settings["iconSize"] = value
-
-        self.AssetBrowser.setGrid()
-        self.AssetBrowser.adjustSize()
 
 
 
@@ -445,22 +333,22 @@ class ExportDialog (QtWidgets.QDialog):
 
         return os.path.join(
             self.AssetPath.get(),
-            self.nameEdit.text() )
+            self.UsdExportOptions.nameEdit.text() )
 
 
 
     def getAssetName (self, final=True, extension="usda"):
 
-        name = self.nameEdit.text()
+        name = self.UsdExportOptions.nameEdit.text()
 
-        version = self.mainOpions.versionCombobox.currentText()
+        version = self.UsdExportOptions.mainOptions.versionCombobox.getName()
         version = int(version)
 
-        variant = self.mainOpions.variantCombobox.currentText()
-        animation = self.animationOpions.animationNameCombobox.currentText()
+        variant = self.UsdExportOptions.mainOptions.variantCombobox.getName()
+        animation = self.UsdExportOptions.animationOptions.animationNameCombobox.getName()
 
         if final:
-            final = self.mainOpions.linkButton.isChecked()
+            final = self.UsdExportOptions.mainOptions.linkButton.isChecked()
 
         return tools.createAssetName(
             name, version,
@@ -478,45 +366,19 @@ class ExportDialog (QtWidgets.QDialog):
         with Settings.Export(update=True) as settings:
 
             animationSwitchBefore = settings["animation"]
-            animationSwitchAfter = self.animationSwitch.isChecked()
+            animationSwitchAfter = self.UsdExportOptions.animationSwitch.isChecked()
             if animationSwitchBefore != animationSwitchAfter:
                 animationSwitchChanged = True
 
-            settings["modelling"] = self.modelingSwitch.isChecked()
-            settings["surfacing"] = self.surfacingSwitch.isChecked()
-            settings["animation"] = self.animationSwitch.isChecked()
+            settings["modelling"] = self.UsdExportOptions.modelingSwitch.isChecked()
+            settings["surfacing"] = self.UsdExportOptions.surfacingSwitch.isChecked()
+            settings["animation"] = self.UsdExportOptions.animationSwitch.isChecked()
 
         self.applySettings()
 
         if animationSwitchChanged:
-            version = self.mainOpions.versionCombobox.currentText()
+            version = self.UsdExportOptions.mainOptions.versionCombobox.currentText()
             self.versionChoice(version)
-
-
-
-    def favoriteClicked (self, index):
-
-        model = self.AssetBrowser.model()
-        iconItem = model.item(index.row())
-        data = index.data(QtCore.Qt.EditRole)
-
-        name = data.get("data").get("name")
-        pathID = self.getPathID(asset=name)
-
-        with Settings.Manager(update=True) as settings:
-
-            if pathID not in settings.get("favorites"):
-                settings["favorites"] += [pathID]
-                data["data"]["favorite"] = True
-
-            else:
-                settings["favorites"].remove(pathID)
-                data["data"]["favorite"] = False
-
-        iconItem.setData(data, QtCore.Qt.EditRole)
-
-        if self.BottomBar.favorite.button.isChecked():
-            self.favoriteFilter(update=True)
 
 
 
@@ -563,30 +425,34 @@ class ExportDialog (QtWidgets.QDialog):
     def loadStatus (self):
 
         directory = self.AssetPath.get()
-        name = self.nameEdit.text()
+        name = self.UsdExportOptions.nameEdit.text()
         path = os.path.join(directory, name)
 
-        metadataPath = os.path.join(path, self.metadata)
+        metadataPath = os.path.join(path, self.metafile)
         data = tools.dataread(metadataPath)
-        self.status.set(
+        self.UsdExportOptions.status.set(
             data.get("status", "") )
 
 
 
     def setName (self, text):
 
-        text = tools.nameFilter(text)
-        self.nameEdit.setText(text)
+        text = self.UsdExportOptions.nameEdit.setName(text)
 
-
-        if text == self.defaultName:
-            self.nameEdit.setProperty("textcolor", "off")
+        if text == self.UsdExportOptions.nameEdit.errorName:
+            self.UsdExportOptions.nameEdit.setProperty("textcolor", "error")
             self.currentName = ""
             self.checkedName = ""
-            self.status.set()
+            self.UsdExportOptions.status.set()
+
+        elif text == self.UsdExportOptions.nameEdit.defaultName:
+            self.UsdExportOptions.nameEdit.setProperty("textcolor", "weak")
+            self.currentName = ""
+            self.checkedName = ""
+            self.UsdExportOptions.status.set()
 
         elif text in self.assetsNames:
-            self.nameEdit.setProperty("textcolor", "violet")
+            self.UsdExportOptions.nameEdit.setProperty("textcolor", "violet")
             
             inputMatch = False
             if not text == self.checkedName:
@@ -600,7 +466,7 @@ class ExportDialog (QtWidgets.QDialog):
                 self.setOptions()
 
         else:
-            self.nameEdit.setProperty("textcolor", "kicker")
+            self.UsdExportOptions.nameEdit.setProperty("textcolor", "kicker")
 
             inputMatchBreak = False
             if not self.checkedName == "":
@@ -610,11 +476,11 @@ class ExportDialog (QtWidgets.QDialog):
             self.checkedName = ""
 
             if inputMatchBreak:
-                self.status.set()
+                self.UsdExportOptions.status.set()
                 self.setOptions(force=True)
 
 
-        self.nameEdit.setStyleSheet("")
+        self.UsdExportOptions.nameEdit.setStyleSheet("")
 
 
         model = self.AssetBrowser.model()
@@ -637,10 +503,10 @@ class ExportDialog (QtWidgets.QDialog):
 
     def setOptions (self, force=False):
 
-        # in name the same do nothing
+        # if name the same do nothing
         if not force:
             name = self.currentName
-            text = self.nameEdit.text()
+            text = self.UsdExportOptions.nameEdit.text()
             if name:
                 if name == text: return
 
@@ -650,24 +516,33 @@ class ExportDialog (QtWidgets.QDialog):
             name = self.checkedName
         elif self.currentName:
             name = self.currentName
+        elif self.UsdExportOptions.nameEdit.errorVisible:
+            name = self.UsdExportOptions.nameEdit.errorName
         else:
-            name = self.defaultName
+            name = self.UsdExportOptions.nameEdit.defaultName
 
-        self.nameEdit.setText(name)
-
+        self.UsdExportOptions.nameEdit.setText(name)
 
         # set default options
-        self.mainOpions.versionCombobox.clear()
+        self.UsdExportOptions.mainOptions.versionCombobox.clear()
 
         if name == self.defaultName:
-            self.mainOpions.versionCombobox.addItem("01")
+            self.UsdExportOptions.mainOptions.versionCombobox.addItem("01")
+            self.UsdExportOptions.infoEdit.setDefault()
 
 
         # load asset options
         else:
+
             directory = self.AssetPath.get()
-            name = self.nameEdit.text()
+            name = self.UsdExportOptions.nameEdit.text()
             path = os.path.join(directory, name)
+
+            info = tools.getInfo(path)
+            if info:
+                self.UsdExportOptions.infoEdit.set(info)
+            else:
+                self.UsdExportOptions.infoEdit.setDefault()
 
             versionList = tools.getVersionList(path)
 
@@ -678,12 +553,164 @@ class ExportDialog (QtWidgets.QDialog):
             versionList.append(newItem+1)
 
             lastItem = 0
+            self.UsdExportOptions.mainOptions.versionCombobox.stealth = True
             for version in versionList:
-                self.mainOpions.versionCombobox.addItem(
+                self.UsdExportOptions.mainOptions.versionCombobox.addItem(
                      "{:02d}".format(version) )
                 if version > lastItem:
                     lastItem = version
-                    self.mainOpions.versionCombobox.setCurrentIndex(lastItem-1)
+
+            self.UsdExportOptions.mainOptions.versionCombobox.setCurrentIndex(lastItem-1)
+            self.UsdExportOptions.mainOptions.versionCombobox.stealth = False
+
+
+
+
+    def resizeMath (self, value):
+
+        minimunWidth = UIGlobals.Options.minimumWidth
+        maximunWidth = UIGlobals.Options.maximumWidth
+        margin = UIGlobals.Options.margin
+
+        optionWidth = (
+            self.width()
+            - value
+            - margin*2 )
+
+        space = (
+            self.width()
+            - self.AssetBrowser.minimumWidth()
+            - optionWidth
+            - margin*2 )
+
+        if maximunWidth >= optionWidth >= minimunWidth and space > 0:
+            self.UsdExportOptions.contentsWidthBuffer = optionWidth
+            self.UsdExportOptions.setOptionWidth(optionWidth)
+
+
+
+    def resizeBake (self):
+        
+        value = self.UsdExportOptions.contentsWidthBuffer
+        self.UsdExportOptions.contentsWidth = value
+
+        self.AssetPath.uiVisibility()
+        self.BarBottom.uiVisibility()
+
+
+
+    def modelingOverwriteSetting (self):
+        with Settings.Export(update=True) as settings:
+            settings["modellingOverwrite"] = self.UsdExportOptions.modelingOverwrite.isChecked()
+
+    def surfacingOverwriteSetting (self):
+        with Settings.Export(update=True) as settings:
+            settings["surfacingOverwrite"] = self.UsdExportOptions.surfacingOverwrite.isChecked()
+
+    def animationOverwriteSetting (self):
+        with Settings.Export(update=True) as settings:
+            settings["animationOverwrite"] = self.UsdExportOptions.animationOverwrite.isChecked()
+
+
+
+    def applySettings (self):
+        super(ExportDialog, self).applySettings()
+
+        with Settings.Export(update=False) as settings:
+
+            self.UsdExportOptions.animationOptions.range.start.setValue(settings.get("rangeStart"))
+            self.UsdExportOptions.animationOptions.range.end.setValue(settings.get("rangeEnd"))
+
+            modelingOn  = settings.get("modelling")
+            surfacingOn = settings.get("surfacing")
+            animationOn = settings.get("animation")
+
+            if modelingOn:
+                self.UsdExportOptions.modelingSwitch.setChecked(True)
+                self.UsdExportOptions.modelingOverwrite.setEnabled(True)
+            else:
+                self.UsdExportOptions.modelingSwitch.setChecked(False)
+                self.UsdExportOptions.modelingOverwrite.setEnabled(False)
+            
+            if settings.get("modellingOverwrite"):
+                self.UsdExportOptions.modelingOverwrite.setChecked(True)
+            else:
+                self.UsdExportOptions.modelingOverwrite.setChecked(False)
+            
+            if surfacingOn:
+                self.UsdExportOptions.surfacingSwitch.setChecked(True)
+                self.UsdExportOptions.surfacingOverwrite.setEnabled(True)
+            else:
+                self.UsdExportOptions.surfacingSwitch.setChecked(False)
+                self.UsdExportOptions.surfacingOverwrite.setEnabled(False)
+            
+            if settings.get("surfacingOverwrite"):
+                self.UsdExportOptions.surfacingOverwrite.setChecked(True)
+            else:
+                self.UsdExportOptions.surfacingOverwrite.setChecked(False)
+
+            if animationOn:
+                self.UsdExportOptions.animationOptions.setVisible(True)
+                self.UsdExportOptions.animationSwitch.setChecked(True)
+                self.UsdExportOptions.animationOverwrite.setEnabled(True)
+            else:
+                self.UsdExportOptions.animationOptions.setVisible(False)
+                self.UsdExportOptions.animationSwitch.setChecked(False)
+                self.UsdExportOptions.animationOverwrite.setEnabled(False)
+            
+            if settings.get("animationOverwrite"):
+                self.UsdExportOptions.animationOverwrite.setChecked(True)
+            else:
+                self.UsdExportOptions.animationOverwrite.setChecked(False)
+
+            if modelingOn or surfacingOn or animationOn:
+                self.UsdExportOptions.mainOptions.setVisible(True)
+            else:
+                self.UsdExportOptions.mainOptions.setVisible(False)
+
+            if settings.get("link"):
+                self.UsdExportOptions.mainOptions.linkButton.setChecked(True)
+            else:
+                self.UsdExportOptions.mainOptions.linkButton.setChecked(False)
+
+        self.overwriteState()
+
+
+
+    def exportQuery (self):
+
+        state = "enabled"
+
+        modelingOn  = self.UsdExportOptions.modelingSwitch.isChecked()
+        surfacingOn = self.UsdExportOptions.surfacingSwitch.isChecked()
+        animationOn = self.UsdExportOptions.animationSwitch.isChecked()
+
+        if self.UsdExportOptions.nameEdit.text() == self.UsdExportOptions.nameEdit.defaultName:
+            self.UsdExportOptions.nameEdit.showError(True)
+            state = "disabled"
+
+        elif self.UsdExportOptions.nameEdit.text() == self.UsdExportOptions.nameEdit.errorName:
+            state = "disabled"
+
+        if animationOn and self.UsdExportOptions.animationOptions.animationNameCombobox.notSet():
+            self.UsdExportOptions.animationOptions.animationNameCombobox.showError(True)
+            state = "disabled"
+
+        elif not modelingOn and not surfacingOn and not animationOn:
+            state = "disabled"
+        elif self.AssetPath.isHidden():
+            state = "disabled"
+
+        self.UsdExportOptions.exportButton.setProperty("state", state)
+        self.UsdExportOptions.exportButton.setStyleSheet("")
+
+
+
+    def exportAction (self):
+
+        if self.UsdExportOptions.exportButton.property("state") == "enabled":
+            self.exported = True
+            self.close()
 
 
 
@@ -694,573 +721,29 @@ class ExportDialog (QtWidgets.QDialog):
             class DataClass: pass
             options = DataClass()
 
-            options.modelling = self.modelingSwitch.isChecked()
-            options.modellingOverride = self.modelingOverwrite.isChecked()
+            options.modelling = self.UsdExportOptions.modelingSwitch.isChecked()
+            options.modellingOverride = self.UsdExportOptions.modelingOverwrite.isChecked()
 
-            options.surfacing = self.surfacingSwitch.isChecked()
-            options.surfacingOverride = self.surfacingOverwrite.isChecked()
+            options.surfacing = self.UsdExportOptions.surfacingSwitch.isChecked()
+            options.surfacingOverride = self.UsdExportOptions.surfacingOverwrite.isChecked()
 
-            options.animation = self.animationSwitch.isChecked()
-            options.animationOverride = self.animationOverwrite.isChecked()
+            options.animation = self.UsdExportOptions.animationSwitch.isChecked()
+            options.animationOverride = self.UsdExportOptions.animationOverwrite.isChecked()
 
-            options.animationName = self.animationOpions.animationNameCombobox.currentText()
+            options.animationName = self.UsdExportOptions.animationOptions.animationNameCombobox.getName()
 
-            options.minTime = self.animationOpions.rangeStartSpinbox.value()
-            options.maxTime = self.animationOpions.rangeEndSpinbox.value()
+            options.minTime = self.UsdExportOptions.animationOptions.range.start.value()
+            options.maxTime = self.UsdExportOptions.animationOptions.range.end.value()
 
             options.assetPath    = self.getAssetPath()
             options.assetName    = self.getAssetName(final=False)
             options.assetFinal   = self.getAssetName(final=True )
 
-            options.version = int(self.mainOpions.versionCombobox.currentText())
-            options.link = self.mainOpions.linkButton.isChecked()
+            options.version = int(self.UsdExportOptions.mainOptions.versionCombobox.getName())
+            options.link = self.UsdExportOptions.mainOptions.linkButton.isChecked()
 
-            options.comment = self.commentEdit.get()
-            options.status = self.status.get()
+            options.info = self.UsdExportOptions.infoEdit.get()
+            options.comment = self.UsdExportOptions.commentEdit.get()
+            options.status = self.UsdExportOptions.status.get()
 
             return options
-
-
-
-    def getAssetRoots (self):
-
-        libraries = dict()
-        path = os.getenv("ASSETLIBS", "")
-
-        for rootPath in path.split(":"):
-            assetPath = os.path.join(rootPath, self.metadata)
-
-            if os.path.exists(assetPath):
-                data = tools.dataread(assetPath)
-
-                if data["type"] == "root":
-                    name = data["name"]
-                    libraries[name] = rootPath
-
-        return libraries
-
-
-
-    def setLibrary (self, name=None, finish=True):
-
-        self.setIsolation(False)
-
-        if name:
-
-            path = self.libraries.get(name, None)
-            if path is not None:
-
-                with Settings.Manager(update=True) as settings:
-
-                    settings["subdirLibrary"] = ""
-                    settings["focusLibrary"]  = name
-                    self.AssetPath.setRoot(name, path, finish)
-                    return
-
-
-        with Settings.Manager(update=False) as settings:
-
-            name = settings["focusLibrary"]
-            
-            path = self.libraries.get(name, None)
-            if path is not None:
-
-                self.AssetPath.setRoot(name, path, finish)
-                return
-
-            elif name == "":
-                self.drawBrowserItems("")
-                return
-
-
-        for name, path in self.libraries.items():
-            with Settings.Manager(update=True) as settings:
-
-                settings["subdirLibrary"] = ""
-                settings["focusLibrary"]  = name
-            
-            self.AssetPath.setRoot(name, path, finish)
-            return
-
-
-        self.AssetPath.setRoot("", "", finish)
-
-
-
-    def sort (self, library):
-
-        labelL    = []
-        labelF    = []
-        labelA    = []
-        plus      = []
-        libraries = []
-        folders   = []
-        assets    = []
-
-        for data in library:
-            dataType = data.get("type")
-
-            if dataType == "labellibrary":
-                labelL += [data]
-            elif dataType == "labelfolder":
-                labelF += [data]
-            elif dataType == "labelasset":
-                labelA += [data]
-            elif dataType == "plusfolder":
-                plus += [data]
-            elif dataType == "library":
-                libraries += [data]
-            elif dataType == "folder":
-                folders += [data]
-            elif dataType == "asset":
-                assets += [data]
-
-        for data in [libraries, folders, assets]:
-            data.sort( key=lambda item : item.get("data").get("name") )
-
-        library = (
-            labelL
-            + labelF
-            + labelA
-            + plus
-            + libraries
-            + folders
-            + assets
-        )
-
-        return library
-
-
-
-    def sortBookmarks (self):
-
-        count = self.BottomBar.bookmarkCombobox.count()
-        bookmarks = []
-
-        for index in range(count):
-            pathUI = self.BottomBar.bookmarkCombobox.itemText(index)
-            pathID = self.BottomBar.bookmarkCombobox.itemData(index)
-            bookmarks += [ { "UI":pathUI, "ID":pathID } ]
-
-        self.BottomBar.bookmarkCombobox.clear()
-        bookmarks.sort( key=lambda item : item.get("ID") )
-
-        for item in bookmarks:
-            pathUI = item.get("UI")
-            pathID = item.get("ID")
-            self.BottomBar.bookmarkCombobox.addItem(pathUI, pathID)
-
-
-
-    def getDirItems (self, path, filterFavotires=False):
-
-        if not path:
-            return []
-    
-        library = []
-        self.assetsNames = []
-
-        favorites = []
-        with Settings.Manager(update=False) as settings:
-            favorites = settings.get("favorites", [])
-
-        for name in os.listdir(path):
-
-            if name == self.metadata:
-                continue
-
-            folderPath = os.path.join(path, name)
-
-            assetPath = os.path.join(
-                folderPath, self.metadata)
-
-            if os.path.exists(assetPath):
-                data = tools.dataread(assetPath)
-
-                dataType = data["type"]
-                dataTime = data["published"]
-
-                publishedTime = tools.getTimeDifference(dataTime)
-                chosenItem = tools.chooseAssetItem(folderPath)
-
-                versionCount = tools.getVersionList(folderPath)
-                versionCount = len(versionCount)
-
-                if dataType == "usdasset":
-
-                    favorite = False
-                    pathID = self.getPathID(asset=name)
-                    if pathID in favorites:
-                        favorite = True
-
-                    if filterFavotires and not favorite:
-                            continue
-
-                    library.append(
-                        dict(type="asset",  data=dict(
-                            name=name,
-                            previews=tools.getUsdPreviews(folderPath, chosenItem),
-                            type=dataType,
-                            version=tools.getVersion(chosenItem),
-                            count=versionCount,
-                            variant=tools.getVariantName(chosenItem),
-                            animation=tools.getAnimationName(chosenItem),
-                            published=publishedTime,
-                            status=data["status"],
-                            favorite=favorite )) )
-                    self.assetsNames.append(name)
-
-
-            elif os.path.exists(folderPath):
-                if os.path.isdir(folderPath):
-                    library.append(
-                        dict(type="folder", data=dict(
-                            name=name,
-                            items=tools.getItemsCount(folderPath) )) )
-
-
-        return library
-
-
-
-    def getLibraries (self):
-    
-        libraries = []
-        self.assetsNames = []
-
-        for name, path in self.libraries.items():
-            libraries.append(
-                dict(type="library", data=dict(
-                    name=name )) )
-
-        return libraries
-
-
-
-    def favoriteFilter (self, update=False):
-
-        favoriteFilter = self.BottomBar.favorite.button.isChecked()
-
-        if not update:
-            with Settings.Manager(update=True) as settings:
-                settings["favoriteFilter"] = favoriteFilter
-
-                if favoriteFilter:
-                    favorites = []
-                    for pathID in settings.get("favorites"):
-                        path = self.translateID(pathID)
-                        if os.path.exists(path):
-                            favorites.append(pathID)
-                    settings["favorites"] = favorites
-
-        self.drawBrowserItems( self.AssetPath.get() )
-
-
-
-    def drawBrowserItems (self, path):
-
-        if not self.bookmarkIndex() is None:
-            self.AssetPath.bookmarkButton.setChecked(True)
-        else:
-            self.AssetPath.bookmarkButton.setChecked(False)
-
-
-        if not path:
-            self.setIsolation(True)
-            library = self.getLibraries()
-        else:
-            library = self.getDirItems(
-                path,
-                filterFavotires=self.BottomBar.favorite.button.isChecked() )
-
-
-        hasCheckedName = False
-
-        hasLibrary = False
-        hasFolder  = False
-        hasAsset   = False
-        for item in library:
-            if hasLibrary:
-                break
-            elif hasAsset and hasFolder:
-                break
-
-            elif item["type"] == "library" and not hasLibrary:
-                hasLibrary = True
-
-            elif item["type"] == "folder" and not hasFolder:
-                hasFolder = True
-
-            elif item["type"] == "asset" and not hasAsset:
-                hasAsset = True
-
-        if hasLibrary:
-            library.append( dict(type="labellibrary", data=dict(text="Libraries")) )
-
-        if hasFolder or not hasLibrary and not hasAsset:
-            library.append( dict(type="labelfolder", data=dict(text="Folders")) )
-            library.append( dict(type="plusfolder", data=dict()) )
-
-        if hasAsset:
-            library.append( dict(type="labelasset", data=dict(text="Assets")) )
-
-
-        iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
-
-        for item in self.sort(library):
-
-            iconItem = QtGui.QStandardItem()
-
-            iconItem.setCheckable(False)
-            iconItem.setEditable(True)
-
-            iconItem.setData(
-                0,
-                QtCore.Qt.StatusTipRole)
-
-            iconItem.setData(
-                dict(type=item["type"], data=item["data"]),
-                QtCore.Qt.EditRole)
-
-            if self.checkedName == item.get("data").get("name"):
-                iconItem.setData(1, QtCore.Qt.StatusTipRole)
-                hasCheckedName = True
-
-            iconModel.appendRow(iconItem)
-
-
-        self.AssetBrowser.setModel(iconModel)
-
-        if hasLibrary:
-            self.AssetBrowser.setItemDelegate(
-                LibraryDelegate.Delegate(self.AssetBrowser, self.theme) )
-
-        elif not hasAsset:
-            self.AssetBrowser.setItemDelegate(
-                FolderDelegate.Delegate(self.AssetBrowser, self.theme) )
-
-        elif not hasFolder:
-            self.AssetBrowser.setItemDelegate(
-                AssetUsdDelegate.Delegate(self.AssetBrowser, self.theme) )
-
-        else:
-            self.AssetBrowser.setItemDelegate(
-                DirectoryDelegate.Delegate(self.AssetBrowser, self.theme) )
-
-
-        self.AssetBrowser.setGrid()
-
-        if not hasCheckedName:
-            self.checkedName = ""
-            self.setOptions()
-
-
-
-    def createFolderQuery (self, index):
-
-        model = self.AssetBrowser.model()
-        iconItem = model.item(index.row())
-
-        dataItem = dict(type="folderquery", data=dict(
-                            name="",
-                            items=0 ))
-        iconItem.setData(dataItem, QtCore.Qt.EditRole)
-
-        self.AssetBrowser.setCurrentIndex(index)
-        self.AssetBrowser.edit(index)
-
-
-
-    def createFolder (self, index, name):
-
-        model = self.AssetBrowser.model()
-        updateItem = model.item(index.row())
-
-        newPath = os.path.join(
-            self.AssetPath.get(), name)
-        if not name or os.path.exists(newPath):
-            updateData = dict(type="plusfolder", data=dict())
-            updateItem.setData(updateData, QtCore.Qt.EditRole)
-            self.AssetBrowser.repaint()
-
-        else:
-            updateData = dict(type="folder", data=dict(
-                            name=name, items=0 ))
-            updateItem.setData(updateData, QtCore.Qt.EditRole)
-
-            plusItem = QtGui.QStandardItem()
-            plusItem.setCheckable(False)
-            plusItem.setEditable(True)
-            plusItem.setData(0, QtCore.Qt.StatusTipRole)
-
-            plusItem.setData(
-                dict(type="plusfolder", data=dict()),
-                QtCore.Qt.EditRole)
-
-            model.appendRow(plusItem)
-
-            self.AssetBrowser.setGrid()
-            os.mkdir(newPath)
-
-
-
-    def openFolder (self, index):
-
-        model = self.AssetBrowser.model()
-        updateItem = model.item(index.row())
-        data = index.data(QtCore.Qt.EditRole)
-
-        path = os.path.join(
-            self.AssetPath.get(),
-            data.get("data").get("name") )
-
-        if os.path.exists(path):
-            tools.openFolder(path)
-
-
-
-    def modelingOverwriteSetting (self):
-        with Settings.Export(update=True) as settings:
-            settings["modellingOverwrite"] = self.modelingOverwrite.isChecked()
-
-    def surfacingOverwriteSetting (self):
-        with Settings.Export(update=True) as settings:
-            settings["surfacingOverwrite"] = self.surfacingOverwrite.isChecked()
-
-    def animationOverwriteSetting (self):
-        with Settings.Export(update=True) as settings:
-            settings["animationOverwrite"] = self.animationOverwrite.isChecked()
-
-
-
-    def applySettings (self):
-
-        blacklist = []
-        with Settings.Manager(update=False) as settings:
-
-            if settings.get("favoriteFilter"):
-                self.BottomBar.favorite.button.setChecked(True)
-
-
-            self.BottomBar.bookmarkCombobox.clear()
-            bookmarks = settings.get("bookmarks")
-            for data in bookmarks:
-                bookmark = self.interpretID(data)
-                if not bookmark is None:
-                    library, subdir = bookmark
-
-                    name = library
-                    if subdir: name += "/"+ subdir
-
-                    if not library in self.libraries:
-                        blacklist.append(data)
-                        continue
-
-                    root = self.libraries.get(library, "")
-                    path = os.path.join(root, name)
-                    if os.path.exists(path):
-                        blacklist.append(data)
-                        continue
-
-                    self.BottomBar.bookmarkCombobox.addItem(name, data)
-
-        if blacklist:
-            with Settings.Manager(update=True) as settings:
-                for data in blacklist:
-                    settings["bookmarks"].remove(data)
-
-
-        self.sortBookmarks()
-        self.BottomBar.bookmarkCombobox.setCurrentIndex(-1)
-
-
-        with Settings.Export(update=False) as settings:
-
-            self.animationOpions.rangeStartSpinbox.setValue(settings.get("rangeStart"))
-            self.animationOpions.rangeEndSpinbox.setValue(settings.get("rangeEnd"))
-
-            modelingOn  = settings.get("modelling")
-            surfacingOn = settings.get("surfacing")
-            animationOn = settings.get("animation")
-
-            if modelingOn:
-                self.modelingSwitch.setChecked(True)
-                self.modelingOverwrite.setEnabled(True)
-            else:
-                self.modelingSwitch.setChecked(False)
-                self.modelingOverwrite.setEnabled(False)
-            
-            if settings.get("modellingOverwrite"):
-                self.modelingOverwrite.setChecked(True)
-            else:
-                self.modelingOverwrite.setChecked(False)
-            
-            if surfacingOn:
-                self.surfacingSwitch.setChecked(True)
-                self.surfacingOverwrite.setEnabled(True)
-            else:
-                self.surfacingSwitch.setChecked(False)
-                self.surfacingOverwrite.setEnabled(False)
-            
-            if settings.get("surfacingOverwrite"):
-                self.surfacingOverwrite.setChecked(True)
-            else:
-                self.surfacingOverwrite.setChecked(False)
-
-            if animationOn:
-                self.animationOpions.setVisible(True)
-                self.animationSwitch.setChecked(True)
-                self.animationOverwrite.setEnabled(True)
-            else:
-                self.animationOpions.setVisible(False)
-                self.animationSwitch.setChecked(False)
-                self.animationOverwrite.setEnabled(False)
-            
-            if settings.get("animationOverwrite"):
-                self.animationOverwrite.setChecked(True)
-            else:
-                self.animationOverwrite.setChecked(False)
-
-            if modelingOn or surfacingOn or animationOn:
-                self.mainOpions.setVisible(True)
-            else:
-                self.mainOpions.setVisible(False)
-
-            if settings.get("link"):
-                self.mainOpions.linkButton.setChecked(True)
-            else:
-                self.mainOpions.linkButton.setChecked(False)
-
-        self.overwriteState()
-
-
-
-    def exportQuery (self):
-
-        modelingOn  = self.modelingSwitch.isChecked()
-        surfacingOn = self.surfacingSwitch.isChecked()
-        animationOn = self.animationSwitch.isChecked()
-        text = self.animationOpions.animationNameCombobox.currentText()
-
-        self.exportButton.setProperty("state", "disabled")
-
-        if not modelingOn and not surfacingOn and not animationOn:
-            pass
-        elif animationOn and not text:
-            pass
-        elif self.nameEdit.text() == self.defaultName:
-            pass
-        elif self.AssetPath.isHidden():
-            pass
-        else:
-            self.exportButton.setProperty("state", "enabled")
-
-        self.exportButton.setStyleSheet("")
-
-
-
-    def exportAction (self):
-
-        if self.exportButton.property("state") == "enabled":
-            self.exported = True
-            self.close()

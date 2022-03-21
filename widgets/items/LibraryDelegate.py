@@ -2,7 +2,7 @@
 
 
 
-from . import ItemBase
+from . import BaseItem
 from . import LibraryPainter
 from . import LibraryEditor
 
@@ -12,7 +12,7 @@ from . import LibraryEditor
 
 
 
-class Delegate (ItemBase.Delegate):
+class Delegate (BaseItem.Delegate):
 
 
     def __init__ (self, parent, theme):
@@ -26,6 +26,6 @@ class Delegate (ItemBase.Delegate):
         editor = LibraryEditor.Editor(parent, index, self.theme)
 
         editor.clicked.connect(self.clickAction)
-        editor.leaveEditor.connect(self.leaveAcion)
+        editor.leaveEditor.connect(self.leaveAction)
 
         return editor

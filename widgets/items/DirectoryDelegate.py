@@ -28,7 +28,7 @@ class Delegate (FolderDelegate.Delegate, AssetUsdDelegate.Delegate):
         editor.Item.controlMode = self.parent().controlMode
 
         editor.clicked.connect(self.clickAction)
-        editor.leaveEditor.connect(self.leaveAcion)
+        editor.leaveEditor.connect(self.leaveAction)
         editor.link.connect(self.linkAction)
 
         editor.createFolderQuery.connect(self.createFolderQuery)

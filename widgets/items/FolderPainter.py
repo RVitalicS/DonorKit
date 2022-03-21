@@ -2,7 +2,7 @@
 
 
 
-from . import tools
+from .. import tools
 from .paintblock import (
     clear,
     label
@@ -10,9 +10,9 @@ from .paintblock import (
 
 
 from Qt import QtCore, QtGui
-from . import ItemBase
+from . import BaseItem
 
-from . import Settings
+from .. import Settings
 UIGlobals = Settings.UIGlobals
 
 
@@ -45,9 +45,9 @@ class Base (object):
         # BACKGROUND
         self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         if self.hover:
-            color = QtGui.QColor(self.theme.iconHilight)
+            color = QtGui.QColor(self.theme.color.iconHighlight)
         else:
-            color = QtGui.QColor(self.theme.iconBackground)
+            color = QtGui.QColor(self.theme.color.iconBackground)
         self.painter.fillRect(self.iconRect, color)
 
 
@@ -61,7 +61,7 @@ class Base (object):
                 self.iconRect.x() + folderOffset,
                 self.iconRect.y() + folderOffset)
         
-        folderImage = tools.recolor(folderImage, self.theme.folderColor)
+        folderImage = tools.recolor(folderImage, self.theme.color.folderColor)
         self.painter.drawImage(folderPosition, folderImage)
 
 
@@ -69,7 +69,7 @@ class Base (object):
         self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.setPen(
             QtGui.QPen(
-                QtGui.QBrush( QtGui.QColor(self.theme.text) ),
+                QtGui.QBrush( QtGui.QColor(self.theme.color.text) ),
                 0,
                 QtCore.Qt.SolidLine,
                 QtCore.Qt.RoundCap,
@@ -101,7 +101,7 @@ class Base (object):
         # ITEMS
         self.painter.setPen(
             QtGui.QPen(
-                QtGui.QBrush( QtGui.QColor(self.theme.textlock) ),
+                QtGui.QBrush( QtGui.QColor(self.theme.color.textlock) ),
                 0,
                 QtCore.Qt.SolidLine,
                 QtCore.Qt.RoundCap,
@@ -138,8 +138,8 @@ class Base (object):
         # LINK
         if self.hover and self.controlMode and name != "":
 
-            linkImage = QtGui.QImage(":/icons/link.png")
-            linkImage = tools.recolor(linkImage, self.theme.kicker, opacity=0.25)
+            linkImage = QtGui.QImage(":/icons/linkarrow.png")
+            linkImage = tools.recolor(linkImage, self.theme.color.kicker, opacity=0.25)
 
             linkOffset = linkImage.width() + UIGlobals.IconDelegate.offsetLink
 
@@ -177,9 +177,9 @@ class Base (object):
             libraryImage.height() )
 
         if self.createFolderArea.contains(self.pointer):
-            libraryImage = tools.recolor(libraryImage, self.theme.plusHover)
+            libraryImage = tools.recolor(libraryImage, self.theme.color.plusHover)
         else:
-            libraryImage = tools.recolor(libraryImage, self.theme.plusColor)
+            libraryImage = tools.recolor(libraryImage, self.theme.color.plusColor)
 
         self.painter.drawImage(iconPosition, libraryImage)
 
@@ -188,11 +188,11 @@ class Base (object):
 
 
 
-class Item (ItemBase.Painter, Base):
+class Item (BaseItem.Painter, Base):
 
 
     def __init__ (self, theme):
-        ItemBase.Painter.__init__(self, theme)
+        BaseItem.Painter.__init__(self, theme)
         Base.__init__(self)
 
 

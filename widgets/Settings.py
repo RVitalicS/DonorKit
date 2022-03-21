@@ -15,8 +15,9 @@ from Qt import QtGui
 STATUS_LIST = [
     "Final",
     "Completed",
+    "Revise",
+    "Pending Review",
     "WIP" ]
-
 
 
 
@@ -162,25 +163,24 @@ class Manager (object):
 
 
 
-FONT_FAMILY = os.getenv("FONT_FAMILY", "")
+def makeFont (size=7, weight=QtGui.QFont.Normal):
 
-
-def makeFont (
-    size   = int(),
-    bold   = bool(),
-    weight = int(),
-    family = FONT_FAMILY ):
-
+    """
+        QFont::Thin         0   0
+        QFont::ExtraLight   12  12
+        QFont::Light        25  25
+        QFont::Normal       50  50
+        QFont::Medium       57  57
+        QFont::DemiBold     63  63
+        QFont::Bold         75  75
+        QFont::ExtraBold    81  81
+        QFont::Black        87  87
+    """
 
     font = QtGui.QFont()
-
+    font.setFamily("Cantarell")
     font.setPointSize(size)
-    font.setBold(bold)
     font.setWeight(weight)
-
-    if FONT_FAMILY:
-        font.setFamily(FONT_FAMILY)
-
 
     return font
 
@@ -198,15 +198,15 @@ UIGlobals = DataClass()
 UIGlobals.Path = DataClass()
 UIGlobals.Path.backIcon = 13
 UIGlobals.Path.height   = 32
-UIGlobals.Path.fontRoot = makeFont( size=9, bold=False, weight=50 )
-UIGlobals.Path.fontPath = makeFont( size=9, bold=False, weight=50 )
+UIGlobals.Path.fontRoot = makeFont( size=9 )
+UIGlobals.Path.fontPath = makeFont( size=9 )
 UIGlobals.Path.bookmarkOffset = 1
 
 
 UIGlobals.Bar = DataClass()
 UIGlobals.Bar.height = 32
-UIGlobals.Bar.fontPreview = makeFont( size=7, bold=False, weight=50 )
-UIGlobals.Bar.fontBookmark = makeFont( size=8, bold=False, weight=50 )
+UIGlobals.Bar.fontPreview  = makeFont( size=7 )
+UIGlobals.Bar.fontBookmark = makeFont( size=8 )
 UIGlobals.Bar.favoriteOffset = 2
 UIGlobals.Bar.bookmarkOffset = 0
 
@@ -255,38 +255,50 @@ UIGlobals.IconDelegate.radiusStatus = 2
 
 UIGlobals.IconDelegate.offsetLink = 9
 
-UIGlobals.IconDelegate.fontLibraries   = makeFont( size=11, bold=False, weight=50 )
-UIGlobals.IconDelegate.fontCategory    = makeFont( size=8, bold=False, weight=50 )
-UIGlobals.IconDelegate.fontFolderName  = makeFont( size=9, bold=False, weight=50 )
-UIGlobals.IconDelegate.fontFolderItems = makeFont( size=7, bold=False, weight=20 )
+UIGlobals.IconDelegate.fontLibraries   = makeFont( size=11 )
+UIGlobals.IconDelegate.fontLibraryName = makeFont( size=10)
 
-UIGlobals.IconDelegate.fontAssetName    = makeFont( size=8, bold=False, weight=50 )
-UIGlobals.IconDelegate.fontAssetVersion = makeFont( size=7, bold=False, weight=50 )
-UIGlobals.IconDelegate.fontAssetLabel   = makeFont( size=6, bold=False, weight=50 )
-UIGlobals.IconDelegate.fontAssetStatus  = makeFont( size=7, bold=False, weight=50 )
+UIGlobals.IconDelegate.fontCategory    = makeFont( size=8 )
+UIGlobals.IconDelegate.fontFolderName  = makeFont( size=9 )
+UIGlobals.IconDelegate.fontFolderItems = makeFont( size=7 )
+
+UIGlobals.IconDelegate.fontAssetName    = makeFont( size=8 )
+UIGlobals.IconDelegate.fontAssetVersion = makeFont( size=7 )
+UIGlobals.IconDelegate.fontAssetLabel   = makeFont( size=6 )
+UIGlobals.IconDelegate.fontAssetStatus  = makeFont( size=7 )
 
 UIGlobals.IconDelegate.Animation = DataClass()
 UIGlobals.IconDelegate.Animation.space  = 10
 UIGlobals.IconDelegate.Animation.offset = 6
 UIGlobals.IconDelegate.Animation.height = 14
-UIGlobals.IconDelegate.Animation.font   = makeFont( size=7, bold=False, weight=90 )
+UIGlobals.IconDelegate.Animation.font   = makeFont( size=7, weight=QtGui.QFont.Bold )
 
 
 UIGlobals.Options = DataClass()
 
-UIGlobals.Options.width      = 210
-UIGlobals.Options.margin     = 30
-UIGlobals.Options.thickHight = 32
+UIGlobals.Options.minimumWidth = 134
+UIGlobals.Options.preferWidth  = 170
+UIGlobals.Options.maximumWidth = 400
+UIGlobals.Options.margin       = 30
+UIGlobals.Options.thickHeight  = 32
+UIGlobals.Options.buttonHeight = 12
+UIGlobals.Options.rawHeight    = 16
+UIGlobals.Options.labelWidth   = 52
 
-UIGlobals.Options.fontLabel = makeFont( size=9, bold=False, weight=50 )
-UIGlobals.Options.fontOverwrite = makeFont( size=7, bold=False, weight=50 )
-UIGlobals.Options.fontComment = makeFont( size=9, bold=False, weight=50 )
+UIGlobals.Options.fontName      = makeFont( size=12, weight=QtGui.QFont.Bold )
+UIGlobals.Options.fontInfo      = makeFont( size=9 )
+UIGlobals.Options.fontLabel     = makeFont( size=9 )
+UIGlobals.Options.fontOverwrite = makeFont( size=7 )
+UIGlobals.Options.fontComment   = makeFont( size=9 )
 
 UIGlobals.Options.Export = DataClass()
 UIGlobals.Options.Export.patternThickness = 11
-UIGlobals.Options.Export.font = makeFont( size=9, bold=False, weight=50 )
+UIGlobals.Options.Export.font = makeFont( size=10 )
 
 
 UIGlobals.Options.Status = DataClass()
-UIGlobals.Options.Status.lineWidth = 4
-UIGlobals.Options.Status.space     = 6
+UIGlobals.Options.Status.lineWidth    = 4
+UIGlobals.Options.Status.space        = 6
+UIGlobals.Options.Status.buttonHeight = 10
+UIGlobals.Options.Status.fontLabel    = makeFont( size=6 )
+UIGlobals.Options.Status.fontButton   = makeFont( size=9 )

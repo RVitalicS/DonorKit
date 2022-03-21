@@ -4,7 +4,7 @@
 
 from Qt import QtCore, QtGui
 
-from . import Settings
+from .. import Settings
 UIGlobals = Settings.UIGlobals
 
 
@@ -40,11 +40,11 @@ class Item (object):
 
     def paint (self, painter, option, index):
 
-        colorText = self.theme.text
-        colorBackground = self.theme.browserHandleSocket
+        colorText = self.theme.color.text
+        colorBackground = self.theme.color.browserHandleSocket
         if option.rect.contains(self.pointer):
-            colorText = self.theme.white
-            colorBackground = self.theme.black
+            colorText = self.theme.color.white
+            colorBackground = self.theme.color.black
 
         painter.fillRect(
             option.rect, QtGui.QColor(colorBackground) )
@@ -76,7 +76,7 @@ class Item (object):
 
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
-        textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        textOption.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
 
         painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         painter.drawText(

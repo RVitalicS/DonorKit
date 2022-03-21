@@ -199,14 +199,6 @@ def PlayBlast (
     '''
 
 
-    displayPreferences = getDisplayPreferences()
-    setDisplayPreferences(
-        dict(wireframeOnShadedActive="none") )
-
-    View = OpenMayaUI.M3dView.active3dView()
-    View.refresh()
-
-
     baseName = re.sub(r"\.usd[ac]*$", "", name)
     previewRoot = os.path.join(
         path,
@@ -225,8 +217,8 @@ def PlayBlast (
     framePadding = 3
     compression  = "png"
 
-    width  = Settings.UIsettings.AssetBrowser.Icon.Preview.width
-    height = Settings.UIsettings.AssetBrowser.Icon.Preview.height
+    width  = Settings.UIGlobals.AssetBrowser.Icon.Preview.width
+    height = Settings.UIGlobals.AssetBrowser.Icon.Preview.height
 
 
     Time = OpenMayaAnim.MAnimControl().currentTime()
@@ -240,6 +232,13 @@ def PlayBlast (
     minTime = int(minTime)
     maxTime = int(maxTime)
 
+
+    displayPreferences = getDisplayPreferences()
+    setDisplayPreferences(
+        dict(wireframeOnShadedActive="none") )
+
+    View = OpenMayaUI.M3dView.active3dView()
+    View.refresh()
 
     command = [
         "playblast",
@@ -261,6 +260,8 @@ def PlayBlast (
     command = " ".join(command)
 
     OpenMaya.MGlobal.executeCommand(command)
+
+    setDisplayPreferences(displayPreferences)
 
 
     for frame in range(minTime, maxTime+1):
@@ -286,8 +287,6 @@ def PlayBlast (
 
     Time.setValue(timeBefore)
     OpenMayaAnim.MAnimControl.setCurrentTime(Time)
-
-    setDisplayPreferences(displayPreferences)
 
 
 
@@ -507,12 +506,14 @@ def Export ():
 
 
                 # Create/Update .metadata.json
-                with Metadata.MetadataManager(options.assetPath, "usdasset") as data:
-                    data["published"] = tools.getTimeCode()
-                    data["status"]    = options.status
+                with Metadata.MetadataManager(
+                        options.assetPath, "usdasset") as data:
 
-                    if options.comment:
-                        data["comments"][options.assetName] = options.comment
+                    data["info"] = options.info
+                    data["status"] = options.status
+                    data["items"][options.assetName] = dict(
+                        published = tools.getTimeCode(),
+                        comment   = options.comment )
 
 
                 # Create Preview Image

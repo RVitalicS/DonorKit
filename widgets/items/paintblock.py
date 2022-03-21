@@ -2,12 +2,12 @@
 
 
 
-from . import tools
+from .. import tools
 
 
 from Qt import QtCore, QtGui
 
-from . import Settings
+from .. import Settings
 UIGlobals = Settings.UIGlobals
 
 
@@ -21,7 +21,7 @@ def clear (function):
 
         self.painter.fillRect(
             self.option.rect,
-            QtGui.QColor(self.theme.browserBackground)
+            QtGui.QColor(self.theme.color.browserBackground)
         )
 
     return wrapped
@@ -39,7 +39,7 @@ def label (font):
             self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
             self.painter.setPen(
                 QtGui.QPen(
-                    QtGui.QBrush( QtGui.QColor(self.theme.text) ),
+                    QtGui.QBrush( QtGui.QColor(self.theme.color.text) ),
                     0,
                     QtCore.Qt.SolidLine,
                     QtCore.Qt.RoundCap,
@@ -78,7 +78,7 @@ def checked (function):
                 self.radius, 
                 self.radius)
 
-            color = QtGui.QColor(self.theme.checkedHilight)
+            color = QtGui.QColor(self.theme.color.checkedHighlight)
         
             pen = QtGui.QPen(
                     QtGui.QBrush(color),
@@ -117,9 +117,9 @@ def favorite (function):
                 image.height() )
 
             if self.favorite:
-                image = tools.recolor(image, self.theme.checkedHilight)
+                image = tools.recolor(image, self.theme.color.checkedHighlight)
             else:
-                image = tools.recolor(image, self.theme.kicker, opacity=0.25)
+                image = tools.recolor(image, self.theme.color.kicker, opacity=0.25)
 
             self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
             self.painter.drawImage(position, image)
@@ -136,9 +136,9 @@ def background (function):
         function(self)
 
         if self.hover:
-            color = QtGui.QColor(self.theme.iconOutlineHover)
+            color = QtGui.QColor(self.theme.color.iconOutlineHover)
         else:
-            color = QtGui.QColor(self.theme.iconOutline)
+            color = QtGui.QColor(self.theme.color.iconOutline)
 
         self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         self.painter.fillRect(self.option.rect, color)
@@ -157,9 +157,9 @@ def background (function):
             self.radius)
 
         if self.hover:
-            color = QtGui.QColor(self.theme.iconHilight)
+            color = QtGui.QColor(self.theme.color.iconHighlight)
         else:
-            color = QtGui.QColor(self.theme.iconBackground)
+            color = QtGui.QColor(self.theme.color.iconBackground)
 
         self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         self.painter.fillPath(outlinePath, QtGui.QBrush(color))
@@ -170,7 +170,7 @@ def background (function):
             self.pointY                ,
             self.width                 ,
             self.previewHeight + self.space )
-        previewColor = QtGui.QColor(self.theme.iconSpace)
+        previewColor = QtGui.QColor(self.theme.color.iconSpace)
         self.painter.fillRect(clearBackground, previewColor)
 
     return wrapped
@@ -186,17 +186,19 @@ def usdColorAccent (status=True):
             function(self)
 
             if status:
-                color = self.theme.statusWIP
-
                 text = self.data.get("status")
-                if text == "Completed":
-                    color = self.theme.statusCompleted
 
-                elif text == "Final":
-                    color = self.theme.statusFinal
-
+                color = self.theme.color.statusWIP
+                if text == "Final":
+                    color = self.theme.color.statusFinal
+                elif text == "Completed":
+                    color = self.theme.color.statusCompleted
+                elif text == "Revise":
+                    color = self.theme.color.statusRevise
+                elif text == "Pending Review":
+                    color = self.theme.color.statusPendingReview
             else:
-                color = self.theme.textlock
+                color = self.theme.color.textlock
 
             self.accentColor = QtGui.QColor(color)
 
@@ -301,7 +303,7 @@ def usdAnimation (function):
 
             fontAnimation = UIGlobals.IconDelegate.Animation.font
             self.painter.setFont(fontAnimation)
-            self.painter.setPen( QtGui.QColor(self.theme.paper) )
+            self.painter.setPen( QtGui.QColor(self.theme.color.paper) )
 
             offsetTag = UIGlobals.IconDelegate.Animation.offset
             spaceTag  = UIGlobals.IconDelegate.Animation.space
@@ -332,7 +334,7 @@ def usdAnimation (function):
             path = QtGui.QPainterPath()
             path.addRoundedRect(tagArea, radiusTag, radiusTag)
 
-            brush = QtGui.QBrush( QtGui.QColor(self.theme.iconAnimation) )
+            brush = QtGui.QBrush( QtGui.QColor(self.theme.color.iconAnimation) )
 
             self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
             self.painter.fillPath(path, brush)
@@ -357,8 +359,8 @@ def usdLink (function):
 
         if self.hover and self.controlMode:
 
-            linkImage = QtGui.QImage(":/icons/link.png")
-            linkImage = tools.recolor(linkImage, self.theme.kicker, opacity=0.25)
+            linkImage = QtGui.QImage(":/icons/linkarrow.png")
+            linkImage = tools.recolor(linkImage, self.theme.color.kicker, opacity=0.25)
 
             linkOffset = linkImage.width() + self.space
 
@@ -417,8 +419,8 @@ def usdStatus (function):
         function(self)
 
 
-        # labels
-        self.painter.setPen( QtGui.QColor(self.theme.textlock) )
+        # LABELS
+        self.painter.setPen( QtGui.QColor(self.theme.color.textlock) )
         self.painter.setFont( UIGlobals.IconDelegate.fontAssetLabel )
 
         textOption = QtGui.QTextOption()
@@ -472,8 +474,8 @@ def usdStatus (function):
 
 
 
-        # date
-        self.painter.setPen( QtGui.QColor(self.theme.text) )
+        # DATE
+        self.painter.setPen( QtGui.QColor(self.theme.color.text) )
         self.painter.setFont( UIGlobals.IconDelegate.fontAssetLabel )
         
         textOption = QtGui.QTextOption()
@@ -497,7 +499,7 @@ def usdStatus (function):
 
         
 
-        # status button
+        # STATUS BUTTON
         offsetButton = offsetPublished + 2
         buttonArea = QtCore.QRect(
             statusArea.x()                     ,
@@ -518,9 +520,10 @@ def usdStatus (function):
 
         
 
-        # status text
-        self.painter.setPen( QtGui.QColor(self.theme.white) )
-        self.painter.setFont( UIGlobals.IconDelegate.fontAssetStatus )
+        # STATUS TEXT
+        fontText = UIGlobals.IconDelegate.fontAssetStatus
+        self.painter.setPen( QtGui.QColor(self.theme.color.white) )
+        self.painter.setFont( fontText )
 
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
@@ -528,6 +531,22 @@ def usdStatus (function):
 
         text = self.data.get("status")
 
+        # cut if text is wider then button
+        textWidth = tools.getStringWidth(text, fontText)
+        textMargin = 3
+        availableWidth = buttonArea.width() - textMargin*2
+        addDots = False
+
+        while textWidth > availableWidth:
+            text = text[:-1]
+            textWidth = tools.getStringWidth(
+                text+"...", fontText)
+            addDots = True
+            
+        if addDots:
+            text += "..."
+
+        # draw text
         self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.drawText(
             QtCore.QRectF(buttonArea),
@@ -557,9 +576,9 @@ def usdName (hasCount=True):
             self.painter.setFont(fontName)
 
             if self.hover or self.checked == 1:
-                self.painter.setPen( QtGui.QColor(self.theme.kicker) )
+                self.painter.setPen( QtGui.QColor(self.theme.color.kicker) )
             else:
-                self.painter.setPen( QtGui.QColor(self.theme.text) )
+                self.painter.setPen( QtGui.QColor(self.theme.color.text) )
 
             offsetName = -2
             self.spaceName -= self.space
@@ -629,7 +648,7 @@ def usdName (hasCount=True):
 
                     textVariant += "..."
 
-                self.painter.setPen( QtGui.QColor(self.theme.text) )
+                self.painter.setPen( QtGui.QColor(self.theme.color.text) )
 
                 self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
                 self.painter.drawText(
@@ -674,7 +693,7 @@ def usdName (hasCount=True):
                 count = self.data.get("count")
                 textCount = " // {}".format(count)
 
-                self.painter.setPen( QtGui.QColor(self.theme.text) )
+                self.painter.setPen( QtGui.QColor(self.theme.color.text) )
 
                 self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
                 self.painter.drawText(

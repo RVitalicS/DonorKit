@@ -4,6 +4,8 @@
 import os
 from . import tools
 
+from Qt import QtGui
+
 from . import Settings
 UIGlobals = Settings.UIGlobals
 
@@ -17,11 +19,12 @@ class Theme (object):
 
 
     def __init__ (self, application="manager"):
+        self.application = application
 
         self.name = "dark"
         filename = "themedark.json"
 
-        if application == "export":
+        if self.application == "export":
             with Settings.Export(update=False) as settings:
                 self.name = settings.get("theme", "")
         else:
@@ -32,11 +35,6 @@ class Theme (object):
             filename = "themelight.json"
 
 
-        path = os.path.join(
-            os.path.dirname(__file__),
-            "databank", filename)
-        self.values = tools.dataread(path)
-
         self.variables = {
             "kicker": "$KICKER",
             "white": "$WHITE_COLOR",
@@ -46,12 +44,13 @@ class Theme (object):
             "textoff": "$TEXT_OFF",
             "textdim": "$TEXT_DIM",
             "textlock": "$TEXT_LOCK",
+            "textover": "$TEXT_OVER",
+            "texterror": "$TEXT_ERROR",
+            "selectionColor": "$SELECTION_COLOR",
+            "selectionBackground": "$SELECTION_BACKGROUND",
             "optionBackground": "$OPTION_BACKGROUND",
-            "optionInput": "$OPTION_INPUT",
-            "optionButton": "$OPTION_BUTTON",
             "optionDisable": "$OPTION_DISABLE",
-            "statusButton" : "$STATUS_BUTTON",
-            "checkedHilight": "$HILIGHT_CHECKED",
+            "optionLine": "$OPTION_LINE",
             "browserBackground": "$BROWSER_BACKGROUND",
             "browserSocket": "$BROWSER_SOCKET",
             "browserHandleSocket": "$HANDLE_SOCKET",
@@ -59,9 +58,24 @@ class Theme (object):
             }
 
 
+        path = os.path.join(
+            os.path.dirname(__file__),
+            "databank", filename)
+        self.values = tools.dataread(path)
+
+        class Group: pass
+        self.color = Group()
+
         for attribute, variable in self.values.items():
             value = self.values.get(attribute, "#00ff00")
-            setattr(self, attribute, value)
+            setattr(self.color, attribute, value)
+
+
+        database = QtGui.QFontDatabase()
+        for font in [
+            ":/fonts/Cantarell-Regular.otf" ,
+            ":/fonts/Cantarell-Bold.otf"    ]:
+            database.addApplicationFont(font)
 
 
 
