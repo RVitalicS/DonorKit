@@ -92,6 +92,13 @@ class TextBlock (QtWidgets.QTextEdit):
             self.setDefault()
 
 
+    def focusInEvent (self, event):
+        super(TextBlock, self).focusInEvent(event)
+
+        if self.toPlainText() == self.defaultName:
+            self.set("")
+
+
     def focusOutEvent (self, event):
         super(TextBlock, self).focusOutEvent(event)
 
