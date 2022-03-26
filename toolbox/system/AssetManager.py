@@ -12,9 +12,12 @@ if rootDir not in sys.path:
     sys.path.append(rootDir)
 
 
-from Qt import QtWidgets, QtCore
+from toolbox.ensure.QtWidgets import *
+from toolbox.ensure.QtCore import *
+
 from widgets import ManagerWidget
 from toolbox.system import actions
+
 
 
 

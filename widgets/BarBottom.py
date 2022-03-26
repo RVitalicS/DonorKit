@@ -5,7 +5,11 @@
 import toolbox.core.graphics
 import toolbox.core.ui
 
-from Qt import QtWidgets, QtCore, QtGui
+from toolbox.ensure.QtWidgets import *
+from toolbox.ensure.QtCore import *
+from toolbox.ensure.QtGui import *
+from toolbox.ensure.Signal import *
+
 from .items import PopupDelegate
 
 from . import Settings
@@ -410,7 +414,7 @@ class ComboBox (QtWidgets.QComboBox):
 
 class Bar (QtWidgets.QWidget):
 
-    bookmarkChosen = QtCore.Signal(str)
+    bookmarkChosen = Signal(str)
 
 
     def __init__ (self, theme):

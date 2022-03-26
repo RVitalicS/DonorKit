@@ -4,7 +4,7 @@
 import os
 from toolbox.system import stream
 
-from Qt import QtGui
+from toolbox.ensure.QtGui import *
 
 from . import Settings
 UIGlobals = Settings.UIGlobals

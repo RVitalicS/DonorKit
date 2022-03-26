@@ -40,7 +40,7 @@ Operating System: CentOS 7
 ### Python Requirements
 
 The following dependencies are required:
-+ [Qt.py](https://github.com/mottosso/Qt.py)
++ PySide2 or PyQt5
 + used oslquery module from RenderMan library ([Open Shading Language](https://github.com/AcademySoftwareFoundation/OpenShadingLanguage) python bindings)
 
 

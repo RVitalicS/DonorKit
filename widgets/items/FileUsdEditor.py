@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
 
-
-from Qt import QtCore
+from toolbox.ensure.QtCore import *
 
 from . import BaseItem
 from . import FileUsdPainter

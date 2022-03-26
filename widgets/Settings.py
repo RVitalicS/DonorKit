@@ -7,8 +7,7 @@ import toolbox.system.stream
 import toolbox.core.ui
 
 
-from Qt import QtGui
-
+from toolbox.ensure.QtGui import *
 
 
 

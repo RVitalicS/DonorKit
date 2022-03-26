@@ -14,7 +14,9 @@ import toolbox.core.naming
 from toolbox.system import stream
 
 
-from Qt import QtWidgets, QtCore, QtGui
+from toolbox.ensure.QtWidgets import *
+from toolbox.ensure.QtCore import *
+from toolbox.ensure.QtGui import *
 
 from . import BaseWidget
 from . import ExportUI

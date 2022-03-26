@@ -22,7 +22,9 @@ from .BasePainterUsd import (
     checked )
 
 
-from Qt import QtCore, QtGui
+from toolbox.ensure.QtCore import *
+from toolbox.ensure.QtGui import *
+
 from . import BaseItem
 
 from .. import Settings

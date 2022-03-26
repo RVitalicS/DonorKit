@@ -5,8 +5,8 @@
 import toolbox.core.calculate
 import toolbox.core.graphics
 
-
-from Qt import QtCore, QtGui
+from toolbox.ensure.QtCore import *
+from toolbox.ensure.QtGui import *
 
 from .. import Settings
 UIGlobals = Settings.UIGlobals

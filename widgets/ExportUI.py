@@ -10,7 +10,10 @@ import toolbox.core.naming
 import toolbox.core.ui
 
 
-from Qt import QtWidgets, QtCore, QtGui
+from toolbox.ensure.QtWidgets import *
+from toolbox.ensure.QtCore import *
+from toolbox.ensure.QtGui import *
+from toolbox.ensure.Signal import *
 
 
 from . import AssetBrowser
@@ -115,7 +118,7 @@ class Line (QtWidgets.QWidget):
 
 class FlatComboBox (QtWidgets.QComboBox):
 
-    selectionChanged = QtCore.Signal(str)
+    selectionChanged = Signal(str)
 
 
     def __init__ (self, theme):

@@ -2,7 +2,7 @@
 
 
 
-from Qt import QtGui
+from toolbox.ensure.QtGui import *
 
 
 

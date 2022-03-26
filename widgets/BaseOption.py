@@ -9,7 +9,10 @@ import toolbox.core.graphics
 import toolbox.core.ui
 
 
-from Qt import QtWidgets, QtCore, QtGui
+from toolbox.ensure.QtWidgets import *
+from toolbox.ensure.QtCore import *
+from toolbox.ensure.QtGui import *
+from toolbox.ensure.Signal import *
 
 from . import Settings
 UIGlobals = Settings.UIGlobals
@@ -26,7 +29,7 @@ HEIGHT_THICK = UIGlobals.Options.thickHeight
 
 class TextBlock (QtWidgets.QTextEdit):
 
-    loseFocus = QtCore.Signal()
+    loseFocus = Signal()
 
 
     def __init__ (self, text):
@@ -112,7 +115,7 @@ class TextBlock (QtWidgets.QTextEdit):
 
 class StatusButton (QtWidgets.QPushButton):
 
-    statusHover  = QtCore.Signal(str)
+    statusHover  = Signal(str)
 
 
     def __init__ (self, theme):
@@ -177,7 +180,7 @@ class StatusButton (QtWidgets.QPushButton):
 
 class Status (QtWidgets.QWidget):
 
-    clicked = QtCore.Signal(str)
+    clicked = Signal(str)
 
 
     def __init__ (self, theme):
@@ -694,7 +697,7 @@ class ExportButton (QtWidgets.QPushButton):
 
 class ResizeButton (QtWidgets.QPushButton):
 
-    moveStart = QtCore.Signal(int)
+    moveStart = Signal(int)
 
 
     def __init__ (self, theme):

@@ -2,7 +2,8 @@
 
 
 
-from Qt import QtGui, QtCore
+from toolbox.ensure.QtCore import *
+from toolbox.ensure.QtGui import *
 
 
 

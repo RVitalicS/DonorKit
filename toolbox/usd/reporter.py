@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 
 
-try:
-    from pxr import Usd, Ar
-except ImportError:
-    try:
-        from fnpxr import Usd, Ar
-    except ImportError:
-        raise ImportError(
-            "Error while importing pxr module")
+from toolbox.ensure.Usd import *
+from toolbox.ensure.Ar import *
 
 import os, re
+
+
 
 
 

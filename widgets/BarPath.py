@@ -8,7 +8,10 @@ import toolbox.core.graphics
 import toolbox.core.ui
 
 
-from Qt import QtWidgets, QtCore, QtGui
+from toolbox.ensure.QtWidgets import *
+from toolbox.ensure.QtCore import *
+from toolbox.ensure.QtGui import *
+from toolbox.ensure.Signal import *
 
 from . import Settings
 UIGlobals = Settings.UIGlobals
@@ -159,8 +162,8 @@ class BookmarkButton (QtWidgets.QPushButton):
 
 class Bar (QtWidgets.QWidget):
 
-    bookmarkClicked = QtCore.Signal()
-    pathChanged  = QtCore.Signal(str)
+    bookmarkClicked = Signal()
+    pathChanged  = Signal(str)
 
 
     def __init__ (self, theme):

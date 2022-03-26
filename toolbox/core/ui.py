@@ -2,9 +2,8 @@
 
 
 
-from Qt import QtGui
+from toolbox.ensure.QtGui import *
 from toolbox.core import calculate
-
 
 
 

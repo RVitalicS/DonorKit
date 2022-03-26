@@ -2,7 +2,10 @@
 
 
 
-from Qt import QtWidgets, QtCore, QtGui
+from toolbox.ensure.QtWidgets import *
+from toolbox.ensure.QtCore import *
+from toolbox.ensure.QtGui import *
+from toolbox.ensure.Signal import *
 
 from . import Settings
 UIGlobals = Settings.UIGlobals
@@ -15,12 +18,12 @@ UIGlobals = Settings.UIGlobals
 
 class AssetBrowser (QtWidgets.QListView):
 
-    createFolderQuery = QtCore.Signal(QtCore.QModelIndex)
-    createFolder      = QtCore.Signal(QtCore.QModelIndex, str)
-    link            = QtCore.Signal(QtCore.QModelIndex)
-    favoriteClicked = QtCore.Signal(QtCore.QModelIndex)
-    tokenClicked    = QtCore.Signal(QtCore.QModelIndex)
-    iconClicked  = QtCore.Signal(QtCore.QModelIndex)
+    createFolderQuery = Signal(QtCore.QModelIndex)
+    createFolder      = Signal(QtCore.QModelIndex, str)
+    link            = Signal(QtCore.QModelIndex)
+    favoriteClicked = Signal(QtCore.QModelIndex)
+    tokenClicked    = Signal(QtCore.QModelIndex)
+    iconClicked  = Signal(QtCore.QModelIndex)
 
 
     def __init__(self):

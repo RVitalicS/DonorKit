@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from Qt import QtCore
+from toolbox.ensure.QtCore import *
 
 qt_resource_data = b"\
 \x00\x00\x01\x22\

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 
-
-from Qt import QtWidgets, QtCore, QtGui
+from toolbox.ensure.QtWidgets import *
+from toolbox.ensure.QtCore import *
+from toolbox.ensure.QtGui import *
 
 import toolbox.core.naming
 

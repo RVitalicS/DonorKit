@@ -11,7 +11,9 @@ import toolbox.system.stream
 import toolbox.core.naming
 import toolbox.core.timing
 
-from Qt import QtWidgets, QtCore, QtGui
+from toolbox.ensure.QtWidgets import *
+from toolbox.ensure.QtCore import *
+from toolbox.ensure.QtGui import *
 
 from .items import LibraryDelegate
 from .items import DirectoryDelegate

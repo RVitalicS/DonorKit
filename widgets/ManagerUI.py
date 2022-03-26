@@ -2,7 +2,8 @@
 
 
 
-from Qt import QtWidgets, QtGui
+from toolbox.ensure.QtWidgets import *
+from toolbox.ensure.QtGui import *
 
 import toolbox.core.ui
 

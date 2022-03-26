@@ -8,8 +8,9 @@ from .BasePainterGeneral import (
     clear,
     label )
 
+from toolbox.ensure.QtCore import *
+from toolbox.ensure.QtGui import *
 
-from Qt import QtCore, QtGui
 from . import BaseItem
 
 from .. import Settings
