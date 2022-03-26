@@ -211,8 +211,14 @@ class ExportDialog (
                     lastVersion = version
                     self.UsdExportOptions.mainOptions.versionCombobox.setCurrentIndex(index)
 
+            self.UsdExportOptions.animationOptions.nameDropdown.setEnabled(False)
+            self.UsdExportOptions.mainOptions.variantDropdown.setEnabled(False)
+            self.UsdExportOptions.mainOptions.versionDropdown.setEnabled(False)
             self.UsdExportOptions.mainOptions.versionCombobox.setEnabled(False)
         else:
+            self.UsdExportOptions.animationOptions.nameDropdown.setEnabled(True)
+            self.UsdExportOptions.mainOptions.variantDropdown.setEnabled(True)
+            self.UsdExportOptions.mainOptions.versionDropdown.setEnabled(True)
             self.UsdExportOptions.mainOptions.versionCombobox.setEnabled(True)
 
 
