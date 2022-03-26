@@ -5,7 +5,11 @@
 import os
 import re
 
-from . import tools
+import toolbox.system.ostree
+import toolbox.system.stream
+
+import toolbox.core.naming
+import toolbox.core.timing
 
 from Qt import QtWidgets, QtCore, QtGui
 
@@ -180,7 +184,7 @@ class Bookmark (QtWidgets.QWidget):
 
 
 
-    def applySettings (self):
+    def applyUiSettings (self):
 
         blacklist = []
         with Settings.Manager(update=False) as settings:
@@ -363,7 +367,7 @@ class Folder (QtWidgets.QWidget):
             data.get("data").get("name") )
 
         if os.path.exists(path):
-            tools.openFolder(path)
+            toolbox.system.stream.openFolder(path)
 
 
 
@@ -379,13 +383,19 @@ class Library (QtWidgets.QWidget):
     def getAssetRoots (self):
 
         libraries = dict()
+        
+        if not os.getenv("ASSETLIBS", ""):
+            os.environ["ASSETLIBS"] = os.path.join(
+                os.path.dirname(
+                    os.path.dirname(__file__)),
+                "examples", "library" )
         path = os.getenv("ASSETLIBS", "")
 
         for rootPath in path.split(":"):
             assetPath = os.path.join(rootPath, self.metafile)
 
             if os.path.exists(assetPath):
-                data = tools.dataread(assetPath)
+                data = toolbox.system.stream.dataread(assetPath)
 
                 if data["type"] == "root":
                     name = data["name"]
@@ -550,14 +560,14 @@ class Browser (QtWidgets.QWidget):
                         folderPath, "usdasset") as metadata:
                     data = metadata
 
-                chosenItem = tools.chooseAssetItem(folderPath)
+                chosenItem = toolbox.core.naming.chooseAssetItem(folderPath)
 
-                versionCount = tools.getVersionList(folderPath)
+                versionCount = toolbox.core.naming.getVersionList(folderPath)
                 versionCount = len(versionCount)
 
                 dataType = data["type"]
                 dataTime = data["items"][chosenItem]["published"]
-                publishedTime = tools.getTimeDifference(dataTime)
+                publishedTime = toolbox.core.timing.getTimeDifference(dataTime)
 
                 if dataType == "usdasset":
 
@@ -572,12 +582,12 @@ class Browser (QtWidgets.QWidget):
                     library.append(
                         dict(type="asset",  data=dict(
                             name=name,
-                            previews=tools.getUsdPreviews(folderPath, chosenItem),
+                            previews=toolbox.core.naming.getUsdPreviews(folderPath, chosenItem),
                             type=dataType,
-                            version=tools.getVersion(chosenItem),
+                            version=toolbox.core.naming.getVersion(chosenItem),
                             count=versionCount,
-                            variant=tools.getVariantName(chosenItem),
-                            animation=tools.getAnimationName(chosenItem),
+                            variant=toolbox.core.naming.getVariantName(chosenItem),
+                            animation=toolbox.core.naming.getAnimationName(chosenItem),
                             published=publishedTime,
                             status=data["status"],
                             favorite=favorite )) )
@@ -589,7 +599,7 @@ class Browser (QtWidgets.QWidget):
                     library.append(
                         dict(type="folder", data=dict(
                             name=name,
-                            items=tools.getItemsCount(folderPath) )) )
+                            items=toolbox.system.ostree.getItemsCount(folderPath) )) )
 
 
         return library

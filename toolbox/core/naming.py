@@ -2,117 +2,8 @@
 
 
 
-import os, re
-import json
-import time, datetime
-import subprocess
-
-from Qt import QtGui
-
-from . import Metadata
-
-
-
-RESERVED_TAGS = [
-    "Render",
-    "Proxy",
-    "RenderMan" ]
-
-
-
-
-
-
-
-def dataread (path):
-
-    with open(path, "r") as file:
-        return json.load(file)
-
-
-def datawrite (path, data):
-
-    with open(path, "w") as file:
-        json.dump(data, file, indent=4, ensure_ascii=False)
-
-
-def validJSON (path):
-
-    try: 
-        data = dataread(path)
-        if not data:
-            return False
-    except:
-        return False
-    
-    return True
-
-
-
-
-
-
-def openFolder (path):
-
-    subprocess.Popen(["nautilus", path],
-        stdin  = None ,
-        stdout = None ,
-        stderr = None )
-
-
-
-
-
-
-def getStringWidth (string, font):
-
-    """
-        Calculates  string width in pixels
-        for the specific font
-
-        :type  string: str
-        :param string: name to find out width
-
-        :type    font: QFont
-        :param   font: font for calculation
-
-        :rtype : int
-        :return: width in pixels
-    """
-
-
-    # scale font for accuracy
-    scale = 1000
-    font = QtGui.QFont(font)
-    font.setPointSize(
-        font.pointSize() * scale )
-
-    metrics = QtGui.QFontMetrics(font)
-
-    # get width and scale back
-    width = metrics.horizontalAdvance(string)
-    width = int(round(width/scale))
-
-    return width
-
-
-
-
-
-
-def recolor (image, color, opacity=1.0):
-
-    for x in range(image.width()):
-        for y in range(image.height()):
-
-            alpha = int(
-                image.pixelColor(x,y).alpha() * opacity )
-
-            color = QtGui.QColor(color)
-            color.setAlpha(alpha)
-            image.setPixelColor(x, y, color)
-
-    return image
+import os
+import re
 
 
 
@@ -126,99 +17,6 @@ def nameFilter (text):
         "", text )
 
     return text
-
-
-
-
-
-
-def getTimeCode ():
-
-    return time.strftime(
-        "%d.%m.%Y %H.%M" ,
-        time.localtime() )
-
-
-
-
-
-
-def getTimeDifference (timeString):
-
-    timeSplit = timeString.split(" ")
-
-    datePart = timeSplit[0]
-    timePart = timeSplit[1]
-
-    dateList = datePart.split(".")
-    timeList = timePart.split(".")
-
-    timeSplit = dateList + timeList
-    timeSplit = [int(i) for i in timeSplit]
-
-
-    dayPublished   = timeSplit[0]
-    monthPublished = timeSplit[1]
-    yearPublished  = timeSplit[2]
-    hourPublished   = timeSplit[3]
-    minutePublished = timeSplit[4]
-
-    dayCurrent    = time.strftime("%d", time.localtime() )
-    monthCurrent  = time.strftime("%m", time.localtime() )
-    yearCurrent   = time.strftime("%Y", time.localtime() )
-    hourCurrent   = time.strftime("%H", time.localtime() )
-    minuteCurrent = time.strftime("%M", time.localtime() )
-
-
-    timeCurrent = datetime.datetime(
-        int(yearCurrent), 
-        int(monthCurrent),
-        int(dayCurrent),
-        hour=int(hourCurrent),
-        minute=int(minuteCurrent))
-
-    timePublished = datetime.datetime(
-        yearPublished,
-        monthPublished,
-        dayPublished,
-        hour=hourPublished,
-        minute=minutePublished)
-
-
-    timeDelta = timeCurrent-timePublished
-
-    days    = timeDelta.days
-    seconds = timeDelta.seconds
-
-    years  = int( days/365 )
-    months = int( days/30 )
-
-    hours   = int( seconds/3600 )
-    minutes = int( seconds/60 )
-
-
-    if years == 1:
-        return "1 year ago"
-    elif years > 1:
-        return "{} years ago".format(years)
-
-    if 12 > months > 0:
-        return "{} mon. ago".format(months)
-
-    if days == 1:
-        return "1 day ago"
-    elif 30 > days > 1:
-        return "{} days ago".format(days)
-
-    if hours == 1:
-        return "1 hour ago"
-    elif 24 > hours > 1:
-        return "{} hours ago".format(hours)
-
-    if 60 > minutes > 0:
-        return "{} min. ago".format(minutes)
-
-    return "a sec. ago"
 
 
 
@@ -282,41 +80,6 @@ def getVersion (name):
             return int(versionString)
 
     return int()
-
-
-
-
-
-
-def getInfo (path):
-
-    info = ""
-    metadataPath = os.path.join(path, Metadata.NAME)
-
-    if os.path.exists(metadataPath):
-        data = dataread(metadataPath)
-        info = data.get("info", "")
-
-    return info
-
-
-
-
-
-
-def getComment (path, filename):
-
-    comment = ""
-
-    metadataPath = os.path.join(path, Metadata.NAME)
-    if os.path.exists(metadataPath):
-        data = dataread(metadataPath)
-
-        items = data.get("items", dict())
-        itemdata = items.get(filename, dict())
-        comment = itemdata.get("comment", "")
-
-    return comment
 
 
 
@@ -542,24 +305,6 @@ def chooseAssetItem (path):
 
 
 
-def getItemsCount (path):
-
-    count = int()
-
-    for item in os.listdir(path):
-
-        itempath = os.path.join(path, item)
-        if not os.path.isdir(itempath):
-            continue
-        count += 1
-
-    return count
-
-
-
-
-
-
 def createAssetName (
         name, version,
         variant=None,
@@ -571,8 +316,6 @@ def createAssetName (
     assetName = [name]
 
     version = "v{:02d}".format(version)
-    if final:
-        version = "Final"
     if variant:
         version = "{}-{}".format(version, variant)
     assetName.append(version)
@@ -582,5 +325,24 @@ def createAssetName (
 
     assetName.append(extension)
 
+    assetName = ".".join(assetName)
 
-    return ".".join(assetName)
+    if final:
+        assetName = makeFinal(assetName)
+
+    return assetName
+
+
+
+
+
+
+
+
+
+def makeFinal (name):
+
+    name = re.sub(r"\.v\d+\.", ".Final.", name)
+    name = re.sub(r"\.v\d+-" , ".Final-", name)
+
+    return name

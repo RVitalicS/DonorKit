@@ -4,7 +4,7 @@
 
 from Qt import QtWidgets, QtCore, QtGui
 
-from .. import tools
+import toolbox.core.naming
 
 from . import BaseItem
 from . import FolderPainter
@@ -35,7 +35,7 @@ class NameLine (QtWidgets.QLineEdit):
 
     def setName (self, text):
 
-        text = tools.nameFilter(text)
+        text = toolbox.core.naming.nameFilter(text)
         self.setText(text)
 
 

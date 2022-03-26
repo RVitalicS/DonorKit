@@ -2,7 +2,8 @@
 
 
 
-from . import tools
+import toolbox.core.graphics
+import toolbox.core.ui
 
 from Qt import QtWidgets, QtCore, QtGui
 from .items import PopupDelegate
@@ -50,11 +51,14 @@ class FavoriteButton (QtWidgets.QPushButton):
         painter.fillRect(buttonRect, color)
 
         if self.isChecked():
-            image = tools.recolor(self.image, self.theme.color.browserSocketPressed)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.browserSocketPressed )
         elif self.buttonHover:
-            image = tools.recolor(self.image, self.theme.color.browserSocketHover)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.browserSocketHover )
         else:
-            image = tools.recolor(self.image, self.theme.color.browserSocket)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.browserSocket )
 
         painter.drawImage(position, image)
         painter.end()
@@ -107,11 +111,14 @@ class BookmarkButton (QtWidgets.QPushButton):
         painter.fillRect(buttonRect, color)
 
         if self.buttonPressed:
-            image = tools.recolor(self.image, self.theme.color.browserSocketPressed)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.browserSocketPressed )
         elif self.buttonHover:
-            image = tools.recolor(self.image, self.theme.color.browserSocketHover)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.browserSocketHover )
         else:
-            image = tools.recolor(self.image, self.theme.color.browserSocket)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.browserSocket )
 
         painter.drawImage(position, image)
         painter.end()
@@ -187,11 +194,14 @@ class ThemeButton (QtWidgets.QPushButton):
             image = self.sun
 
         if self.buttonPressed:
-            image = tools.recolor(image, self.theme.color.browserSocketPressed)
+            image = toolbox.core.graphics.recolor(
+                image, self.theme.color.browserSocketPressed )
         elif self.buttonHover:
-            image = tools.recolor(image, self.theme.color.browserSocketHover)
+            image = toolbox.core.graphics.recolor(
+                image, self.theme.color.browserSocketHover )
         else:
-            image = tools.recolor(image, self.theme.color.browserSocket)
+            image = toolbox.core.graphics.recolor(
+                image, self.theme.color.browserSocket )
 
         painter.drawImage(position, image)
         painter.end()
@@ -233,7 +243,9 @@ class FavoriteGroup (QtWidgets.QWidget):
         self.mainLayout.setSpacing(SPACE)
 
         self.label = QtWidgets.QLabel("FAVORITES")
-        self.label.setFont(UIGlobals.Bar.fontPreview)
+        toolbox.core.ui.setFont(
+            self.label,
+            UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
             QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label.setProperty("textcolor", "on")
@@ -259,7 +271,9 @@ class BookmarkGroup (QtWidgets.QWidget):
         self.mainLayout.setSpacing(SPACE)
 
         self.label = QtWidgets.QLabel("BOOKMARKS")
-        self.label.setFont(UIGlobals.Bar.fontPreview)
+        toolbox.core.ui.setFont(
+            self.label,
+            UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
             QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label.setProperty("textcolor", "on")
@@ -289,7 +303,9 @@ class ThemeGroup (QtWidgets.QWidget):
         self.mainLayout.setSpacing(SPACE)
 
         self.label = QtWidgets.QLabel("THEME")
-        self.label.setFont(UIGlobals.Bar.fontPreview)
+        toolbox.core.ui.setFont(
+            self.label,
+            UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
             QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label.setProperty("textcolor", "on")
@@ -340,8 +356,10 @@ class PreviewGroup (QtWidgets.QWidget):
         self.mainLayout.setContentsMargins(0,0,0,0)
         self.mainLayout.setSpacing(SPACE)
 
-        self.label = QtWidgets.QLabel("PREVIEW")
-        self.label.setFont(UIGlobals.Bar.fontPreview)
+        self.label  = QtWidgets.QLabel("PREVIEW")
+        toolbox.core.ui.setFont(
+            self.label,
+            UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
             QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label.setProperty("textcolor", "on")
@@ -405,7 +423,8 @@ class Bar (QtWidgets.QWidget):
         palette = QtGui.QPalette()
         palette.setColor(
             QtGui.QPalette.Background,
-            theme.color.browserBackground )
+            QtGui.QColor(
+                theme.color.browserBackground) )
         self.setPalette(palette)
 
 
@@ -448,10 +467,10 @@ class Bar (QtWidgets.QWidget):
         self.groupsLayout.addWidget(self.bookmark)
 
 
-        spacer = QtWidgets.QSpacerItem(0, 0,
+        self.spacerCenter = QtWidgets.QSpacerItem(0, 0,
             QtWidgets.QSizePolicy.Expanding,
             QtWidgets.QSizePolicy.Minimum)
-        self.groupsLayout.addItem(spacer)
+        self.groupsLayout.addItem(self.spacerCenter)
 
 
         self.themeHideForce = False
@@ -465,11 +484,18 @@ class Bar (QtWidgets.QWidget):
         self.groupsLayout.addWidget(self.preview)
 
 
+        self.spacerRight = QtWidgets.QSpacerItem(0, 0,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum)
+        self.groupsLayout.addItem(self.spacerRight)
+
+
         self.groupsLayout.setStretch(0, 0)
         self.groupsLayout.setStretch(1, 0)
         self.groupsLayout.setStretch(2, 1)
         self.groupsLayout.setStretch(3, 0)
         self.groupsLayout.setStretch(4, 0)
+        self.groupsLayout.setStretch(5, 0)
 
         self.setLayout(self.mainLayout)
 

@@ -2,7 +2,7 @@
 
 
 import os
-from . import tools
+from toolbox.system import stream
 
 from Qt import QtGui
 
@@ -61,7 +61,7 @@ class Theme (object):
         path = os.path.join(
             os.path.dirname(__file__),
             "databank", filename)
-        self.values = tools.dataread(path)
+        self.values = stream.dataread(path)
 
         class Group: pass
         self.color = Group()

@@ -7,40 +7,23 @@ import os
 import importlib
 
 
-
-# define libraries in env. variable
-if not os.getenv("ASSETLIBS", ""):
-    os.environ["ASSETLIBS"] = os.path.join(
-        os.path.dirname(
-            os.path.dirname(__file__)),
-        "examples", "library" )
-
-# use this font in UI
-if not os.getenv("FONT_FAMILY", ""):
-    os.environ["FONT_FAMILY"] = "Cantarell"
-
-
-
-
 from pxr import Usd
 
-from Qt import QtGui, QtCore
-
-from widgets import ExportDialog
-from widgets import Metadata
-from widgets import Settings
-from widgets import tools
+from widgets import (
+    ExportDialog,
+    Metadata,
+    Settings )
 
 
-from . import ostree
-from . import scene
+import toolbox.core.timing
+import toolbox.system.ostree
+import toolbox.maya.scene
 
-importlib.reload(scene)
+importlib.reload(toolbox.maya.scene)
 
-
-from . import material
-from . import editor
-from . import asset
+import toolbox.usd.material
+import toolbox.usd.editor
+import toolbox.usd.asset
 
 
 import maya.OpenMayaUI as OpenMayaUI
@@ -202,7 +185,7 @@ def PlayBlast (
     baseName = re.sub(r"\.usd[ac]*$", "", name)
     previewRoot = os.path.join(
         path,
-        ostree.SUBDIR_PREVIEWS )
+        toolbox.system.ostree.SUBDIR_PREVIEWS )
 
     for assetName in os.listdir(previewRoot):
         if baseName in assetName:
@@ -315,7 +298,7 @@ def Export ():
 
 
 
-            mayaScene = scene.Manager()
+            mayaScene = toolbox.maya.scene.Manager()
             sceneData = mayaScene.get(getshaders=options.surfacing)
 
             mayatree = sceneData["tree"]
@@ -337,7 +320,7 @@ def Export ():
 
             SourceModelPath = os.path.join(
                 options.assetPath,
-                ostree.SUBDIR_MODELLING,
+                toolbox.system.ostree.SUBDIR_MODELLING,
                 "source.geo.usd" )
 
             ModelFileName = "{}.{}.usdc".format(
@@ -345,7 +328,7 @@ def Export ():
 
             ModelPath = os.path.join(
                 options.assetPath,
-                ostree.SUBDIR_MODELLING,
+                toolbox.system.ostree.SUBDIR_MODELLING,
                 ModelFileName )
 
             AnimationFileName = "{}.{}.usdc".format(
@@ -353,7 +336,7 @@ def Export ():
 
             AnimationPath = os.path.join(
                 options.assetPath,
-                ostree.SUBDIR_ANIMATION,
+                toolbox.system.ostree.SUBDIR_ANIMATION,
                 AnimationFileName )
 
 
@@ -381,7 +364,8 @@ def Export ():
 
 
             if export:
-                ostree.build(options.assetPath, modelling=True)
+                toolbox.system.ostree.buildUsdRoot(
+                    options.assetPath, modelling=True)
                 UsdExport(
                     SourceModelPath,
                     animation= 1 if options.animation else 0,
@@ -398,12 +382,12 @@ def Export ():
 
                 OldStage = Usd.Stage.Open(SourceModelPath)
                 NewStage = Usd.Stage.CreateNew(ModelPath)
-                editor.copyStage(
+                toolbox.usd.editor.copyStage(
                     OldStage,
                     NewStage,
                     root=root, units=units)
 
-                editor.addMayaAttributes(NewStage, mayatree)
+                toolbox.usd.editor.addMayaAttributes(NewStage, mayatree)
                 NewStage.GetRootLayer().Export(
                     ModelPath, args=dict(format="usdc") )
 
@@ -412,7 +396,8 @@ def Export ():
 
 
             if extractAnimatioin:
-                ostree.build(options.assetPath, animation=True)
+                toolbox.system.ostree.buildUsdRoot(
+                    options.assetPath, animation=True)
 
                 if os.path.exists(AnimationPath):
                     message = "Animation Overwritten: "
@@ -421,7 +406,7 @@ def Export ():
 
                 OldStage = Usd.Stage.Open(SourceModelPath)
                 NewStage = Usd.Stage.CreateNew(AnimationPath)
-                editor.copyAnimation(
+                toolbox.usd.editor.copyAnimation(
                     OldStage,
                     NewStage,
                     root=root, reference=ModelPath, units=units )
@@ -438,7 +423,8 @@ def Export ():
 
 
             if options.surfacing and shaders:
-                ostree.build(options.assetPath, surfacing=True)
+                toolbox.system.ostree.buildUsdRoot(
+                    options.assetPath, surfacing=True)
 
                 for name, data in shaders.items():
                     for key in ["render", "preview"]:
@@ -457,7 +443,7 @@ def Export ():
 
                         ShaderPath = os.path.join(
                             options.assetPath,
-                            ostree.SUBDIR_SURFACING,
+                            toolbox.system.ostree.SUBDIR_SURFACING,
                             ShaderFileName )
 
                         if os.path.exists(ShaderPath):
@@ -467,7 +453,7 @@ def Export ():
 
                         if ShaderData:
                             ShaderData["name"] = name
-                            material.make(
+                            toolbox.usd.material.make(
                                 ShaderPath,
                                 ShaderData,
                                 prman=prman)
@@ -488,7 +474,7 @@ def Export ():
                 else:
                     message = "Asset Saved: "
 
-                asset.make (
+                toolbox.usd.asset.make (
                     ReferencePath,
                     AssetPath,
                     mayatree )
@@ -496,13 +482,9 @@ def Export ():
 
                 # Create/Update Symbolic Link
                 if options.link:
-
-                    if os.path.exists(options.assetFinal):
-                        os.remove(options.assetFinal)
-
-                    os.symlink(
-                        options.assetName,
-                        options.assetFinal )
+                    toolbox.system.ostree.linkUpdate(
+                        options.assetPath,
+                        options.assetName )
 
 
                 # Create/Update .metadata.json
@@ -512,13 +494,14 @@ def Export ():
                     data["info"] = options.info
                     data["status"] = options.status
                     data["items"][options.assetName] = dict(
-                        published = tools.getTimeCode(),
+                        published = toolbox.core.timing.getTimeCode(),
                         comment   = options.comment )
 
 
                 # Create Preview Image
                 if os.path.exists(AssetPath):
-                    ostree.build(options.assetPath, previews=True)
+                    toolbox.system.ostree.buildUsdRoot(
+                        options.assetPath, previews=True)
 
                     minTime = None
                     maxTime = None

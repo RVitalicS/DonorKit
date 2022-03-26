@@ -7,7 +7,11 @@ import re
 
 from . import resources
 from . import theme
-from . import tools
+
+import toolbox.core.metadata
+import toolbox.core.naming
+
+from toolbox.system import stream
 
 
 from Qt import QtWidgets, QtCore, QtGui
@@ -65,7 +69,7 @@ class ExportDialog (
         self.assetsNames = []
         self.exported    = False
 
-        self.applySettings()
+        self.applyUiSettings()
         self.setLibrary()
 
         self.setWindowTitle("Asset Export")
@@ -90,6 +94,8 @@ class ExportDialog (
         self.BarBottom.preview.slider.valueChanged.connect(self.sliderAction)
         self.BarBottom.favorite.button.released.connect(self.favoriteFilter)
         self.BarBottom.bookmarkChosen.connect(self.jumpBookmark)
+
+        self.ResizeButton.moveStart.connect(self.resizeMath)
 
         self.UsdExportOptions.nameEdit.textChanged.connect(self.setName)
 
@@ -226,10 +232,10 @@ class ExportDialog (
 
 
         assetpath = self.getAssetPath()
-        assetname = self.getAssetName(final=False)
+        assetname = self.getAssetName()
 
         self.UsdExportOptions.commentEdit.hide()
-        comment = tools.getComment(assetpath, assetname)
+        comment = toolbox.core.metadata.getComment(assetpath, assetname)
         if not comment:
             self.UsdExportOptions.commentEdit.setDefault()
         else:
@@ -240,18 +246,17 @@ class ExportDialog (
         path = os.path.join(assetpath, assetname)
         if os.path.exists(path):
 
-            animationPart = tools.getAnimationName(assetname)
+            animationPart = toolbox.core.naming.getAnimationName(assetname)
             animationName = self.UsdExportOptions.animationOptions.animationNameCombobox.getName()
             if animationPart == animationName != "":
                 highlightAnimation = True
 
-            variantPart = tools.getVariantName(assetname)
+            variantPart = toolbox.core.naming.getVariantName(assetname)
             variantName = self.UsdExportOptions.mainOptions.variantCombobox.getName()
             if variantPart == variantName != "":
                 highlightVariant = True
 
-            finalname = re.sub(r"\.v\d+\.", ".Final.", assetname)
-            finalname = re.sub(r"\.v\d+-" , ".Final-", finalname)
+            finalname = toolbox.core.naming.makeFinal(assetname)
             finalpath = os.path.join(assetpath, finalname)
             if os.path.exists(finalpath):
                 realpath = os.path.realpath(finalpath)
@@ -299,7 +304,7 @@ class ExportDialog (
 
             self.UsdExportOptions.animationOptions.animationNameCombobox.stealth = True
             self.UsdExportOptions.animationOptions.animationNameCombobox.clear()
-            animationList = tools.getAnimationList(path, version=version)
+            animationList = toolbox.core.naming.getAnimationList(path, version=version)
             for animation in animationList:
                 self.UsdExportOptions.animationOptions.animationNameCombobox.addItem(
                      animation )
@@ -309,7 +314,7 @@ class ExportDialog (
 
             self.UsdExportOptions.mainOptions.variantCombobox.stealth = True
             self.UsdExportOptions.mainOptions.variantCombobox.clear()
-            variantList = tools.getVariantList(path, version=version)
+            variantList = toolbox.core.naming.getVariantList(path, version=version)
             for variant in variantList:
                 self.UsdExportOptions.mainOptions.variantCombobox.addItem(
                      variant )
@@ -317,7 +322,7 @@ class ExportDialog (
             self.UsdExportOptions.mainOptions.variantCombobox.stealth = False
 
 
-            versionList = tools.getVersionList(path)
+            versionList = toolbox.core.naming.getVersionList(path)
             if version not in versionList:
                 self.UsdExportOptions.mainOptions.versionCombobox.setProperty("textcolor", "on")
             else:
@@ -337,7 +342,7 @@ class ExportDialog (
 
 
 
-    def getAssetName (self, final=True, extension="usda"):
+    def getAssetName (self, final=False, extension="usda"):
 
         name = self.UsdExportOptions.nameEdit.text()
 
@@ -350,7 +355,7 @@ class ExportDialog (
         if final:
             final = self.UsdExportOptions.mainOptions.linkButton.isChecked()
 
-        return tools.createAssetName(
+        return toolbox.core.naming.createAssetName(
             name, version,
             variant=variant,
             animation=animation,
@@ -374,7 +379,7 @@ class ExportDialog (
             settings["surfacing"] = self.UsdExportOptions.surfacingSwitch.isChecked()
             settings["animation"] = self.UsdExportOptions.animationSwitch.isChecked()
 
-        self.applySettings()
+        self.applyUiSettings()
 
         if animationSwitchChanged:
             version = self.UsdExportOptions.mainOptions.versionCombobox.currentText()
@@ -429,7 +434,7 @@ class ExportDialog (
         path = os.path.join(directory, name)
 
         metadataPath = os.path.join(path, self.metafile)
-        data = tools.dataread(metadataPath)
+        data = stream.dataread(metadataPath)
         self.UsdExportOptions.status.set(
             data.get("status", "") )
 
@@ -526,7 +531,8 @@ class ExportDialog (
         # set default options
         self.UsdExportOptions.mainOptions.versionCombobox.clear()
 
-        if name == self.defaultName:
+        if name in [ self.UsdExportOptions.nameEdit.errorName,
+                     self.UsdExportOptions.nameEdit.defaultName ]:
             self.UsdExportOptions.mainOptions.versionCombobox.addItem("01")
             self.UsdExportOptions.infoEdit.setDefault()
 
@@ -538,13 +544,13 @@ class ExportDialog (
             name = self.UsdExportOptions.nameEdit.text()
             path = os.path.join(directory, name)
 
-            info = tools.getInfo(path)
+            info = toolbox.core.metadata.getInfo(path)
             if info:
                 self.UsdExportOptions.infoEdit.set(info)
             else:
                 self.UsdExportOptions.infoEdit.setDefault()
 
-            versionList = tools.getVersionList(path)
+            versionList = toolbox.core.naming.getVersionList(path)
 
             newItem = 0
             for version in versionList:
@@ -584,18 +590,7 @@ class ExportDialog (
             - margin*2 )
 
         if maximunWidth >= optionWidth >= minimunWidth and space > 0:
-            self.UsdExportOptions.contentsWidthBuffer = optionWidth
             self.UsdExportOptions.setOptionWidth(optionWidth)
-
-
-
-    def resizeBake (self):
-        
-        value = self.UsdExportOptions.contentsWidthBuffer
-        self.UsdExportOptions.contentsWidth = value
-
-        self.AssetPath.uiVisibility()
-        self.BarBottom.uiVisibility()
 
 
 
@@ -613,8 +608,8 @@ class ExportDialog (
 
 
 
-    def applySettings (self):
-        super(ExportDialog, self).applySettings()
+    def applyUiSettings (self):
+        super(ExportDialog, self).applyUiSettings()
 
         with Settings.Export(update=False) as settings:
 
@@ -735,9 +730,8 @@ class ExportDialog (
             options.minTime = self.UsdExportOptions.animationOptions.range.start.value()
             options.maxTime = self.UsdExportOptions.animationOptions.range.end.value()
 
-            options.assetPath    = self.getAssetPath()
-            options.assetName    = self.getAssetName(final=False)
-            options.assetFinal   = self.getAssetName(final=True )
+            options.assetPath = self.getAssetPath()
+            options.assetName = self.getAssetName()
 
             options.version = int(self.UsdExportOptions.mainOptions.versionCombobox.getName())
             options.link = self.UsdExportOptions.mainOptions.linkButton.isChecked()

@@ -37,6 +37,13 @@ class Delegate (BaseItem.Delegate):
 
 
 
+    def paint (self, painter, option, index):
+        
+        self.Item.controlMode = self.parent().controlMode
+        super(Delegate, self).paint(painter, option, index)
+
+
+
     def favoriteAction (self, index):
 
         self.parent().favoriteClickedSignal(index)

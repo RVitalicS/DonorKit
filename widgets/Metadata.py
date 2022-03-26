@@ -4,7 +4,9 @@
 
 import os
 import re
-from . import tools
+
+import toolbox.system.stream
+import toolbox.core.timing
 
 
 
@@ -48,19 +50,19 @@ class Metadata (object):
         if not os.path.exists(self.path):
             self.default_settings(self.path)
 
-        elif not tools.validJSON(self.path):
+        elif not toolbox.system.stream.validJSON(self.path):
             self.default_settings(self.path)
 
 
 
     def default_settings (self, path):
-        tools.datawrite(path, self.default_data)
+        toolbox.system.stream.datawrite(path, self.default_data)
 
 
 
     def load (self):
 
-        data = tools.dataread(self.path)
+        data = toolbox.system.stream.dataread(self.path)
         data = self.restructure(data)
 
         return data
@@ -68,7 +70,7 @@ class Metadata (object):
 
 
     def save (self, data):
-        tools.datawrite(self.path, data)
+        toolbox.system.stream.datawrite(self.path, data)
 
 
 
@@ -147,7 +149,7 @@ class Metadata (object):
                         comment = data.get(
                             "comments", dict()).get(name, "")
                         timecode = data.get(
-                            "published", tools.getTimeCode())
+                            "published", toolbox.core.timing.getTimeCode())
                         item["comment"] = comment
                         item["published"] = timecode
                         items[name] = item

@@ -19,6 +19,7 @@ class AssetBrowser (QtWidgets.QListView):
     createFolder      = QtCore.Signal(QtCore.QModelIndex, str)
     link            = QtCore.Signal(QtCore.QModelIndex)
     favoriteClicked = QtCore.Signal(QtCore.QModelIndex)
+    tokenClicked    = QtCore.Signal(QtCore.QModelIndex)
     iconClicked  = QtCore.Signal(QtCore.QModelIndex)
 
 
@@ -396,6 +397,12 @@ class AssetBrowser (QtWidgets.QListView):
     def favoriteClickedSignal (self, index):
 
         self.favoriteClicked.emit(index)
+
+
+
+    def tokenClickedSignal (self, index):
+
+        self.tokenClicked.emit(index)
 
 
 

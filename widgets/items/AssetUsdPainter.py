@@ -2,22 +2,24 @@
 
 
 
-from .. import tools
-from .paintblock import (
+from .BasePainterGeneral import (
     clear,
-    label,
+    label )
+
+from .BasePainterUsd import (
     background,
-    usdInitialize,
-    usdColorAccent,
-    usdPreview,
-    usdAnimation,
-    usdLink,
-    usdIcon,
-    usdStatus,
-    usdName,
+    initialize,
+    accent,
+    preview,
+    animation,
+    link,
+    icon,
+    division,
+    published,
+    status,
+    name,
     favorite,
-    checked
-)
+    checked )
 
 
 from Qt import QtCore, QtGui
@@ -54,15 +56,17 @@ class Base (object):
 
     @checked
     @favorite
-    @usdName(hasCount=True)
-    @usdStatus
-    @usdIcon
-    @usdLink
-    @usdAnimation
-    @usdPreview
+    @name(hasCount=True)
+    @status
+    @published
+    @division
+    @icon
+    @link
+    @animation
+    @preview
     @background
-    @usdInitialize
-    @usdColorAccent(status=True)
+    @initialize
+    @accent(status=True)
     def paintAssetUsd (self):
         pass
 

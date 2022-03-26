@@ -2,11 +2,11 @@
 
 
 
-from .. import tools
-from .paintblock import (
+import toolbox.core.graphics
+
+from .BasePainterGeneral import (
     clear,
-    label
-)
+    label )
 
 from Qt import QtCore, QtGui
 from . import BaseItem
@@ -49,12 +49,12 @@ class Item (BaseItem.Painter):
         if self.hover:
             colorBackground = QtGui.QColor(self.theme.color.libraryHover)
             colorText = self.theme.color.kicker
-            libraryImage = tools.recolor(libraryImage, self.theme.color.violet)
+            libraryImage = toolbox.core.graphics.recolor(libraryImage, self.theme.color.violet)
 
         else:
             colorBackground = QtGui.QColor(self.theme.color.libraryBackground)
             colorText = self.theme.color.text
-            libraryImage = tools.recolor(libraryImage, self.theme.color.text)
+            libraryImage = toolbox.core.graphics.recolor(libraryImage, self.theme.color.text)
 
 
         # BACKGROUND

@@ -3,7 +3,11 @@
 
 
 import math
-from . import tools
+
+import toolbox.core.calculate
+import toolbox.core.graphics
+import toolbox.core.naming
+import toolbox.core.ui
 
 
 from Qt import QtWidgets, QtCore, QtGui
@@ -58,7 +62,7 @@ class NameEdit (QtWidgets.QLineEdit):
             pass
 
         elif text != self.defaultName:
-            text = tools.nameFilter(text)
+            text = toolbox.core.naming.nameFilter(text)
             self.setText(text)
 
         return text
@@ -98,7 +102,8 @@ class Line (QtWidgets.QWidget):
         palette = QtGui.QPalette()
         palette.setColor(
             QtGui.QPalette.Background,
-            theme.color.optionLine )
+            QtGui.QColor(
+                theme.color.optionLine) )
         self.setPalette(palette)
 
 
@@ -122,7 +127,9 @@ class FlatComboBox (QtWidgets.QComboBox):
         self.underPointer = False
 
         self.fontValue = UIGlobals.Options.fontLabel
-        self.setFont(self.fontValue)
+        toolbox.core.ui.setFont(
+            self, self.fontValue)
+
 
         self.setEditable(True)
         self.setFrame(False)
@@ -197,7 +204,7 @@ class FlatComboBox (QtWidgets.QComboBox):
             widthButton = 20
 
             if self.lineEdit().text():
-                widthLalbel = tools.getStringWidth(
+                widthLalbel = toolbox.core.calculate.stringWidth(
                     self.lineEdit().text().replace(" ", "_"),
                     self.fontValue )
 
@@ -211,7 +218,7 @@ class FlatComboBox (QtWidgets.QComboBox):
     def textFilter (self, text):
 
         if text != self.errorName:
-            text = tools.nameFilter(text)
+            text = toolbox.core.naming.nameFilter(text)
             self.setEditText(text)
 
 
@@ -254,7 +261,8 @@ class SpinBoxLabel (QtWidgets.QSpinBox):
         self.setProperty("border", "none")
 
         self.fontValue = UIGlobals.Options.fontLabel
-        self.setFont(self.fontValue)
+        toolbox.core.ui.setFont(
+            self, self.fontValue)
 
         self.setMinimum(0)
         self.setMaximum(99999)
@@ -275,7 +283,7 @@ class SpinBoxLabel (QtWidgets.QSpinBox):
 
         value = self.value()
         if value >= 0:
-            width = tools.getStringWidth(
+            width = toolbox.core.calculate.stringWidth(
                 str(value), self.fontValue )
             
             self.setFixedWidth(width+2)
@@ -308,7 +316,9 @@ class RangeOption (QtWidgets.QWidget):
         self.dash.setProperty("background", "transparent")
         self.dash.setProperty("textcolor", "on")
         self.dash.setProperty("border", "none")
-        self.dash.setFont(UIGlobals.Options.fontLabel)
+        toolbox.core.ui.setFont(
+            self.dash,
+            UIGlobals.Options.fontLabel)
         self.dash.setContentsMargins(0,0,0,0)
         self.mainLayout.addWidget(self.dash)
 
@@ -360,9 +370,11 @@ class SwitchButton (QtWidgets.QPushButton):
         painter.fillRect(buttonRect, color)
 
         if self.isChecked():
-            image = tools.recolor(self.check, self.theme.color.green)
+            image = toolbox.core.graphics.recolor(
+                self.check, self.theme.color.green )
         else:
-            image = tools.recolor(self.uncheck, self.theme.color.optionDisable)
+            image = toolbox.core.graphics.recolor(
+                self.uncheck, self.theme.color.optionDisable )
 
         painter.drawImage(position, image)
         painter.end()
@@ -405,9 +417,11 @@ class RefreshButton (QtWidgets.QPushButton):
         painter.fillRect(buttonRect, color)
 
         if self.buttonPressed:
-            image = tools.recolor(self.image, self.theme.color.white)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.white )
         else:
-            image = tools.recolor(self.image, self.theme.color.optionButton)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.optionButton )
 
         painter.drawImage(position, image)
         painter.end()
@@ -469,9 +483,11 @@ class DropdownButton (QtWidgets.QPushButton):
         painter.fillRect(buttonRect, color)
 
         if self.buttonPressed:
-            image = tools.recolor(self.image, self.theme.color.white)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.white )
         else:
-            image = tools.recolor(self.image, self.theme.color.optionButton)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.optionButton )
 
         painter.drawImage(position, image)
         painter.end()
@@ -538,11 +554,14 @@ class LinkButton (QtWidgets.QPushButton):
 
         if self.isChecked():
             if self.property("overwrite") == "true":
-                image = tools.recolor(self.image, self.theme.color.violet)
+                image = toolbox.core.graphics.recolor(
+                    self.image, self.theme.color.violet )
             else:
-                image = tools.recolor(self.image, self.theme.color.optionButton)
+                image = toolbox.core.graphics.recolor(
+                    self.image, self.theme.color.optionButton )
         else:
-            image = tools.recolor(self.image, self.theme.color.browserSocket)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.browserSocket )
 
         painter.drawImage(position, image)
         painter.end()
@@ -591,7 +610,9 @@ class AnimationOptions (QtWidgets.QWidget):
         self.nameLabel.setProperty("textcolor", "weak")
         self.nameLabel.setFixedSize(
             QtCore.QSize(UIGlobals.Options.labelWidth, UIGlobals.Options.rawHeight) )
-        self.nameLabel.setFont(UIGlobals.IconDelegate.fontAssetLabel)
+        toolbox.core.ui.setFont(
+            self.nameLabel,
+            UIGlobals.IconDelegate.fontAssetLabel)
         self.nameLabel.setAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter )
         self.animationNameLayout.addWidget(self.nameLabel)
@@ -622,7 +643,9 @@ class AnimationOptions (QtWidgets.QWidget):
         self.rangeLabel.setProperty("textcolor", "weak")
         self.rangeLabel.setFixedSize(
             QtCore.QSize(UIGlobals.Options.labelWidth, UIGlobals.Options.rawHeight) )
-        self.rangeLabel.setFont(UIGlobals.IconDelegate.fontAssetLabel)
+        toolbox.core.ui.setFont(
+            self.rangeLabel,
+            UIGlobals.IconDelegate.fontAssetLabel)
         self.rangeLabel.setAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter )
         self.animationRangeLayout.addWidget(self.rangeLabel)
@@ -669,7 +692,9 @@ class MainOptions (QtWidgets.QWidget):
         self.variantLabel = QtWidgets.QLabel("Variant")
         self.variantLabel.setFixedSize(
             QtCore.QSize(UIGlobals.Options.labelWidth, 24))
-        self.variantLabel.setFont(UIGlobals.Options.fontLabel)
+        toolbox.core.ui.setFont(
+            self.variantLabel,
+            UIGlobals.Options.fontLabel)
         self.variantLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.variantLabel.setObjectName("variantLabel")
         self.variantLabel.setProperty("textcolor", "on")
@@ -696,7 +721,9 @@ class MainOptions (QtWidgets.QWidget):
         self.versionLabel = QtWidgets.QLabel("Version")
         self.versionLabel.setFixedSize(
             QtCore.QSize(UIGlobals.Options.labelWidth, 24))
-        self.versionLabel.setFont(UIGlobals.Options.fontLabel)
+        toolbox.core.ui.setFont(
+            self.versionLabel,
+            UIGlobals.Options.fontLabel)
         self.versionLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.versionLabel.setObjectName("versionLabel")
         self.versionLabel.setProperty("textcolor", "on")
@@ -743,8 +770,15 @@ class UsdExportOptions (QtWidgets.QWidget):
         super(UsdExportOptions, self).__init__()
         self.setObjectName("UsdExportOptions")
 
-        self.contentsWidth = WIDTH
-        self.contentsWidthBuffer = 0
+
+        self.setAutoFillBackground(True)
+
+        palette = QtGui.QPalette()
+        palette.setColor(
+            QtGui.QPalette.Background,
+            theme.color.optionBackground )
+        self.setPalette(palette)
+
 
         self.mainLayout = QtWidgets.QVBoxLayout()
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -765,7 +799,9 @@ class UsdExportOptions (QtWidgets.QWidget):
         self.nameLayout.setObjectName("nameLayout")
 
         self.nameEdit = NameEdit()
-        self.nameEdit.setFont(UIGlobals.Options.fontName)
+        toolbox.core.ui.setFont(
+            self.nameEdit,
+            UIGlobals.Options.fontName)
         self.nameEdit.setObjectName("nameEdit")
         self.nameEdit.setProperty("background", "transparent")
         self.nameEdit.setProperty("border", "none")
@@ -803,11 +839,12 @@ class UsdExportOptions (QtWidgets.QWidget):
         self.modelingLayout.setContentsMargins(0, 0, 0, 4)
         self.modelingLayout.setSpacing(10)
         self.modelingLayout.setObjectName("modelingLayout")
-        self.modelingLabel = QtWidgets.QLabel()
-        self.modelingLabel.setText("Modeling")
+        self.modelingLabel = QtWidgets.QLabel("Modeling")
         self.modelingLabel.setFixedSize(
             QtCore.QSize(UIGlobals.Options.labelWidth, 18))
-        self.modelingLabel.setFont(UIGlobals.Options.fontLabel)
+        toolbox.core.ui.setFont(
+            self.modelingLabel,
+            UIGlobals.Options.fontLabel)
         self.modelingLabel.setObjectName("modelingLabel")
         self.modelingLabel.setProperty("textcolor", "on")
         self.modelingLayout.addWidget(self.modelingLabel)
@@ -817,7 +854,9 @@ class UsdExportOptions (QtWidgets.QWidget):
 
         self.modelingOverwrite = QtWidgets.QPushButton("overwrite")
         self.modelingOverwrite.setFixedSize(QtCore.QSize(50, 16))
-        self.modelingOverwrite.setFont(UIGlobals.Options.fontOverwrite)
+        toolbox.core.ui.setFont(
+            self.modelingOverwrite,
+            UIGlobals.Options.fontOverwrite)
         self.modelingOverwrite.setCheckable(True)
         self.modelingOverwrite.setObjectName("modelingOverwrite")
         self.modelingLayout.addWidget(self.modelingOverwrite)
@@ -832,11 +871,12 @@ class UsdExportOptions (QtWidgets.QWidget):
         self.surfacingLayout.setContentsMargins(0, 0, 0, 4)
         self.surfacingLayout.setSpacing(10)
         self.surfacingLayout.setObjectName("surfacingLayout")
-        self.surfacingLabel = QtWidgets.QLabel()
-        self.surfacingLabel.setText("Surfacing")
+        self.surfacingLabel = QtWidgets.QLabel("Surfacing")
         self.surfacingLabel.setFixedSize(
             QtCore.QSize(UIGlobals.Options.labelWidth, 18))
-        self.surfacingLabel.setFont(UIGlobals.Options.fontLabel)
+        toolbox.core.ui.setFont(
+            self.surfacingLabel,
+            UIGlobals.Options.fontLabel)
         self.surfacingLabel.setObjectName("surfacingLabel")
         self.surfacingLabel.setProperty("textcolor", "on")
         self.surfacingLayout.addWidget(self.surfacingLabel)
@@ -846,7 +886,9 @@ class UsdExportOptions (QtWidgets.QWidget):
 
         self.surfacingOverwrite = QtWidgets.QPushButton("overwrite")
         self.surfacingOverwrite.setFixedSize(QtCore.QSize(50, 16))
-        self.surfacingOverwrite.setFont(UIGlobals.Options.fontOverwrite)
+        toolbox.core.ui.setFont(
+            self.surfacingOverwrite,
+            UIGlobals.Options.fontOverwrite)
         self.surfacingOverwrite.setCheckable(True)
         self.surfacingOverwrite.setFlat(True)
         self.surfacingOverwrite.setObjectName("surfacingOverwrite")
@@ -863,11 +905,12 @@ class UsdExportOptions (QtWidgets.QWidget):
         self.animationLayout.setContentsMargins(0, 0, 0, 4)
         self.animationLayout.setSpacing(10)
         self.animationLayout.setObjectName("animationLayout")
-        self.animationLabel = QtWidgets.QLabel()
-        self.animationLabel.setText("Animation")
+        self.animationLabel = QtWidgets.QLabel("Animation")
         self.animationLabel.setFixedSize(
             QtCore.QSize(UIGlobals.Options.labelWidth, 18))
-        self.animationLabel.setFont(UIGlobals.Options.fontLabel)
+        toolbox.core.ui.setFont(
+            self.animationLabel,
+            UIGlobals.Options.fontLabel)
         self.animationLabel.setObjectName("animationLabel")
         self.animationLabel.setProperty("textcolor", "on")
         self.animationLayout.addWidget(self.animationLabel)
@@ -877,7 +920,9 @@ class UsdExportOptions (QtWidgets.QWidget):
 
         self.animationOverwrite = QtWidgets.QPushButton("overwrite")
         self.animationOverwrite.setFixedSize(QtCore.QSize(50, 16))
-        self.animationOverwrite.setFont(UIGlobals.Options.fontOverwrite)
+        toolbox.core.ui.setFont(
+            self.animationOverwrite,
+            UIGlobals.Options.fontOverwrite)
         self.animationOverwrite.setCheckable(True)
         self.animationOverwrite.setFlat(True)
         self.animationOverwrite.setObjectName("animationOverwrite")
@@ -910,7 +955,9 @@ class UsdExportOptions (QtWidgets.QWidget):
         self.labelComment = QtWidgets.QLabel("COMMENT")
         self.labelComment.setObjectName("labelComment")
         self.labelComment.setProperty("textcolor", "weak")
-        self.labelComment.setFont(UIGlobals.IconDelegate.fontAssetLabel)
+        toolbox.core.ui.setFont(
+            self.labelComment,
+            UIGlobals.IconDelegate.fontAssetLabel)
         self.commentLabelLayout.addWidget(self.labelComment)
 
         commentSpacer = QtWidgets.QSpacerItem(
@@ -956,7 +1003,9 @@ class UsdExportOptions (QtWidgets.QWidget):
 
         self.exportButton = BaseOption.ExportButton(theme)
         self.exportButton.setText("Export")
-        self.exportButton.setFont(UIGlobals.Options.fontLabel)
+        toolbox.core.ui.setFont(
+            self.exportButton,
+            UIGlobals.Options.fontLabel)
         self.exportButton.setFlat(True)
         self.exportButton.setProperty("state", "disabled")
         self.exportLayout.addWidget(self.exportButton)
@@ -1010,85 +1059,14 @@ class UsdExportOptions (QtWidgets.QWidget):
 
 
 
-
-class ResizeButton (QtWidgets.QPushButton):
-
-    moveStart = QtCore.Signal(int)
-    moveEnd   = QtCore.Signal()
-
-
-    def __init__ (self, theme):
-        super(ResizeButton, self).__init__()
-
-        self.theme = theme
-        self.buttonPressed = False
-
-        self.mainLayout = QtWidgets.QVBoxLayout()
-        self.mainLayout.setContentsMargins(0, 0, 0, 0)
-        self.mainLayout.setSpacing(0)
-
-        self.setFixedWidth(3)
-        self.setMaximumHeight(2000)
-
-        self.setCheckable(False)
-        self.setText("")
-
-        self.setLayout(self.mainLayout)
-
-        self.setCursor(
-            QtGui.QCursor(QtCore.Qt.SizeHorCursor))
-
-        self.setMouseTracking(True)
-
-
-    def paintEvent (self, event):
-
-        painter = QtGui.QPainter(self)
-        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-
-        painter.fillRect(
-            self.contentsRect() ,
-            self.theme.color.browserBackground    )
-
-        painter.end()
-
-
-    def mousePressEvent (self, event):
-        super(ResizeButton, self).mousePressEvent(event)
-        self.buttonPressed = True
-
-    def mouseReleaseEvent (self, event):
-        super(ResizeButton, self).mouseReleaseEvent(event)
-        self.buttonPressed = False
-        self.moveEnd.emit()
-
-    def mouseMoveEvent (self, event):
-        super(ResizeButton, self).mouseMoveEvent(event)
-        if self.buttonPressed:
-            moved = self.mapToParent(QtCore.QPoint(event.x(), 0))
-            self.moveStart.emit( moved.x() )
-
-    def enterEvent (self, event):
-        super(ResizeButton, self).enterEvent(event)
-
-    def leaveEvent (self, event):
-        super(ResizeButton, self).leaveEvent(event)
-        self.buttonPressed = False
-
-
-
-
-
-
 def setupUi (self, theme):
 
 
-    self.defaultName = "Name"
     self.currentName = ""
     self.checkedName = ""
 
 
-    self.setProperty("background", "options")
+    self.setProperty("background", "browser")
     self.setProperty("border", "none")
 
     self.mainLayout = QtWidgets.QHBoxLayout()
@@ -1111,9 +1089,7 @@ def setupUi (self, theme):
     self.BarBottom = BarBottom.Bar(theme)
     self.browserLayout.addWidget(self.BarBottom)
 
-    self.ResizeButton = ResizeButton(theme)
-    self.ResizeButton.moveStart.connect(self.resizeMath)
-    self.ResizeButton.moveEnd.connect(self.resizeBake)
+    self.ResizeButton = BaseOption.ResizeButton(theme)
     self.mainLayout.addWidget(self.ResizeButton)
 
     self.UsdExportOptions = UsdExportOptions(theme)

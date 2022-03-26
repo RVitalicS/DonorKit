@@ -3,8 +3,7 @@
     "white": "#ffffff",
     "paper": "#e4e4e4",
     "black": "#4e5458",
-    "violet": "#a37acc",
-    "purple": "#b789e5",
+    "violet": "#b789e5",
     "green": "#4cd964",
     "blue": "#0099ff",
     "text": "#5d6063",
@@ -32,6 +31,7 @@
     "browserSocketPressed": "#79dafe",
     "browserHandleSocket": "#f1f1f1",
     "browserHandle": "#d7dadd",
+    "browserBookmark": "#c190f1",
     "libraryBackground": "#f6f6f6",
     "libraryHover": "#ffffff",
     "libraryOutline": "#dfe0e2",
@@ -44,5 +44,6 @@
     "iconOutlineHover": "#dfe0e2",
     "iconOutline": "#e9e9e9",
     "iconAnimation": "#5c5c5c",
+    "iconFavorite": "#00aaff",
     "checkedHighlight": "#79dafe"
 }

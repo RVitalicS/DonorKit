@@ -2,7 +2,10 @@
 
 
 import os
-from . import tools
+
+import toolbox.core.calculate
+import toolbox.core.graphics
+import toolbox.core.ui
 
 
 from Qt import QtWidgets, QtCore, QtGui
@@ -54,9 +57,11 @@ class BackButton (QtWidgets.QPushButton):
         painter.fillRect(buttonRect, color)
 
         if self.buttonPressed:
-            image = tools.recolor(self.image, self.theme.color.kicker)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.kicker )
         else:
-            image = tools.recolor(self.image, self.theme.color.text)
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.text )
 
         painter.drawImage(position, image)
         painter.end()
@@ -122,11 +127,14 @@ class BookmarkButton (QtWidgets.QPushButton):
             painter.fillRect(buttonRect, color)
 
             if self.isChecked():
-                image = tools.recolor(self.image, self.theme.color.purple)
+                image = toolbox.core.graphics.recolor(
+                    self.image, self.theme.color.browserBookmark)
             elif self.buttonHover:
-                image = tools.recolor(self.image, self.theme.color.browserSocketHover)
+                image = toolbox.core.graphics.recolor(
+                    self.image, self.theme.color.browserSocketHover)
             else:
-                image = tools.recolor(self.image, self.theme.color.browserSocket)
+                image = toolbox.core.graphics.recolor(
+                    self.image, self.theme.color.browserSocket)
 
             painter.drawImage(position, image)
             painter.end()
@@ -173,7 +181,8 @@ class Bar (QtWidgets.QWidget):
         palette = QtGui.QPalette()
         palette.setColor(
             QtGui.QPalette.Background,
-            theme.color.browserBackground )
+            QtGui.QColor(
+                theme.color.browserBackground) )
         self.setPalette(palette)
 
 
@@ -200,7 +209,9 @@ class Bar (QtWidgets.QWidget):
         self.pathRoot.setObjectName("pathRoot")
         self.pathRoot.setProperty("background", "browser")
         self.pathRoot.setProperty("border", "none")
-        self.pathRoot.setFont(UIGlobals.Path.fontRoot)
+        toolbox.core.ui.setFont(
+            self.pathRoot,
+            UIGlobals.Path.fontRoot)
         self.pathRoot.setFixedHeight(UIGlobals.Path.height)
         self.pathRoot.setMinimumWidth(0)
         self.pathRoot.setFlat(True)
@@ -225,7 +236,9 @@ class Bar (QtWidgets.QWidget):
         self.pathLine.setObjectName("pathLine")
         self.pathLine.setProperty("background", "browser")
         self.pathLine.setProperty("border", "none")
-        self.pathLine.setFont(UIGlobals.Path.fontPath)
+        toolbox.core.ui.setFont(
+            self.pathLine,
+            UIGlobals.Path.fontPath)
         self.pathLine.setFixedHeight(UIGlobals.Path.height)
         self.pathLine.setObjectName("pathLine")
         self.subdirLayout.addWidget(self.pathLine)
@@ -249,7 +262,7 @@ class Bar (QtWidgets.QWidget):
 
         font = UIGlobals.Path.fontPath
         text = self.pathLine.text()
-        textWidth  = tools.getStringWidth(text, font)
+        textWidth  = toolbox.core.calculate.stringWidth(text, font)
         textWidth += SPACE
 
         sumwidth = (
@@ -295,6 +308,9 @@ class Bar (QtWidgets.QWidget):
 
 
     def resetRoot (self):
+
+        if self.group:
+            self.group = str()
 
         with Settings.Manager(update=True) as settings:
             settings["subdirLibrary"] = ""
@@ -363,6 +379,9 @@ class Bar (QtWidgets.QWidget):
 
             path = os.path.join(self.root, text)
             if os.path.exists(path):
+                
+                if self.group:
+                    self.group = str()
 
                 settings["subdirLibrary"] = text
                 self.pathChanged.emit(path)
@@ -373,6 +392,7 @@ class Bar (QtWidgets.QWidget):
                 settings["subdirLibrary"] = subdir
 
                 success = False
+
 
         return success
 

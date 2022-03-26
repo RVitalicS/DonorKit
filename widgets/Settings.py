@@ -2,7 +2,9 @@
 
 
 import os
-from . import tools
+
+import toolbox.system.stream
+import toolbox.core.ui
 
 
 from Qt import QtGui
@@ -49,20 +51,20 @@ class ExportData (object):
         if not os.path.exists(self.path):
             self.defaultSettings(self.path)
 
-        elif not tools.validJSON(self.path):
+        elif not toolbox.system.stream.validJSON(self.path):
             self.defaultSettings(self.path)
 
 
     def defaultSettings (self, path):
-        tools.datawrite(path, self.defaults)
+        toolbox.system.stream.datawrite(path, self.defaults)
 
 
     def load (self):
-        return tools.dataread(self.path)
+        return toolbox.system.stream.dataread(self.path)
 
 
     def save (self, data):
-        tools.datawrite(self.path, data)
+        toolbox.system.stream.datawrite(self.path, data)
 
 
 
@@ -111,26 +113,27 @@ class ManagerData (object):
             theme="dark" )
 
         self.path = os.path.join(
-            os.path.expanduser("~"),
+            os.path.dirname(__file__),
+            "databank",
             ".AssetManagerSettings.json")
 
         if not os.path.exists(self.path):
             self.defaultSettings(self.path)
 
-        elif not tools.validJSON(self.path):
+        elif not toolbox.system.stream.validJSON(self.path):
             self.defaultSettings(self.path)
 
 
     def defaultSettings (self, path):
-        tools.datawrite(path, self.defaults)
+        toolbox.system.stream.datawrite(path, self.defaults)
 
 
     def load (self):
-        return tools.dataread(self.path)
+        return toolbox.system.stream.dataread(self.path)
 
 
     def save (self, data):
-        tools.datawrite(self.path, data)
+        toolbox.system.stream.datawrite(self.path, data)
 
 
 
@@ -163,33 +166,6 @@ class Manager (object):
 
 
 
-def makeFont (size=7, weight=QtGui.QFont.Normal):
-
-    """
-        QFont::Thin         0   0
-        QFont::ExtraLight   12  12
-        QFont::Light        25  25
-        QFont::Normal       50  50
-        QFont::Medium       57  57
-        QFont::DemiBold     63  63
-        QFont::Bold         75  75
-        QFont::ExtraBold    81  81
-        QFont::Black        87  87
-    """
-
-    font = QtGui.QFont()
-    font.setFamily("Cantarell")
-    font.setPointSize(size)
-    font.setWeight(weight)
-
-    return font
-
-
-
-
-
-
-
 class DataClass: pass
 
 UIGlobals = DataClass()
@@ -198,15 +174,15 @@ UIGlobals = DataClass()
 UIGlobals.Path = DataClass()
 UIGlobals.Path.backIcon = 13
 UIGlobals.Path.height   = 32
-UIGlobals.Path.fontRoot = makeFont( size=9 )
-UIGlobals.Path.fontPath = makeFont( size=9 )
+UIGlobals.Path.fontRoot = toolbox.core.ui.makeFont( size=9 )
+UIGlobals.Path.fontPath = toolbox.core.ui.makeFont( size=9 )
 UIGlobals.Path.bookmarkOffset = 1
 
 
 UIGlobals.Bar = DataClass()
 UIGlobals.Bar.height = 32
-UIGlobals.Bar.fontPreview  = makeFont( size=7 )
-UIGlobals.Bar.fontBookmark = makeFont( size=8 )
+UIGlobals.Bar.fontPreview  = toolbox.core.ui.makeFont( size=7 )
+UIGlobals.Bar.fontBookmark = toolbox.core.ui.makeFont( size=8 )
 UIGlobals.Bar.favoriteOffset = 2
 UIGlobals.Bar.bookmarkOffset = 0
 
@@ -241,7 +217,8 @@ UIGlobals.AssetBrowser.Icon.Asset.max.width = 390
 UIGlobals.AssetBrowser.Icon.Asset.max.height = 260
 UIGlobals.AssetBrowser.Icon.Asset.max.label = 36
 
-UIGlobals.AssetBrowser.Icon.Asset.statusHeight = 26
+UIGlobals.AssetBrowser.Icon.Asset.infoHeight = 26
+UIGlobals.AssetBrowser.Icon.Asset.infoLabel  = 10
 
 UIGlobals.AssetBrowser.Icon.Preview = DataClass()
 UIGlobals.AssetBrowser.Icon.Preview.width  = 480
@@ -255,23 +232,24 @@ UIGlobals.IconDelegate.radiusStatus = 2
 
 UIGlobals.IconDelegate.offsetLink = 9
 
-UIGlobals.IconDelegate.fontLibraries   = makeFont( size=11 )
-UIGlobals.IconDelegate.fontLibraryName = makeFont( size=10)
+UIGlobals.IconDelegate.fontLibraries   = toolbox.core.ui.makeFont( size=11 )
+UIGlobals.IconDelegate.fontLibraryName = toolbox.core.ui.makeFont( size=10)
 
-UIGlobals.IconDelegate.fontCategory    = makeFont( size=8 )
-UIGlobals.IconDelegate.fontFolderName  = makeFont( size=9 )
-UIGlobals.IconDelegate.fontFolderItems = makeFont( size=7 )
+UIGlobals.IconDelegate.fontCategory    = toolbox.core.ui.makeFont( size=8 )
+UIGlobals.IconDelegate.fontFolderName  = toolbox.core.ui.makeFont( size=9 )
+UIGlobals.IconDelegate.fontFolderItems = toolbox.core.ui.makeFont( size=7 )
 
-UIGlobals.IconDelegate.fontAssetName    = makeFont( size=8 )
-UIGlobals.IconDelegate.fontAssetVersion = makeFont( size=7 )
-UIGlobals.IconDelegate.fontAssetLabel   = makeFont( size=6 )
-UIGlobals.IconDelegate.fontAssetStatus  = makeFont( size=7 )
+UIGlobals.IconDelegate.fontAssetName    = toolbox.core.ui.makeFont( size=8 )
+UIGlobals.IconDelegate.fontAssetVersion = toolbox.core.ui.makeFont( size=7 )
+UIGlobals.IconDelegate.fontAssetLabel   = toolbox.core.ui.makeFont( size=6 )
+UIGlobals.IconDelegate.fontAssetStatus  = toolbox.core.ui.makeFont( size=7 )
+UIGlobals.IconDelegate.fontAssetSize    = toolbox.core.ui.makeFont( size=7 )
 
 UIGlobals.IconDelegate.Animation = DataClass()
 UIGlobals.IconDelegate.Animation.space  = 10
 UIGlobals.IconDelegate.Animation.offset = 6
 UIGlobals.IconDelegate.Animation.height = 14
-UIGlobals.IconDelegate.Animation.font   = makeFont( size=7, weight=QtGui.QFont.Bold )
+UIGlobals.IconDelegate.Animation.font   = toolbox.core.ui.makeFont( size=7, weight=QtGui.QFont.Bold )
 
 
 UIGlobals.Options = DataClass()
@@ -285,20 +263,22 @@ UIGlobals.Options.buttonHeight = 12
 UIGlobals.Options.rawHeight    = 16
 UIGlobals.Options.labelWidth   = 52
 
-UIGlobals.Options.fontName      = makeFont( size=12, weight=QtGui.QFont.Bold )
-UIGlobals.Options.fontInfo      = makeFont( size=9 )
-UIGlobals.Options.fontLabel     = makeFont( size=9 )
-UIGlobals.Options.fontOverwrite = makeFont( size=7 )
-UIGlobals.Options.fontComment   = makeFont( size=9 )
+UIGlobals.Options.fontName      = toolbox.core.ui.makeFont( size=12, weight=QtGui.QFont.Bold )
+UIGlobals.Options.fontLabel     = toolbox.core.ui.makeFont( size=9 )
+UIGlobals.Options.fontInfo      = toolbox.core.ui.makeFont( size=9 )
+UIGlobals.Options.fontComment   = toolbox.core.ui.makeFont( size=9 )
+UIGlobals.Options.fontOverwrite = toolbox.core.ui.makeFont( size=7 )
+UIGlobals.Options.fontLink      = toolbox.core.ui.makeFont( size=9 )
 
 UIGlobals.Options.Export = DataClass()
 UIGlobals.Options.Export.patternThickness = 11
-UIGlobals.Options.Export.font = makeFont( size=10 )
+UIGlobals.Options.Export.delayTime = 35
+UIGlobals.Options.Export.font = toolbox.core.ui.makeFont( size=10 )
 
 
 UIGlobals.Options.Status = DataClass()
 UIGlobals.Options.Status.lineWidth    = 4
 UIGlobals.Options.Status.space        = 6
 UIGlobals.Options.Status.buttonHeight = 10
-UIGlobals.Options.Status.fontLabel    = makeFont( size=6 )
-UIGlobals.Options.Status.fontButton   = makeFont( size=9 )
+UIGlobals.Options.Status.fontLabel    = toolbox.core.ui.makeFont( size=6 )
+UIGlobals.Options.Status.fontButton   = toolbox.core.ui.makeFont( size=9 )

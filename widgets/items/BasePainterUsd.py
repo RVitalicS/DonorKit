@@ -2,64 +2,14 @@
 
 
 
-from .. import tools
+import toolbox.core.calculate
+import toolbox.core.graphics
 
 
 from Qt import QtCore, QtGui
 
 from .. import Settings
 UIGlobals = Settings.UIGlobals
-
-
-
-
-
-def clear (function):
-    def wrapped (self):
-
-        function(self)
-
-        self.painter.fillRect(
-            self.option.rect,
-            QtGui.QColor(self.theme.color.browserBackground)
-        )
-
-    return wrapped
-
-
-
-
-
-def label (font):
-    def decorated (function):
-        def wrapped (self):
-
-            function(self)
-
-            self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
-            self.painter.setPen(
-                QtGui.QPen(
-                    QtGui.QBrush( QtGui.QColor(self.theme.color.text) ),
-                    0,
-                    QtCore.Qt.SolidLine,
-                    QtCore.Qt.RoundCap,
-                    QtCore.Qt.RoundJoin) )
-
-            self.painter.setFont(font)
-
-            text = self.data.get("text")
-
-            textOption = QtGui.QTextOption()
-            textOption.setWrapMode(QtGui.QTextOption.NoWrap)
-            textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-
-            self.painter.drawText(
-                QtCore.QRectF(self.iconRect),
-                text,
-                textOption)
-
-        return wrapped
-    return decorated
 
 
 
@@ -74,7 +24,7 @@ def checked (function):
 
             outlinePath = QtGui.QPainterPath()
             outlinePath.addRoundedRect(
-                self.iconRect, 
+                QtCore.QRectF(self.iconRect), 
                 self.radius, 
                 self.radius)
 
@@ -89,6 +39,45 @@ def checked (function):
 
             self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
             self.painter.strokePath(outlinePath, pen)
+
+    return wrapped
+
+
+
+
+
+def token (function):
+    def wrapped (self):
+
+        function(self)
+
+
+        if self.token or self.hover:
+
+            image = QtGui.QImage(":/icons/check.png")
+
+            offset = UIGlobals.IconDelegate.space
+            position = QtCore.QPoint(
+                self.iconRect.x() + self.iconRect.width() - image.width() - offset,
+                self.iconRect.y() + offset )
+
+            self.tokenArea = QtCore.QRect(
+                position.x()   ,
+                position.y()   ,
+                image.width()  ,
+                image.height() )
+
+            if self.token:
+                image = toolbox.core.graphics.recolor(
+                    image, self.theme.color.violet)
+            else:
+                image = toolbox.core.graphics.recolor(
+                    image, 
+                    self.getOverlayHex(self.tokenArea),
+                    opacity=0.25)
+
+            self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+            self.painter.drawImage(position, image)
 
     return wrapped
 
@@ -117,9 +106,13 @@ def favorite (function):
                 image.height() )
 
             if self.favorite:
-                image = tools.recolor(image, self.theme.color.checkedHighlight)
+                image = toolbox.core.graphics.recolor(
+                    image, self.theme.color.iconFavorite)
             else:
-                image = tools.recolor(image, self.theme.color.kicker, opacity=0.25)
+                image = toolbox.core.graphics.recolor(
+                    image, 
+                    self.getOverlayHex(self.favoriteArea),
+                    opacity=0.25)
 
             self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
             self.painter.drawImage(position, image)
@@ -152,7 +145,7 @@ def background (function):
 
         outlinePath = QtGui.QPainterPath()
         outlinePath.addRoundedRect(
-            shape, 
+            QtCore.QRectF(shape), 
             self.radius, 
             self.radius)
 
@@ -179,7 +172,7 @@ def background (function):
 
 
 
-def usdColorAccent (status=True):
+def accent (status=True):
     def decorated (function):
         def wrapped (self):
 
@@ -209,7 +202,7 @@ def usdColorAccent (status=True):
 
 
 
-def usdInitialize (function):
+def initialize (function):
     def wrapped (self):
 
         function(self)
@@ -244,7 +237,7 @@ def usdInitialize (function):
 
 
 
-def usdPreview (function):
+def preview (function):
     def wrapped (self):
 
         function(self)
@@ -267,20 +260,22 @@ def usdPreview (function):
                     break
 
             previewPath = previewList[index]
-            previewImage = QtGui.QImage(previewPath)
+            previewImport = QtGui.QImage(previewPath)
 
-            scaledImage = previewImage.scaledToWidth(
+            self.previewImage = previewImport.scaledToWidth(
                 self.iconRect.width(),
                 QtCore.Qt.SmoothTransformation )
 
-            previewY  = (self.previewHeight - scaledImage.height())/2
-            previewY  = int(round(previewY))
-            previewY += self.pointY + self.space
+            previewY = (
+                self.pointY
+                + self.space
+                + self.previewHeight
+                - self.previewImage.height() )
 
             self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
             self.painter.drawImage(
                 QtCore.QPoint(self.iconRect.x(), previewY),
-                scaledImage )
+                self.previewImage )
 
     return wrapped
 
@@ -288,7 +283,7 @@ def usdPreview (function):
 
 
 
-def usdAnimation (function):
+def animation (function):
     def wrapped (self):
 
         function(self)
@@ -310,7 +305,7 @@ def usdAnimation (function):
             heightTag = UIGlobals.IconDelegate.Animation.height
             radiusTag = int(round(heightTag/2))
 
-            animationWidth = tools.getStringWidth(textAnimation, fontAnimation)
+            animationWidth = toolbox.core.calculate.stringWidth(textAnimation, fontAnimation)
 
             spaceAnimation = self.iconRect.width() - spaceTag - offsetTag*2
             if animationWidth > spaceAnimation:
@@ -319,7 +314,7 @@ def usdAnimation (function):
                     if not textAnimation: break
 
                     textAnimation = textAnimation[:-1]
-                    animationWidth = tools.getStringWidth(
+                    animationWidth = toolbox.core.calculate.stringWidth(
                         textAnimation + "...", fontAnimation)
 
                 textAnimation += "..."
@@ -332,7 +327,9 @@ def usdAnimation (function):
 
 
             path = QtGui.QPainterPath()
-            path.addRoundedRect(tagArea, radiusTag, radiusTag)
+            path.addRoundedRect(
+                QtCore.QRectF(tagArea),
+                radiusTag, radiusTag )
 
             brush = QtGui.QBrush( QtGui.QColor(self.theme.color.iconAnimation) )
 
@@ -352,7 +349,7 @@ def usdAnimation (function):
 
 
 
-def usdLink (function):
+def link (function):
     def wrapped (self):
 
         function(self)
@@ -360,22 +357,24 @@ def usdLink (function):
         if self.hover and self.controlMode:
 
             linkImage = QtGui.QImage(":/icons/linkarrow.png")
-            linkImage = tools.recolor(linkImage, self.theme.color.kicker, opacity=0.25)
 
             linkOffset = linkImage.width() + self.space
-
             linkPosition = QtCore.QPoint(
                     self.iconRect.x() + self.iconRect.width()  - linkOffset,
                     self.iconRect.y() + self.previewHeight          - linkOffset)
-
-            self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-            self.painter.drawImage(linkPosition, linkImage)
 
             self.linkArea = QtCore.QRect(
                 linkPosition.x() ,
                 linkPosition.y() ,
                 linkImage.width() ,
                 linkImage.height() )
+
+            linkImage = toolbox.core.graphics.recolor(
+                linkImage,
+                self.getOverlayHex(self.linkArea), opacity=0.25)
+
+            self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+            self.painter.drawImage(linkPosition, linkImage)
 
 
     return wrapped
@@ -384,7 +383,7 @@ def usdLink (function):
 
 
 
-def usdIcon (function):
+def icon (function):
     def wrapped (self):
 
         function(self)
@@ -413,13 +412,98 @@ def usdIcon (function):
 
 
 
-def usdStatus (function):
+def division (function):
+    def wrapped (self):
+
+        function(self)
+
+        statusHeight = UIGlobals.AssetBrowser.Icon.Asset.infoHeight
+
+        if self.iconSize == 1:
+            halfInfoWidth = int(self.labelArea.width()/2)
+            self.leftInfoArea  = QtCore.QRect(
+                self.labelArea.x(),
+                self.labelArea.y() + self.labelArea.height() - statusHeight,
+                halfInfoWidth,
+                statusHeight)
+
+        elif self.iconSize == 2:
+            halfInfoWidth = int(((self.labelArea.width() - self.space*4)/2 )/2)
+            self.leftInfoArea = QtCore.QRect(
+                self.labelArea.x() + self.labelArea.width()  - halfInfoWidth*2,
+                self.labelArea.y() + self.labelArea.height() - statusHeight,
+                halfInfoWidth,
+                statusHeight)
+            self.spaceName -= halfInfoWidth*2 + self.space*2
+
+        else:
+            halfInfoWidth = int(((self.labelArea.width() - self.space*8)/3 )/2)
+            self.leftInfoArea = QtCore.QRect(
+                self.labelArea.x() + self.labelArea.width()  - halfInfoWidth*2,
+                self.labelArea.y() + self.labelArea.height() - statusHeight,
+                halfInfoWidth,
+                statusHeight)
+            self.spaceName -= halfInfoWidth*2 + self.space*2
+
+        self.rightInfoArea = QtCore.QRect(
+            self.leftInfoArea.x() + halfInfoWidth,
+            self.leftInfoArea.y(),
+            halfInfoWidth,
+            self.leftInfoArea.height())
+
+    return wrapped
+
+
+
+
+
+def published (function):
+    def wrapped (self):
+
+        function(self)
+
+        offsetPublished = UIGlobals.AssetBrowser.Icon.Asset.infoLabel
+        dateArea = QtCore.QRect(
+            self.leftInfoArea.x()                        ,
+            self.leftInfoArea.y()      + offsetPublished ,
+            self.leftInfoArea.width()                    ,
+            self.leftInfoArea.height() - offsetPublished )
+
+
+        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
+        self.painter.setFont( UIGlobals.IconDelegate.fontAssetLabel )
+
+        textOption = QtGui.QTextOption()
+        textOption.setWrapMode(QtGui.QTextOption.NoWrap)
+        textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+
+
+        self.painter.setPen( QtGui.QColor(self.theme.color.textlock) )
+        self.painter.drawText(
+            QtCore.QRectF(self.leftInfoArea),
+            "Published",
+            textOption)
+
+        self.painter.setPen( QtGui.QColor(self.theme.color.text) )
+        self.painter.drawText(
+            QtCore.QRectF(dateArea),
+            self.data.get("published"),
+            textOption)
+
+
+    return wrapped
+
+
+
+
+
+def status (function):
     def wrapped (self):
 
         function(self)
 
 
-        # LABELS
+        # label
         self.painter.setPen( QtGui.QColor(self.theme.color.textlock) )
         self.painter.setFont( UIGlobals.IconDelegate.fontAssetLabel )
 
@@ -427,89 +511,26 @@ def usdStatus (function):
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
         textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
 
-        statusHeight = UIGlobals.AssetBrowser.Icon.Asset.statusHeight
-
-        if self.iconSize == 1:
-            publishedWidth = int(self.labelArea.width()/2)
-            publishedArea  = QtCore.QRect(
-                self.labelArea.x()                                           ,
-                self.labelArea.y() + int(self.labelArea.height() - statusHeight ) ,
-                publishedWidth                                          ,
-                statusHeight                                            )
-        elif self.iconSize == 2:
-            publishedWidth = int(((self.labelArea.width() - self.space*4)/2 )/2)
-            publishedArea = QtCore.QRect(
-                self.labelArea.x() + self.labelArea.width() - publishedWidth*2    ,
-                self.labelArea.y() + int(self.labelArea.height() - statusHeight ) ,
-                publishedWidth                                          ,
-                statusHeight                                            )
-            self.spaceName -= publishedWidth*2 + self.space*2
-        else:
-            publishedWidth = int(((self.labelArea.width() - self.space*8)/3 )/2)
-            publishedArea = QtCore.QRect(
-                self.labelArea.x() + self.labelArea.width() - publishedWidth*2    ,
-                self.labelArea.y() + int(self.labelArea.height() - statusHeight ) ,
-                publishedWidth                                          ,
-                statusHeight                                            )
-            self.spaceName -= publishedWidth*2 + self.space*2
-
         self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
-
         self.painter.drawText(
-            QtCore.QRectF(publishedArea),
-            "Published",
-            textOption)
-
-
-        statusArea = QtCore.QRect(
-            publishedArea.x() + publishedWidth ,
-            publishedArea.y()                  ,
-            publishedArea.width()              ,
-            publishedArea.height()             )
-
-        self.painter.drawText(
-            QtCore.QRectF(statusArea),
+            QtCore.QRectF(self.rightInfoArea),
             "STATUS",
             textOption)
 
 
-
-        # DATE
-        self.painter.setPen( QtGui.QColor(self.theme.color.text) )
-        self.painter.setFont( UIGlobals.IconDelegate.fontAssetLabel )
-        
-        textOption = QtGui.QTextOption()
-        textOption.setWrapMode(QtGui.QTextOption.NoWrap)
-        textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
-
-        offsetPublished = 10
-        dateArea = QtCore.QRect(
-            publishedArea.x()                        ,
-            publishedArea.y()      + offsetPublished ,
-            publishedArea.width()                    ,
-            publishedArea.height() - offsetPublished )
-
-        text = self.data.get("published")
-
-        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
-        self.painter.drawText(
-            QtCore.QRectF(dateArea),
-            text,
-            textOption)
-
-        
-
-        # STATUS BUTTON
-        offsetButton = offsetPublished + 2
+        # button rect
+        offsetButton = (
+            UIGlobals.AssetBrowser.Icon.Asset.infoLabel
+            + 2)
         buttonArea = QtCore.QRect(
-            statusArea.x()                     ,
-            statusArea.y()      + offsetButton ,
-            statusArea.width()                 ,
-            statusArea.height() - offsetButton )
+            self.rightInfoArea.x()                     ,
+            self.rightInfoArea.y()      + offsetButton ,
+            self.rightInfoArea.width()                 ,
+            self.rightInfoArea.height() - offsetButton )
 
         path = QtGui.QPainterPath()
         path.addRoundedRect(
-            buttonArea, 
+            QtCore.QRectF(buttonArea),
             UIGlobals.IconDelegate.radiusStatus, 
             UIGlobals.IconDelegate.radiusStatus)
 
@@ -518,9 +539,8 @@ def usdStatus (function):
         self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         self.painter.fillPath(path, brush)
 
-        
 
-        # STATUS TEXT
+        # status text
         fontText = UIGlobals.IconDelegate.fontAssetStatus
         self.painter.setPen( QtGui.QColor(self.theme.color.white) )
         self.painter.setFont( fontText )
@@ -531,22 +551,20 @@ def usdStatus (function):
 
         text = self.data.get("status")
 
-        # cut if text is wider then button
-        textWidth = tools.getStringWidth(text, fontText)
+        textWidth = toolbox.core.calculate.stringWidth(text, fontText)
         textMargin = 3
         availableWidth = buttonArea.width() - textMargin*2
         addDots = False
 
         while textWidth > availableWidth:
             text = text[:-1]
-            textWidth = tools.getStringWidth(
+            textWidth = toolbox.core.calculate.stringWidth(
                 text+"...", fontText)
             addDots = True
             
         if addDots:
             text += "..."
 
-        # draw text
         self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.drawText(
             QtCore.QRectF(buttonArea),
@@ -560,7 +578,58 @@ def usdStatus (function):
 
 
 
-def usdName (hasCount=True):
+def size (function):
+    def wrapped (self):
+
+        function(self)
+
+
+        # button rect
+        offsetSize = (
+            UIGlobals.AssetBrowser.Icon.Asset.infoLabel
+            + 0)
+        sizeArea = QtCore.QRect(
+            self.rightInfoArea.x()                     ,
+            self.rightInfoArea.y()      + offsetSize ,
+            self.rightInfoArea.width()                 ,
+            self.rightInfoArea.height() - offsetSize )
+
+
+        # label
+        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
+
+        textOption = QtGui.QTextOption()
+        textOption.setWrapMode(QtGui.QTextOption.NoWrap)
+        textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+
+        self.painter.setPen( QtGui.QColor(self.theme.color.textlock) )
+        self.painter.setFont( UIGlobals.IconDelegate.fontAssetLabel )
+        self.painter.drawText(
+            QtCore.QRectF(self.rightInfoArea),
+            "SIZE",
+            textOption)
+
+
+        # size text
+        textOption = QtGui.QTextOption()
+        textOption.setWrapMode(QtGui.QTextOption.NoWrap)
+        textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+
+        self.painter.setPen( QtGui.QColor(self.theme.color.kicker) )
+        self.painter.setFont( UIGlobals.IconDelegate.fontAssetSize )
+        self.painter.drawText(
+            QtCore.QRectF(sizeArea),
+            self.data.get("size") + " MB",
+            textOption)
+
+
+    return wrapped
+
+
+
+
+
+def name (hasCount=True):
     def decorated (function):
         def wrapped (self):
 
@@ -599,7 +668,7 @@ def usdName (hasCount=True):
             textName = self.data.get("name")
             textName = textName.replace("_", " ")
             
-            nameWidth = tools.getStringWidth(textName, fontName)
+            nameWidth = toolbox.core.calculate.stringWidth(textName, fontName)
             spaceVariant = self.spaceName - nameWidth
 
             if nameWidth > self.spaceName:
@@ -608,7 +677,7 @@ def usdName (hasCount=True):
                     if not textName: break
 
                     textName = textName[:-1]
-                    nameWidth = tools.getStringWidth(
+                    nameWidth = toolbox.core.calculate.stringWidth(
                         textName + "...", fontName)
 
                 textName += "..."
@@ -636,14 +705,14 @@ def usdName (hasCount=True):
                 textVariant = " {}".format(variant)
                 textVariant = textVariant.replace("_", " ")
             
-                variantWidth = tools.getStringWidth(textVariant, fontName)
+                variantWidth = toolbox.core.calculate.stringWidth(textVariant, fontName)
                 if variantWidth > spaceVariant:
 
                     while variantWidth > spaceVariant-self.space:
                         if not textVariant: break
 
                         textVariant = textVariant[:-1]
-                        variantWidth = tools.getStringWidth(
+                        variantWidth = toolbox.core.calculate.stringWidth(
                             textVariant + "...", fontName)
 
                     textVariant += "..."
@@ -681,7 +750,7 @@ def usdName (hasCount=True):
 
             if hasCount and self.hover and self.controlMode:
 
-                versionWidth = tools.getStringWidth(textVersion, fontVersion)
+                versionWidth = toolbox.core.calculate.stringWidth(textVersion, fontVersion)
                 offsetPixel = 1
 
                 nameArea = QtCore.QRect(

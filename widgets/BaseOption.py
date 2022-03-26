@@ -3,7 +3,10 @@
 
 
 import math
-from . import tools
+
+import toolbox.core.calculate
+import toolbox.core.graphics
+import toolbox.core.ui
 
 
 from Qt import QtWidgets, QtCore, QtGui
@@ -14,6 +17,7 @@ UIGlobals = Settings.UIGlobals
 WIDTH        = UIGlobals.Options.preferWidth
 MARGIN       = UIGlobals.Options.margin
 HEIGHT_THICK = UIGlobals.Options.thickHeight
+
 
 
 
@@ -41,7 +45,7 @@ class TextBlock (QtWidgets.QTextEdit):
     def setCommentFont (self, font):
 
         self.fontComment = font
-        self.setFont(self.fontComment)
+        toolbox.core.ui.setFont(self, font)
 
 
     def setPropertyTag (self, tag):
@@ -248,7 +252,9 @@ class Status (QtWidgets.QWidget):
         self.labelStatus.setMouseTracking(True)
         self.labelStatus.setObjectName("labelStatus")
         self.labelStatus.setProperty("textcolor", "weak")
-        self.labelStatus.setFont(fontLabel)
+        toolbox.core.ui.setFont(
+            self.labelStatus,
+            fontLabel)
         self.labelStatus.setFixedHeight(labelHeight)
         self.labelLayout.addWidget(self.labelStatus)
 
@@ -268,7 +274,8 @@ class Status (QtWidgets.QWidget):
         self.nameStatus.setMouseTracking(True)
         self.nameStatus.setObjectName("nameStatus")
         self.nameStatus.setProperty("textcolor", "kicker")
-        self.nameStatus.setFont(fontButton)
+        toolbox.core.ui.setFont(
+            self.nameStatus, fontButton)
         self.nameStatus.setFixedHeight(textHeight)
         self.nameLayout.addWidget(self.nameStatus)
 
@@ -423,7 +430,7 @@ class Status (QtWidgets.QWidget):
         palette = QtGui.QPalette()
         palette.setColor(
             QtGui.QPalette.Background,
-            color )
+            QtGui.QColor(color) )
         self.mark.setPalette(palette)
 
 
@@ -434,20 +441,20 @@ class Status (QtWidgets.QWidget):
 
 
         statusArea = QtCore.QRect(
-            self.contentsRect().x()                              ,
-            self.contentsRect().y()     + MARGIN                 ,
-            self.contentsRect().width() - MARGIN                 ,
-            HEIGHT_THICK + UIGlobals.Options.Status.buttonHeight )
+            self.contentsRect().x() + MARGIN,
+            self.contentsRect().y() + MARGIN,
+            self.contentsRect().width() - MARGIN*2,
+            HEIGHT_THICK + UIGlobals.Options.Status.buttonHeight)
         hoverWidget = statusArea.contains(pointer)
 
         labelWidth = self.nameStatus.width()
         if labelWidth < self.labelStatus.width():
             labelWidth = self.labelStatus.width()
         labelArea = QtCore.QRect(
-            statusArea.x()      ,
-            statusArea.y()      ,
-            MARGIN + labelWidth ,
-            HEIGHT_THICK        )
+            statusArea.x(),
+            statusArea.y(),
+            labelWidth,
+            HEIGHT_THICK)
         hoverLabel = labelArea.contains(pointer)
 
         if hoverLabel and not self.hoverStatus:
@@ -503,7 +510,7 @@ class ExportButton (QtWidgets.QPushButton):
         self.timerDelay = QtCore.QTimer(self)
         self.timerDelay.timeout.connect(self.delay)
 
-        self.delayTime  = 35
+        self.delayTime  = UIGlobals.Options.Export.delayTime
         self.delayValue = -1
 
         self.patternThickness = UIGlobals.Options.Export.patternThickness
@@ -585,10 +592,9 @@ class ExportButton (QtWidgets.QPushButton):
         radius = 3
         clipPath = QtGui.QPainterPath()
         clipPath.addRoundedRect(
-            buttonRect.x()     , buttonRect.y()      ,
-            buttonRect.width() , buttonRect.height() ,
+            QtCore.QRectF(buttonRect),
             radius, radius,
-            mode=QtCore.Qt.AbsoluteSize              )
+            mode=QtCore.Qt.AbsoluteSize)
 
         painter.setClipPath(clipPath)
 
@@ -613,7 +619,8 @@ class ExportButton (QtWidgets.QPushButton):
                 buttonRect.height() - thickness*2 )
 
             outlinePath = QtGui.QPainterPath()
-            outlinePath.addRoundedRect(shape, radius, radius)
+            outlinePath.addRoundedRect(
+                QtCore.QRectF(shape), radius, radius)
 
             color = QtGui.QColor(self.theme.color.optionBackground)
             painter.fillPath(outlinePath, QtGui.QBrush(color))
@@ -677,5 +684,143 @@ class ExportButton (QtWidgets.QPushButton):
             QtCore.QRectF(buttonRect),
             self.text(),
             textOption)
+
+        painter.end()
+
+
+
+
+
+
+class ResizeButton (QtWidgets.QPushButton):
+
+    moveStart = QtCore.Signal(int)
+
+
+    def __init__ (self, theme):
+        super(ResizeButton, self).__init__()
+
+        self.theme = theme
+        self.buttonPressed = False
+
+        self.setFixedWidth(3)
+        self.setMaximumHeight(2000)
+
+        self.setCheckable(False)
+        self.setText("")
+
+        self.setCursor(
+            QtGui.QCursor(QtCore.Qt.SizeHorCursor))
+
+        self.setMouseTracking(True)
+
+
+    def paintEvent (self, event):
+
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+        painter.fillRect(
+            self.contentsRect() ,
+            QtGui.QColor(self.theme.color.browserBackground) )
+
+        painter.end()
+
+
+    def mousePressEvent (self, event):
+        super(ResizeButton, self).mousePressEvent(event)
+        self.buttonPressed = True
+
+    def mouseReleaseEvent (self, event):
+        super(ResizeButton, self).mouseReleaseEvent(event)
+        self.buttonPressed = False
+
+    def mouseMoveEvent (self, event):
+        super(ResizeButton, self).mouseMoveEvent(event)
+        if self.buttonPressed:
+            moved = self.mapToParent(QtCore.QPoint(event.x(), 0))
+            self.moveStart.emit( moved.x() )
+
+    def enterEvent (self, event):
+        super(ResizeButton, self).enterEvent(event)
+
+    def leaveEvent (self, event):
+        super(ResizeButton, self).leaveEvent(event)
+        self.buttonPressed = False
+
+
+
+
+
+
+class SymbolicLink (QtWidgets.QPushButton):
+
+
+    def __init__ (self, theme):
+        super(SymbolicLink, self).__init__()
+
+        self.theme = theme
+        self.fontText = UIGlobals.Options.fontLink
+
+        self.buttonPressed = False
+        self.setCheckable(True)
+        self.setText("")
+
+        self.image = QtGui.QImage(":/icons/check.png")
+        self.space = 7
+        self.text  = "Symbolic Link"
+
+        self.setFixedWidth(
+            self.image.width() + self.space
+            + toolbox.core.calculate.stringWidth(self.text, self.fontText) )
+        self.setFixedHeight(self.image.height())
+
+
+
+    def paintEvent (self, event):
+
+        painter = QtGui.QPainter(self)
+
+        buttonRect = self.contentsRect()
+        position = QtCore.QPoint(
+            buttonRect.x() ,
+            buttonRect.y() )
+
+        color = QtGui.QColor(self.theme.color.optionBackground)
+        painter.fillRect(buttonRect, color)
+
+
+        if self.isChecked():
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.violet )
+            color = QtGui.QColor(self.theme.color.kicker)
+        else:
+            image = toolbox.core.graphics.recolor(
+                self.image, self.theme.color.optionDisable )
+            color = QtGui.QColor(self.theme.color.optionDisable)
+
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        painter.drawImage(position, image)
+
+
+        painter.setPen(
+            QtGui.QPen(
+                QtGui.QBrush(color),
+                0,
+                QtCore.Qt.SolidLine,
+                QtCore.Qt.RoundCap,
+                QtCore.Qt.RoundJoin) )
+        painter.setFont(self.fontText)
+
+        textOption = QtGui.QTextOption()
+        textOption.setWrapMode(QtGui.QTextOption.NoWrap)
+        textOption.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+
+        painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
+        painter.drawText(
+            QtCore.QRectF(buttonRect),
+            self.text,
+            textOption)
+
 
         painter.end()

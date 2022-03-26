@@ -6,8 +6,8 @@ import re
 import os
 
 
-from . import ostree
-from . import scene
+from ..system import ostree
+from ..maya import scene
 from . import editor
 
 

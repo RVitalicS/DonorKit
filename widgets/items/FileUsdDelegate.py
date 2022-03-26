@@ -29,6 +29,14 @@ class Delegate (BaseItem.Delegate):
 
         editor.clicked.connect(self.clickAction)
         editor.leaveEditor.connect(self.leaveAction)
+        
+        editor.tokenClicked.connect(self.tokenAction)
 
         return editor
+
+
+
+    def tokenAction (self, index):
+
+        self.parent().tokenClickedSignal(index)
 

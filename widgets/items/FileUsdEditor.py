@@ -32,6 +32,11 @@ class Editor (BaseItem.Editor):
                 event.x(),
                 event.y())
 
+            if self.Item.tokenArea.contains(pointer):
+                self.tokenClicked.emit(self.Item.index)
+                self.repaint()
+                return
+
             if self.Item.iconRect.contains(pointer):
                 self.clicked.emit(self.Item.index)
                 return

@@ -2,19 +2,26 @@
 
 
 
-from .paintblock import (
+from .BasePainterGeneral import (
     clear,
-    label,
-    background,
-    usdInitialize,
-    usdColorAccent,
-    usdPreview,
-    usdAnimation,
-    usdIcon,
-    usdName,
-    checked
-)
+    label )
 
+from .BasePainterUsd import (
+    background,
+    initialize,
+    accent,
+    preview,
+    animation,
+    icon,
+    division,
+    published,
+    size,
+    name,
+    token,
+    checked )
+
+
+from Qt import QtCore
 from . import BaseItem
 
 from .. import Settings
@@ -36,13 +43,17 @@ class Base (object):
 
 
     @checked
-    @usdName(hasCount=False)
-    @usdIcon
-    @usdAnimation
-    @usdPreview
+    @token
+    @name(hasCount=False)
+    @size
+    @published
+    @division
+    @icon
+    @animation
+    @preview
     @background
-    @usdInitialize
-    @usdColorAccent(status=False)
+    @initialize
+    @accent(status=False)
     def paintFileUsd (self):
         pass
 
@@ -56,6 +67,9 @@ class Item (BaseItem.Painter, Base):
     def __init__ (self, theme):
         BaseItem.Painter.__init__(self, theme)
 
+        self.token = False
+        self.tokenArea = QtCore.QRect()
+
 
     def paint (self, painter, option, index):
         super(Item, self).paint(painter, option, index)
@@ -65,4 +79,5 @@ class Item (BaseItem.Painter, Base):
 
         elif self.type == "asset":
             if self.data.get("type") == "usdfile":
+                self.token = self.data.get("token", False)
                 self.paintFileUsd()

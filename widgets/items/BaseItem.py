@@ -2,6 +2,8 @@
 
 
 
+import toolbox.core.graphics
+
 from Qt import QtWidgets, QtCore, QtGui
 
 from .. import Settings
@@ -25,6 +27,8 @@ class Painter (object):
         self.pointer  = QtCore.QPoint(-1, -1)
         self.iconRect = QtCore.QRect()
 
+        self.previewImage = QtGui.QImage()
+
 
 
     def sizeHint (self):
@@ -34,6 +38,7 @@ class Painter (object):
         item = model.item(raw)
 
         return item.sizeHint()
+
 
 
     def paint (self, painter, option, index):
@@ -70,13 +75,49 @@ class Painter (object):
         
         clipPath = QtGui.QPainterPath()
         clipPath.addRoundedRect(
-            self.iconRect.x()     , self.iconRect.y()      ,
-            self.iconRect.width() , self.iconRect.height() ,
-            self.radius           , self.radius            ,
-            mode=QtCore.Qt.AbsoluteSize                    )
+            QtCore.QRectF(self.iconRect),
+            self.radius, self.radius,
+            mode=QtCore.Qt.AbsoluteSize)
 
         self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         self.painter.setClipPath(clipPath)
+
+
+
+    def copyPreviewCrop (self, rect):
+
+        offsetY  = (
+            self.previewHeight
+            - self.previewImage.height() )
+
+        crop = QtCore.QRect(
+                rect.x() - self.space,
+                rect.y() - self.space - offsetY,
+                rect.width(),
+                rect.height())
+
+        return self.previewImage.copy(crop)
+
+
+
+    def getOverlayHex (self, rect):
+
+        hexValue = self.theme.color.white
+        if not self.previewImage.isNull():
+            lightness = toolbox.core.graphics.lightnessAverage(
+                self.copyPreviewCrop(rect) )
+            if not lightness:
+                lightness = QtGui.QColor(
+                    self.theme.color.iconSpace ).lightnessF()
+        else:
+            lightness = QtGui.QColor(
+                self.theme.color.iconSpace ).lightnessF()
+
+        color = QtGui.QColor(hexValue)
+        if abs(lightness - color.lightnessF()) < 0.5:
+            hexValue = self.theme.color.black
+
+        return hexValue
 
 
 
@@ -96,6 +137,7 @@ class Editor (QtWidgets.QWidget):
     createFolder      = QtCore.Signal(QtCore.QModelIndex, str)
 
     favoriteClicked = QtCore.Signal(QtCore.QModelIndex)
+    tokenClicked    = QtCore.Signal(QtCore.QModelIndex)
 
 
 

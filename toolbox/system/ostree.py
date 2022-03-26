@@ -1,69 +1,10 @@
 #!/usr/bin/env python
 
 
-
-# Naming Convention
-#    
-#    Name.v01-VariantName.usdc
-#    Name.v01.AnimationName.usd
-#    Name.Final.usda [ symbolic link ]
-#    
-#    name
-#        "AssetName."
-#    variant & version (Final)
-#        ".v01."
-#        ".v01-VariantName."
-#        ".Final."
-#        ".Final-VariantName."
-#    tag & animation
-#        ".Proxy."            [ reserved ]
-#        ".RenderMan."        [ reserved ]
-#        ".AnimationName-01."
-#    extension 
-#        ".usd"
-
-
-
-# Asset Structure
-#
-# [AssetName]
-# 
-#     [previews]
-#         AssetName.v01.png
-#         AssetName.v01.mp4
-# 
-#     [sources]
-#         AssetName.v01.mb
-# 
-#     [vfx]
-#         Hair.v01.usd
-#         Cloth.v01.usd
-#         Fire.v01.usd
-# 
-#     [modelling]
-#         ModelName.v01.Proxy.usdc
-#         ModelName.v01.usdc
-# 
-#     [animation]
-#         AnimationName.v01.usdc
-# 
-#     [surfacing]
-#         [textures]
-#             ...
-# 
-#         SurfaceName.v01.RenderMan.usda
-#         SurfaceName.v01.usda
-# 
-#     AssetName.Final.AnimationName.usda [AssetName.v01-VariantName.AnimationName.usda]
-#     AssetName.v01-VariantName.AnimationName.usda
-#     .metadata.json
-
-
-
-
-
 import os
 import re
+
+import toolbox.core.naming
 
 
 # define names of directories
@@ -76,10 +17,17 @@ SUBDIR_SURFACING = "surfacing"
 SUBDIR_TEXTURES  = "textures"
 
 
+# define tags
+RESERVED_TAGS = [
+    "Render",
+    "Proxy",
+    "RenderMan" ]
 
 
 
-def build ( root,
+
+
+def buildUsdRoot ( root,
             previews  = False,
             sources   = False,
             vfx       = False,
@@ -136,3 +84,39 @@ def build ( root,
         textures = os.path.join(surfacing, SUBDIR_TEXTURES)
         if not os.path.exists(textures):
             os.mkdir(textures)
+
+
+
+
+
+
+def getItemsCount (path):
+
+    count = int()
+
+    for item in os.listdir(path):
+
+        itempath = os.path.join(path, item)
+        if not os.path.isdir(itempath):
+            continue
+        count += 1
+
+    return count
+
+
+
+
+
+
+def linkUpdate (path, name, create=True):
+
+    os.chdir(path)
+
+    finalname = toolbox.core.naming.makeFinal(name)
+    finalpath = os.path.join(path, finalname)
+
+    if os.path.exists(finalpath):
+        os.remove(finalpath)
+
+    if create:
+        os.symlink(name, finalname)
