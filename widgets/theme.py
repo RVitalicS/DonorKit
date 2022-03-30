@@ -2,9 +2,9 @@
 
 
 import os
-from toolbox.system import stream
+from toolkit.system import stream
 
-from toolbox.ensure.QtGui import *
+from toolkit.ensure.QtGui import *
 
 from . import Settings
 UIGlobals = Settings.UIGlobals

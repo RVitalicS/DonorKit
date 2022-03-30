@@ -2,14 +2,14 @@
 
 
 
-import toolbox.core.graphics
+import toolkit.core.graphics
 
 from .BasePainterGeneral import (
     clear,
     label )
 
-from toolbox.ensure.QtCore import *
-from toolbox.ensure.QtGui import *
+from toolkit.ensure.QtCore import *
+from toolkit.ensure.QtGui import *
 
 from . import BaseItem
 
@@ -62,7 +62,7 @@ class Base (object):
                 self.iconRect.x() + folderOffset,
                 self.iconRect.y() + folderOffset)
         
-        folderImage = toolbox.core.graphics.recolor(
+        folderImage = toolkit.core.graphics.recolor(
             folderImage, self.theme.color.folderColor)
         self.painter.drawImage(folderPosition, folderImage)
 
@@ -141,7 +141,7 @@ class Base (object):
         if self.hover and self.controlMode and name != "":
 
             linkImage = QtGui.QImage(":/icons/linkarrow.png")
-            linkImage = toolbox.core.graphics.recolor(
+            linkImage = toolkit.core.graphics.recolor(
                 linkImage, self.theme.color.kicker, opacity=0.25)
 
             linkOffset = linkImage.width() + UIGlobals.IconDelegate.offsetLink
@@ -180,10 +180,10 @@ class Base (object):
             libraryImage.height() )
 
         if self.createFolderArea.contains(self.pointer):
-            libraryImage = toolbox.core.graphics.recolor(
+            libraryImage = toolkit.core.graphics.recolor(
                 libraryImage, self.theme.color.plusHover)
         else:
-            libraryImage = toolbox.core.graphics.recolor(
+            libraryImage = toolkit.core.graphics.recolor(
                 libraryImage, self.theme.color.plusColor)
 
         self.painter.drawImage(iconPosition, libraryImage)

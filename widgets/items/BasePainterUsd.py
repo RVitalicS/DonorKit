@@ -2,11 +2,11 @@
 
 
 
-import toolbox.core.calculate
-import toolbox.core.graphics
+import toolkit.core.calculate
+import toolkit.core.graphics
 
-from toolbox.ensure.QtCore import *
-from toolbox.ensure.QtGui import *
+from toolkit.ensure.QtCore import *
+from toolkit.ensure.QtGui import *
 
 from .. import Settings
 UIGlobals = Settings.UIGlobals
@@ -68,10 +68,10 @@ def token (function):
                 image.height() )
 
             if self.token:
-                image = toolbox.core.graphics.recolor(
+                image = toolkit.core.graphics.recolor(
                     image, self.theme.color.violet)
             else:
-                image = toolbox.core.graphics.recolor(
+                image = toolkit.core.graphics.recolor(
                     image, 
                     self.getOverlayHex(self.tokenArea),
                     opacity=0.25)
@@ -106,10 +106,10 @@ def favorite (function):
                 image.height() )
 
             if self.favorite:
-                image = toolbox.core.graphics.recolor(
+                image = toolkit.core.graphics.recolor(
                     image, self.theme.color.iconFavorite)
             else:
-                image = toolbox.core.graphics.recolor(
+                image = toolkit.core.graphics.recolor(
                     image, 
                     self.getOverlayHex(self.favoriteArea),
                     opacity=0.25)
@@ -305,7 +305,7 @@ def animation (function):
             heightTag = UIGlobals.IconDelegate.Animation.height
             radiusTag = int(round(heightTag/2))
 
-            animationWidth = toolbox.core.calculate.stringWidth(textAnimation, fontAnimation)
+            animationWidth = toolkit.core.calculate.stringWidth(textAnimation, fontAnimation)
 
             spaceAnimation = self.iconRect.width() - spaceTag - offsetTag*2
             if animationWidth > spaceAnimation:
@@ -314,7 +314,7 @@ def animation (function):
                     if not textAnimation: break
 
                     textAnimation = textAnimation[:-1]
-                    animationWidth = toolbox.core.calculate.stringWidth(
+                    animationWidth = toolkit.core.calculate.stringWidth(
                         textAnimation + "...", fontAnimation)
 
                 textAnimation += "..."
@@ -369,7 +369,7 @@ def link (function):
                 linkImage.width() ,
                 linkImage.height() )
 
-            linkImage = toolbox.core.graphics.recolor(
+            linkImage = toolkit.core.graphics.recolor(
                 linkImage,
                 self.getOverlayHex(self.linkArea), opacity=0.25)
 
@@ -551,14 +551,14 @@ def status (function):
 
         text = self.data.get("status")
 
-        textWidth = toolbox.core.calculate.stringWidth(text, fontText)
+        textWidth = toolkit.core.calculate.stringWidth(text, fontText)
         textMargin = 3
         availableWidth = buttonArea.width() - textMargin*2
         addDots = False
 
         while textWidth > availableWidth:
             text = text[:-1]
-            textWidth = toolbox.core.calculate.stringWidth(
+            textWidth = toolkit.core.calculate.stringWidth(
                 text+"...", fontText)
             addDots = True
             
@@ -649,8 +649,13 @@ def name (hasCount=True):
             else:
                 self.painter.setPen( QtGui.QColor(self.theme.color.text) )
 
-            offsetName = -2
+
+            offsetName = -1
+            if self.iconSize == 1:
+                offsetName = 0
+
             self.spaceName -= self.space
+
 
             if self.iconSize == 1:
                 nameArea = QtCore.QRect(
@@ -668,7 +673,7 @@ def name (hasCount=True):
             textName = self.data.get("name")
             textName = textName.replace("_", " ")
             
-            nameWidth = toolbox.core.calculate.stringWidth(textName, fontName)
+            nameWidth = toolkit.core.calculate.stringWidth(textName, fontName)
             spaceVariant = self.spaceName - nameWidth
 
             if nameWidth > self.spaceName:
@@ -677,7 +682,7 @@ def name (hasCount=True):
                     if not textName: break
 
                     textName = textName[:-1]
-                    nameWidth = toolbox.core.calculate.stringWidth(
+                    nameWidth = toolkit.core.calculate.stringWidth(
                         textName + "...", fontName)
 
                 textName += "..."
@@ -705,14 +710,14 @@ def name (hasCount=True):
                 textVariant = " {}".format(variant)
                 textVariant = textVariant.replace("_", " ")
             
-                variantWidth = toolbox.core.calculate.stringWidth(textVariant, fontName)
+                variantWidth = toolkit.core.calculate.stringWidth(textVariant, fontName)
                 if variantWidth > spaceVariant:
 
                     while variantWidth > spaceVariant-self.space:
                         if not textVariant: break
 
                         textVariant = textVariant[:-1]
-                        variantWidth = toolbox.core.calculate.stringWidth(
+                        variantWidth = toolkit.core.calculate.stringWidth(
                             textVariant + "...", fontName)
 
                     textVariant += "..."
@@ -730,7 +735,7 @@ def name (hasCount=True):
             fontVersion = UIGlobals.IconDelegate.fontAssetVersion
             self.painter.setFont(fontVersion)
 
-            offsetVersion = 13
+            offsetVersion = 14
             nameArea = QtCore.QRect(
                 nameArea.x()                      ,
                 nameArea.y()      + offsetVersion ,
@@ -750,7 +755,7 @@ def name (hasCount=True):
 
             if hasCount and self.hover and self.controlMode:
 
-                versionWidth = toolbox.core.calculate.stringWidth(textVersion, fontVersion)
+                versionWidth = toolkit.core.calculate.stringWidth(textVersion, fontVersion)
                 offsetPixel = 1
 
                 nameArea = QtCore.QRect(

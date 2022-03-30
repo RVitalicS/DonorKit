@@ -2,8 +2,8 @@
 
 
 
-from toolbox.ensure.QtWidgets import *
-from toolbox.ensure.QtCore import *
+from toolkit.ensure.QtWidgets import *
+from toolkit.ensure.QtCore import *
 
 from . import DirectoryPainter
 

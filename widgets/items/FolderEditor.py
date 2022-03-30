@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 
-from toolbox.ensure.QtWidgets import *
-from toolbox.ensure.QtCore import *
-from toolbox.ensure.QtGui import *
+from toolkit.ensure.QtWidgets import *
+from toolkit.ensure.QtCore import *
+from toolkit.ensure.QtGui import *
 
-import toolbox.core.naming
+import toolkit.core.naming
 
 from . import BaseItem
 from . import FolderPainter
@@ -36,7 +36,7 @@ class NameLine (QtWidgets.QLineEdit):
 
     def setName (self, text):
 
-        text = toolbox.core.naming.nameFilter(text)
+        text = toolkit.core.naming.nameFilter(text)
         self.setText(text)
 
 

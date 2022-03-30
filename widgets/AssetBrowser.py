@@ -2,10 +2,10 @@
 
 
 
-from toolbox.ensure.QtWidgets import *
-from toolbox.ensure.QtCore import *
-from toolbox.ensure.QtGui import *
-from toolbox.ensure.Signal import *
+from toolkit.ensure.QtWidgets import *
+from toolkit.ensure.QtCore import *
+from toolkit.ensure.QtGui import *
+from toolkit.ensure.Signal import *
 
 from . import Settings
 UIGlobals = Settings.UIGlobals

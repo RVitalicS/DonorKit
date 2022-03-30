@@ -2,12 +2,12 @@
 
 
 
-import toolbox.core.graphics
+import toolkit.core.graphics
 
-from toolbox.ensure.QtWidgets import *
-from toolbox.ensure.QtCore import *
-from toolbox.ensure.QtGui import *
-from toolbox.ensure.Signal import *
+from toolkit.ensure.QtWidgets import *
+from toolkit.ensure.QtCore import *
+from toolkit.ensure.QtGui import *
+from toolkit.ensure.Signal import *
 
 from .. import Settings
 UIGlobals = Settings.UIGlobals
@@ -107,7 +107,7 @@ class Painter (object):
 
         hexValue = self.theme.color.white
         if not self.previewImage.isNull():
-            lightness = toolbox.core.graphics.lightnessAverage(
+            lightness = toolkit.core.graphics.lightnessAverage(
                 self.copyPreviewCrop(rect) )
             if not lightness:
                 lightness = QtGui.QColor(

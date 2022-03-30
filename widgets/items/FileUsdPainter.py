@@ -20,7 +20,7 @@ from .BasePainterUsd import (
     token,
     checked )
 
-from toolbox.ensure.QtCore import *
+from toolkit.ensure.QtCore import *
 from . import BaseItem
 
 from .. import Settings

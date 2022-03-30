@@ -2,13 +2,13 @@
 
 
 
-import toolbox.core.graphics
-import toolbox.core.ui
+import toolkit.core.graphics
+import toolkit.core.ui
 
-from toolbox.ensure.QtWidgets import *
-from toolbox.ensure.QtCore import *
-from toolbox.ensure.QtGui import *
-from toolbox.ensure.Signal import *
+from toolkit.ensure.QtWidgets import *
+from toolkit.ensure.QtCore import *
+from toolkit.ensure.QtGui import *
+from toolkit.ensure.Signal import *
 
 from .items import PopupDelegate
 
@@ -55,13 +55,13 @@ class FavoriteButton (QtWidgets.QPushButton):
         painter.fillRect(buttonRect, color)
 
         if self.isChecked():
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 self.image, self.theme.color.browserSocketPressed )
         elif self.buttonHover:
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 self.image, self.theme.color.browserSocketHover )
         else:
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 self.image, self.theme.color.browserSocket )
 
         painter.drawImage(position, image)
@@ -115,13 +115,13 @@ class BookmarkButton (QtWidgets.QPushButton):
         painter.fillRect(buttonRect, color)
 
         if self.buttonPressed:
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 self.image, self.theme.color.browserSocketPressed )
         elif self.buttonHover:
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 self.image, self.theme.color.browserSocketHover )
         else:
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 self.image, self.theme.color.browserSocket )
 
         painter.drawImage(position, image)
@@ -198,13 +198,13 @@ class ThemeButton (QtWidgets.QPushButton):
             image = self.sun
 
         if self.buttonPressed:
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 image, self.theme.color.browserSocketPressed )
         elif self.buttonHover:
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 image, self.theme.color.browserSocketHover )
         else:
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 image, self.theme.color.browserSocket )
 
         painter.drawImage(position, image)
@@ -247,7 +247,7 @@ class FavoriteGroup (QtWidgets.QWidget):
         self.mainLayout.setSpacing(SPACE)
 
         self.label = QtWidgets.QLabel("FAVORITES")
-        toolbox.core.ui.setFont(
+        toolkit.core.ui.setFont(
             self.label,
             UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
@@ -275,7 +275,7 @@ class BookmarkGroup (QtWidgets.QWidget):
         self.mainLayout.setSpacing(SPACE)
 
         self.label = QtWidgets.QLabel("BOOKMARKS")
-        toolbox.core.ui.setFont(
+        toolkit.core.ui.setFont(
             self.label,
             UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
@@ -307,7 +307,7 @@ class ThemeGroup (QtWidgets.QWidget):
         self.mainLayout.setSpacing(SPACE)
 
         self.label = QtWidgets.QLabel("THEME")
-        toolbox.core.ui.setFont(
+        toolkit.core.ui.setFont(
             self.label,
             UIGlobals.Bar.fontPreview)
         self.label.setAlignment(
@@ -361,7 +361,7 @@ class PreviewGroup (QtWidgets.QWidget):
         self.mainLayout.setSpacing(SPACE)
 
         self.label  = QtWidgets.QLabel("PREVIEW")
-        toolbox.core.ui.setFont(
+        toolkit.core.ui.setFont(
             self.label,
             UIGlobals.Bar.fontPreview)
         self.label.setAlignment(

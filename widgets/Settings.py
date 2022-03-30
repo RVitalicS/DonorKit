@@ -3,11 +3,11 @@
 
 import os
 
-import toolbox.system.stream
-import toolbox.core.ui
+import toolkit.system.stream
+import toolkit.core.ui
 
 
-from toolbox.ensure.QtGui import *
+from toolkit.ensure.QtGui import *
 
 
 
@@ -45,25 +45,25 @@ class ExportData (object):
         self.path = os.path.join(
             os.path.dirname(__file__),
             "databank",
-            ".AssetExportSettings.json")
+            ".UsdExportSettings.json")
 
         if not os.path.exists(self.path):
             self.defaultSettings(self.path)
 
-        elif not toolbox.system.stream.validJSON(self.path):
+        elif not toolkit.system.stream.validJSON(self.path):
             self.defaultSettings(self.path)
 
 
     def defaultSettings (self, path):
-        toolbox.system.stream.datawrite(path, self.defaults)
+        toolkit.system.stream.datawrite(path, self.defaults)
 
 
     def load (self):
-        return toolbox.system.stream.dataread(self.path)
+        return toolkit.system.stream.dataread(self.path)
 
 
     def save (self, data):
-        toolbox.system.stream.datawrite(self.path, data)
+        toolkit.system.stream.datawrite(self.path, data)
 
 
 
@@ -114,25 +114,25 @@ class ManagerData (object):
         self.path = os.path.join(
             os.path.dirname(__file__),
             "databank",
-            ".AssetManagerSettings.json")
+            ".AssetDonorSettings.json")
 
         if not os.path.exists(self.path):
             self.defaultSettings(self.path)
 
-        elif not toolbox.system.stream.validJSON(self.path):
+        elif not toolkit.system.stream.validJSON(self.path):
             self.defaultSettings(self.path)
 
 
     def defaultSettings (self, path):
-        toolbox.system.stream.datawrite(path, self.defaults)
+        toolkit.system.stream.datawrite(path, self.defaults)
 
 
     def load (self):
-        return toolbox.system.stream.dataread(self.path)
+        return toolkit.system.stream.dataread(self.path)
 
 
     def save (self, data):
-        toolbox.system.stream.datawrite(self.path, data)
+        toolkit.system.stream.datawrite(self.path, data)
 
 
 
@@ -173,15 +173,15 @@ UIGlobals = DataClass()
 UIGlobals.Path = DataClass()
 UIGlobals.Path.backIcon = 13
 UIGlobals.Path.height   = 32
-UIGlobals.Path.fontRoot = toolbox.core.ui.makeFont( size=9 )
-UIGlobals.Path.fontPath = toolbox.core.ui.makeFont( size=9 )
+UIGlobals.Path.fontRoot = toolkit.core.ui.makeFont(size=9)
+UIGlobals.Path.fontPath = toolkit.core.ui.makeFont(size=9)
 UIGlobals.Path.bookmarkOffset = 1
 
 
 UIGlobals.Bar = DataClass()
 UIGlobals.Bar.height = 32
-UIGlobals.Bar.fontPreview  = toolbox.core.ui.makeFont( size=7 )
-UIGlobals.Bar.fontBookmark = toolbox.core.ui.makeFont( size=8 )
+UIGlobals.Bar.fontPreview  = toolkit.core.ui.makeFont(size=7)
+UIGlobals.Bar.fontBookmark = toolkit.core.ui.makeFont(size=8)
 UIGlobals.Bar.favoriteOffset = 2
 UIGlobals.Bar.bookmarkOffset = 0
 
@@ -231,24 +231,24 @@ UIGlobals.IconDelegate.radiusStatus = 2
 
 UIGlobals.IconDelegate.offsetLink = 9
 
-UIGlobals.IconDelegate.fontLibraries   = toolbox.core.ui.makeFont( size=11 )
-UIGlobals.IconDelegate.fontLibraryName = toolbox.core.ui.makeFont( size=10)
+UIGlobals.IconDelegate.fontLibraries   = toolkit.core.ui.makeFont(size=11)
+UIGlobals.IconDelegate.fontLibraryName = toolkit.core.ui.makeFont(size=10)
 
-UIGlobals.IconDelegate.fontCategory    = toolbox.core.ui.makeFont( size=8 )
-UIGlobals.IconDelegate.fontFolderName  = toolbox.core.ui.makeFont( size=9 )
-UIGlobals.IconDelegate.fontFolderItems = toolbox.core.ui.makeFont( size=7 )
+UIGlobals.IconDelegate.fontCategory    = toolkit.core.ui.makeFont(size=8)
+UIGlobals.IconDelegate.fontFolderName  = toolkit.core.ui.makeFont(size=9)
+UIGlobals.IconDelegate.fontFolderItems = toolkit.core.ui.makeFont(size=7)
 
-UIGlobals.IconDelegate.fontAssetName    = toolbox.core.ui.makeFont( size=8 )
-UIGlobals.IconDelegate.fontAssetVersion = toolbox.core.ui.makeFont( size=7 )
-UIGlobals.IconDelegate.fontAssetLabel   = toolbox.core.ui.makeFont( size=6 )
-UIGlobals.IconDelegate.fontAssetStatus  = toolbox.core.ui.makeFont( size=7 )
-UIGlobals.IconDelegate.fontAssetSize    = toolbox.core.ui.makeFont( size=7 )
+UIGlobals.IconDelegate.fontAssetName    = toolkit.core.ui.makeFont(size=8)
+UIGlobals.IconDelegate.fontAssetVersion = toolkit.core.ui.makeFont(size=7)
+UIGlobals.IconDelegate.fontAssetLabel   = toolkit.core.ui.makeFont(size=6)
+UIGlobals.IconDelegate.fontAssetStatus  = toolkit.core.ui.makeFont(size=7)
+UIGlobals.IconDelegate.fontAssetSize    = toolkit.core.ui.makeFont(size=7)
 
 UIGlobals.IconDelegate.Animation = DataClass()
 UIGlobals.IconDelegate.Animation.space  = 10
 UIGlobals.IconDelegate.Animation.offset = 6
 UIGlobals.IconDelegate.Animation.height = 14
-UIGlobals.IconDelegate.Animation.font   = toolbox.core.ui.makeFont( size=7, weight=QtGui.QFont.Bold )
+UIGlobals.IconDelegate.Animation.font   = toolkit.core.ui.makeFont(size=7, weight=QtGui.QFont.Bold)
 
 
 UIGlobals.Options = DataClass()
@@ -262,22 +262,22 @@ UIGlobals.Options.buttonHeight = 12
 UIGlobals.Options.rawHeight    = 16
 UIGlobals.Options.labelWidth   = 52
 
-UIGlobals.Options.fontName      = toolbox.core.ui.makeFont( size=12, weight=QtGui.QFont.Bold )
-UIGlobals.Options.fontLabel     = toolbox.core.ui.makeFont( size=9 )
-UIGlobals.Options.fontInfo      = toolbox.core.ui.makeFont( size=9 )
-UIGlobals.Options.fontComment   = toolbox.core.ui.makeFont( size=9 )
-UIGlobals.Options.fontOverwrite = toolbox.core.ui.makeFont( size=7 )
-UIGlobals.Options.fontLink      = toolbox.core.ui.makeFont( size=9 )
+UIGlobals.Options.fontName      = toolkit.core.ui.makeFont(size=12, weight=QtGui.QFont.Bold)
+UIGlobals.Options.fontLabel     = toolkit.core.ui.makeFont(size=9)
+UIGlobals.Options.fontInfo      = toolkit.core.ui.makeFont(size=9)
+UIGlobals.Options.fontComment   = toolkit.core.ui.makeFont(size=9)
+UIGlobals.Options.fontOverwrite = toolkit.core.ui.makeFont(size=7)
+UIGlobals.Options.fontLink      = toolkit.core.ui.makeFont(size=9)
 
 UIGlobals.Options.Export = DataClass()
 UIGlobals.Options.Export.patternThickness = 11
 UIGlobals.Options.Export.delayTime = 35
-UIGlobals.Options.Export.font = toolbox.core.ui.makeFont( size=10 )
+UIGlobals.Options.Export.font = toolkit.core.ui.makeFont(size=10)
 
 
 UIGlobals.Options.Status = DataClass()
 UIGlobals.Options.Status.lineWidth    = 4
 UIGlobals.Options.Status.space        = 6
 UIGlobals.Options.Status.buttonHeight = 10
-UIGlobals.Options.Status.fontLabel    = toolbox.core.ui.makeFont( size=6 )
-UIGlobals.Options.Status.fontButton   = toolbox.core.ui.makeFont( size=9 )
+UIGlobals.Options.Status.fontLabel    = toolkit.core.ui.makeFont(size=6)
+UIGlobals.Options.Status.fontButton   = toolkit.core.ui.makeFont(size=9)

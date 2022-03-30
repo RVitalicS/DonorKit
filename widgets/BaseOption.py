@@ -4,15 +4,15 @@
 
 import math
 
-import toolbox.core.calculate
-import toolbox.core.graphics
-import toolbox.core.ui
+import toolkit.core.calculate
+import toolkit.core.graphics
+import toolkit.core.ui
 
 
-from toolbox.ensure.QtWidgets import *
-from toolbox.ensure.QtCore import *
-from toolbox.ensure.QtGui import *
-from toolbox.ensure.Signal import *
+from toolkit.ensure.QtWidgets import *
+from toolkit.ensure.QtCore import *
+from toolkit.ensure.QtGui import *
+from toolkit.ensure.Signal import *
 
 from . import Settings
 UIGlobals = Settings.UIGlobals
@@ -48,7 +48,7 @@ class TextBlock (QtWidgets.QTextEdit):
     def setCommentFont (self, font):
 
         self.fontComment = font
-        toolbox.core.ui.setFont(self, font)
+        toolkit.core.ui.setFont(self, font)
 
 
     def setPropertyTag (self, tag):
@@ -262,7 +262,7 @@ class Status (QtWidgets.QWidget):
         self.labelStatus.setMouseTracking(True)
         self.labelStatus.setObjectName("labelStatus")
         self.labelStatus.setProperty("textcolor", "weak")
-        toolbox.core.ui.setFont(
+        toolkit.core.ui.setFont(
             self.labelStatus,
             fontLabel)
         self.labelStatus.setFixedHeight(labelHeight)
@@ -284,7 +284,7 @@ class Status (QtWidgets.QWidget):
         self.nameStatus.setMouseTracking(True)
         self.nameStatus.setObjectName("nameStatus")
         self.nameStatus.setProperty("textcolor", "kicker")
-        toolbox.core.ui.setFont(
+        toolkit.core.ui.setFont(
             self.nameStatus, fontButton)
         self.nameStatus.setFixedHeight(textHeight)
         self.nameLayout.addWidget(self.nameStatus)
@@ -782,7 +782,7 @@ class SymbolicLink (QtWidgets.QPushButton):
 
         self.setFixedWidth(
             self.image.width() + self.space
-            + toolbox.core.calculate.stringWidth(self.text, self.fontText) )
+            + toolkit.core.calculate.stringWidth(self.text, self.fontText) )
         self.setFixedHeight(self.image.height())
 
 
@@ -801,11 +801,11 @@ class SymbolicLink (QtWidgets.QPushButton):
 
 
         if self.isChecked():
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 self.image, self.theme.color.violet )
             color = QtGui.QColor(self.theme.color.kicker)
         else:
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 self.image, self.theme.color.optionDisable )
             color = QtGui.QColor(self.theme.color.optionDisable)
 

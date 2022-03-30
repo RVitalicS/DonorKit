@@ -3,15 +3,15 @@
 
 import os
 
-import toolbox.core.calculate
-import toolbox.core.graphics
-import toolbox.core.ui
+import toolkit.core.calculate
+import toolkit.core.graphics
+import toolkit.core.ui
 
 
-from toolbox.ensure.QtWidgets import *
-from toolbox.ensure.QtCore import *
-from toolbox.ensure.QtGui import *
-from toolbox.ensure.Signal import *
+from toolkit.ensure.QtWidgets import *
+from toolkit.ensure.QtCore import *
+from toolkit.ensure.QtGui import *
+from toolkit.ensure.Signal import *
 
 from . import Settings
 UIGlobals = Settings.UIGlobals
@@ -60,10 +60,10 @@ class BackButton (QtWidgets.QPushButton):
         painter.fillRect(buttonRect, color)
 
         if self.buttonPressed:
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 self.image, self.theme.color.kicker )
         else:
-            image = toolbox.core.graphics.recolor(
+            image = toolkit.core.graphics.recolor(
                 self.image, self.theme.color.text )
 
         painter.drawImage(position, image)
@@ -130,13 +130,13 @@ class BookmarkButton (QtWidgets.QPushButton):
             painter.fillRect(buttonRect, color)
 
             if self.isChecked():
-                image = toolbox.core.graphics.recolor(
+                image = toolkit.core.graphics.recolor(
                     self.image, self.theme.color.browserBookmark)
             elif self.buttonHover:
-                image = toolbox.core.graphics.recolor(
+                image = toolkit.core.graphics.recolor(
                     self.image, self.theme.color.browserSocketHover)
             else:
-                image = toolbox.core.graphics.recolor(
+                image = toolkit.core.graphics.recolor(
                     self.image, self.theme.color.browserSocket)
 
             painter.drawImage(position, image)
@@ -212,7 +212,7 @@ class Bar (QtWidgets.QWidget):
         self.pathRoot.setObjectName("pathRoot")
         self.pathRoot.setProperty("background", "browser")
         self.pathRoot.setProperty("border", "none")
-        toolbox.core.ui.setFont(
+        toolkit.core.ui.setFont(
             self.pathRoot,
             UIGlobals.Path.fontRoot)
         self.pathRoot.setFixedHeight(UIGlobals.Path.height)
@@ -239,7 +239,7 @@ class Bar (QtWidgets.QWidget):
         self.pathLine.setObjectName("pathLine")
         self.pathLine.setProperty("background", "browser")
         self.pathLine.setProperty("border", "none")
-        toolbox.core.ui.setFont(
+        toolkit.core.ui.setFont(
             self.pathLine,
             UIGlobals.Path.fontPath)
         self.pathLine.setFixedHeight(UIGlobals.Path.height)
@@ -265,7 +265,7 @@ class Bar (QtWidgets.QWidget):
 
         font = UIGlobals.Path.fontPath
         text = self.pathLine.text()
-        textWidth  = toolbox.core.calculate.stringWidth(text, font)
+        textWidth  = toolkit.core.calculate.stringWidth(text, font)
         textWidth += SPACE
 
         sumwidth = (

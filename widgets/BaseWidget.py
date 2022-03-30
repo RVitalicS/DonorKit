@@ -5,15 +5,15 @@
 import os
 import re
 
-import toolbox.system.ostree
-import toolbox.system.stream
+import toolkit.system.ostree
+import toolkit.system.stream
 
-import toolbox.core.naming
-import toolbox.core.timing
+import toolkit.core.naming
+import toolkit.core.timing
 
-from toolbox.ensure.QtWidgets import *
-from toolbox.ensure.QtCore import *
-from toolbox.ensure.QtGui import *
+from toolkit.ensure.QtWidgets import *
+from toolkit.ensure.QtCore import *
+from toolkit.ensure.QtGui import *
 
 from .items import LibraryDelegate
 from .items import DirectoryDelegate
@@ -369,7 +369,7 @@ class Folder (QtWidgets.QWidget):
             data.get("data").get("name") )
 
         if os.path.exists(path):
-            toolbox.system.stream.openFolder(path)
+            toolkit.system.stream.openFolder(path)
 
 
 
@@ -397,7 +397,7 @@ class Library (QtWidgets.QWidget):
             assetPath = os.path.join(rootPath, self.metafile)
 
             if os.path.exists(assetPath):
-                data = toolbox.system.stream.dataread(assetPath)
+                data = toolkit.system.stream.dataread(assetPath)
 
                 if data["type"] == "root":
                     name = data["name"]
@@ -562,14 +562,14 @@ class Browser (QtWidgets.QWidget):
                         folderPath, "usdasset") as metadata:
                     data = metadata
 
-                chosenItem = toolbox.core.naming.chooseAssetItem(folderPath)
+                chosenItem = toolkit.core.naming.chooseAssetItem(folderPath)
 
-                versionCount = toolbox.core.naming.getVersionList(folderPath)
+                versionCount = toolkit.core.naming.getVersionList(folderPath)
                 versionCount = len(versionCount)
 
                 dataType = data["type"]
                 dataTime = data["items"][chosenItem]["published"]
-                publishedTime = toolbox.core.timing.getTimeDifference(dataTime)
+                publishedTime = toolkit.core.timing.getTimeDifference(dataTime)
 
                 if dataType == "usdasset":
 
@@ -584,12 +584,12 @@ class Browser (QtWidgets.QWidget):
                     library.append(
                         dict(type="asset",  data=dict(
                             name=name,
-                            previews=toolbox.core.naming.getUsdPreviews(folderPath, chosenItem),
+                            previews=toolkit.core.naming.getUsdPreviews(folderPath, chosenItem),
                             type=dataType,
-                            version=toolbox.core.naming.getVersion(chosenItem),
+                            version=toolkit.core.naming.getVersion(chosenItem),
                             count=versionCount,
-                            variant=toolbox.core.naming.getVariantName(chosenItem),
-                            animation=toolbox.core.naming.getAnimationName(chosenItem),
+                            variant=toolkit.core.naming.getVariantName(chosenItem),
+                            animation=toolkit.core.naming.getAnimationName(chosenItem),
                             published=publishedTime,
                             status=data["status"],
                             favorite=favorite )) )
@@ -601,7 +601,7 @@ class Browser (QtWidgets.QWidget):
                     library.append(
                         dict(type="folder", data=dict(
                             name=name,
-                            items=toolbox.system.ostree.getItemsCount(folderPath) )) )
+                            items=toolkit.system.ostree.getItemsCount(folderPath) )) )
 
 
         return library
