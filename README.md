@@ -1,4 +1,4 @@
-# <img style="position:relative;top:4px;" src="install/icons/DonorManager.png"> Donor Kit
+# Donor Kit
 Tools for Exporting, Importing and Managing CG Assets:
 + DonorManager for OS
 + DonorManager for Katana
