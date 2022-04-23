@@ -3,6 +3,7 @@
 
 
 import os
+import toolkit.maya.misc
 
 
 import xml.etree.ElementTree as ET
@@ -125,96 +126,6 @@ class Manager (object):
 
 
 
-    def getMPlugAs (self, MPlug, asValue=False, asType=False, echo=False):
-
-
-        MObject = MPlug.attribute()
-
-        attribute = OpenMaya.MFnAttribute(MObject)
-        attrName  = attribute.name()
-
-        apiType = MObject.apiType()
-
-
-        if apiType == OpenMaya.MFn.kNumericAttribute:
-
-            MFnNumericAttribute = OpenMaya.MFnNumericAttribute(MObject)
-            unitType = MFnNumericAttribute.unitType()
-
-            if unitType == OpenMaya.MFnNumericData.kBoolean:
-                if echo: print( "{}: bool".format(attrName) )
-                if asType: return "bool"
-                if asValue: return MPlug.asBool()
-                
-            elif unitType in [ 
-                OpenMaya.MFnNumericData.kInt,
-                OpenMaya.MFnNumericData.kByte,
-                OpenMaya.MFnNumericData.kShort,
-                OpenMaya.MFnNumericData.kLong ]:
-
-                if echo: print( "{}: int".format(attrName) )
-                if asType: return "int"
-                if asValue: return MPlug.asInt()
-                
-            elif unitType == OpenMaya.MFnNumericData.kFloat:
-                if echo: print( "{}: float".format(attrName) )
-                if asType: return "float"
-                if asValue: return MPlug.asFloat()
-                
-            elif unitType == OpenMaya.MFnNumericData.kDouble:
-                if echo: print( "{}: double".format(attrName) )
-                if asType: return "double"
-                if asValue: return MPlug.asDouble()
-
-
-        elif apiType == OpenMaya.MFn.kEnumAttribute:
-
-            if echo: print( "{}: int".format(attrName) )
-            if asType: return "int"
-            if asValue: return MPlug.asInt()
-
-
-        elif apiType == OpenMaya.MFn.kTypedAttribute:
-
-            MFnTypedAttribute = OpenMaya.MFnTypedAttribute(MObject)
-            attrType = MFnTypedAttribute.attrType()
-
-            if attrType == OpenMaya.MFnData.kString:
-                if echo: print( "{}: string".format(attrName) )
-                if asType: return "string"
-                if asValue: return MPlug.asString()
-
-            elif attrType == OpenMaya.MFnData.kMatrix:
-                MFnMatrixData = OpenMaya.MFnMatrixData( MPlug.asMObject() )
-
-                if echo: print( "{}: matrix".format(attrName) )
-                if asType: return "matrix"
-                if asValue: return MFnMatrixData.matrix()
-
-
-        elif apiType in [ 
-            OpenMaya.MFn.kAttribute3Float,
-            OpenMaya.MFn.kAttribute3Double,
-            OpenMaya.MFn.kCompoundAttribute ]:
-
-            result = []
-            for index in range( MPlug.numChildren() ):
-
-                value = self.getMPlugAs( MPlug.child(index),
-                       asValue=True )
-                result.append( value )
-            
-
-            typeString = "float3"
-            if attribute.isUsedAsColor():
-                typeString = "color3f"
-
-            if echo: print( "{}: {}".format(attrName, typeString) )
-            if asType: return typeString
-            if asValue: return tuple(result)
-
-
-
     def getNetwork (self, shader, prman=True, collector={}):
 
         shaderType = shader.typeName()
@@ -247,19 +158,20 @@ class Manager (object):
                 MPlug = shader.findPlug(attrName)
 
                 if attribute.isWritable():
-                    if MPlug.isConnected():
+
+                    if MPlug.isConnected() and shaderType != "PxrManifold2D":
 
                         if not prman and attrName not in [
-                            "diffuseColor",
-                            "roughness",
-                            "uvCoord"]:
+                                "diffuseColor",
+                                "roughness",
+                                "uvCoord"]:
                             continue
                         
-                        valueType = self.getMPlugAs( MPlug, asType=True )
+                        valueType = toolkit.maya.misc.getMPlugAs( MPlug, asType=True )
 
                         if prman:
                             data = shaderDefaults.get(attrName, None)
-                            if not data is None:
+                            if data != None:
                                 valueType = data["type"]
 
                         MPlugSource = MPlug.source()
@@ -278,11 +190,13 @@ class Manager (object):
                                 prman=prman,
                                 collector=collector )
 
+
+
                     elif prman:
                         data = shaderDefaults.get(attrName, None)
-                        value = self.getMPlugAs( MPlug, asValue=True )
+                        value = toolkit.maya.misc.getMPlugAs( MPlug, asValue=True )
 
-                        if not data is None and not value is None:
+                        if data != None and value != None:
 
                             valueDefault = data["default"]
                             valueType    = data["type"]
@@ -308,7 +222,6 @@ class Manager (object):
                             elif value != valueDefault:
                                     isDefault = False
 
-
                             if not isDefault:
                                 inputs[attrName] = dict(
                                 value=value,
@@ -326,12 +239,11 @@ class Manager (object):
                         "roughness",
                         "clearcoat",
                         "clearcoatRoughness",
-                        "fileTextureName",
-                        "repeatUV" ] and not MPlug.isDefaultValue():
+                        "fileTextureName" ] and not MPlug.isDefaultValue():
 
-                        value = self.getMPlugAs( MPlug, asValue=True )
+                        value = toolkit.maya.misc.getMPlugAs( MPlug, asValue=True )
                         if not value is None:
-                            typeString = self.getMPlugAs( MPlug, asType=True )
+                            typeString = toolkit.maya.misc.getMPlugAs( MPlug, asType=True )
 
                             inputs[attrName] = dict(
                                 value=value,
@@ -394,9 +306,72 @@ class Manager (object):
             shader = OpenMaya.MFnDependencyNode(
                 connectionSource.node() )
 
-            material["shaders"] = self.getNetwork(
+            network = self.getNetwork(
                 shader,
                 prman=False,
                 collector=material["shaders"] )
+            material["shaders"] = self.editPreviewNetwork(network)
 
         return material
+
+
+
+    def editPreviewNetwork (self, data):
+
+        network = dict()
+        replace = dict()
+
+
+        # add manifold transform node
+        for shaderName, value in data.items():
+
+            if value.get("id") == "place2dTexture":
+                nameTransform = shaderName + "Transform"
+
+                outputManifold  = shaderName + ".outUV"
+                outputTransform = nameTransform + ".outUV"
+
+                shader = toolkit.maya.misc.getShaderByName(shaderName)
+                repeatUV = toolkit.maya.misc.getNodeAttribute(shader, "repeatUV")
+                rotateUV = toolkit.maya.misc.getNodeAttribute(shader, "rotateUV")
+                offset = toolkit.maya.misc.getNodeAttribute(shader, "offset")
+
+                network[nameTransform] = dict(
+                    id="UsdTransform2d",
+                    inputs={
+                        "in": {
+                            "value": outputManifold,
+                            "type": "float2",
+                            "connection": True
+                        },
+                        "scale": {
+                            "value": toolkit.maya.misc.getMPlugAs(repeatUV, asValue=True),
+                            "type": toolkit.maya.misc.getMPlugAs(repeatUV, asType=True),
+                            "connection": False
+                        },
+                        "rotation": {
+                            "value": toolkit.maya.misc.getMPlugAs(rotateUV, asValue=True),
+                            "type": toolkit.maya.misc.getMPlugAs(rotateUV, asType=True),
+                            "connection": False
+                        },
+                        "translation": {
+                            "value": toolkit.maya.misc.getMPlugAs(offset, asValue=True),
+                            "type": toolkit.maya.misc.getMPlugAs(offset, asType=True),
+                            "connection": False
+                        }
+                    } )
+
+                replace[outputManifold] = outputTransform
+
+
+        # edit manifold bindings
+        for shaderName, item in data.items():
+            for key, value in item.get("inputs").items():
+                output = value.get("value")
+                if output in replace:
+                    value["value"] = replace.get(output)
+
+            network[shaderName] = item
+
+
+        return network

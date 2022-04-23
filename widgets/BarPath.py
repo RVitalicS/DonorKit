@@ -1,18 +1,26 @@
 #!/usr/bin/env python
 
 
+import re
 import os
+
+thisDir = os.path.dirname(__file__)
+rootDir = os.path.dirname(thisDir)
+
 
 import toolkit.core.calculate
 import toolkit.core.graphics
 import toolkit.core.ui
 
 
+from toolkit.system import stream
+
 from toolkit.ensure.QtWidgets import *
 from toolkit.ensure.QtCore import *
 from toolkit.ensure.QtGui import *
 from toolkit.ensure.Signal import *
 
+from . import Metadata
 from . import Settings
 UIGlobals = Settings.UIGlobals
 
@@ -169,8 +177,8 @@ class Bar (QtWidgets.QWidget):
     def __init__ (self, theme):
         super(Bar, self).__init__()
 
-        self.root   = str()
-        self.group  = str()
+        self.theme = theme
+        self.libraries = self.getLibraries()
 
 
         height  = MARGIN
@@ -205,21 +213,21 @@ class Bar (QtWidgets.QWidget):
         
         self.backButton = BackButton(theme)
         self.rootLayout.addWidget(self.backButton)
-        self.backButton.released.connect(self.moveBack)
+        self.backButton.released.connect(self.goBack)
 
 
-        self.pathRoot = QtWidgets.QPushButton()
-        self.pathRoot.setObjectName("pathRoot")
-        self.pathRoot.setProperty("background", "browser")
-        self.pathRoot.setProperty("border", "none")
+        self.rootButton = QtWidgets.QPushButton()
+        self.rootButton.setObjectName("rootButton")
+        self.rootButton.setProperty("background", "browser")
+        self.rootButton.setProperty("border", "none")
         toolkit.core.ui.setFont(
-            self.pathRoot,
+            self.rootButton,
             UIGlobals.Path.fontRoot)
-        self.pathRoot.setFixedHeight(UIGlobals.Path.height)
-        self.pathRoot.setMinimumWidth(0)
-        self.pathRoot.setFlat(True)
-        self.rootLayout.addWidget(self.pathRoot)
-        self.pathRoot.clicked.connect(self.resetRoot)
+        self.rootButton.setFixedHeight(UIGlobals.Path.height)
+        self.rootButton.setMinimumWidth(0)
+        self.rootButton.setFlat(True)
+        self.rootLayout.addWidget(self.rootButton)
+        self.rootButton.clicked.connect(self.goLibrary)
 
 
         self.subdirLayout = QtWidgets.QVBoxLayout()
@@ -231,12 +239,13 @@ class Bar (QtWidgets.QWidget):
 
         self.bookmarkButton = BookmarkButton(theme)
         self.bookmarkButton.setCheckable(True)
-        self.bookmarkButton.clicked.connect(self.actionBookmark)
+        self.bookmarkButton.clicked.connect(self.switchBookmark)
         self.subdirLayout.addWidget(self.bookmarkButton)
 
 
         self.pathLine = QtWidgets.QLineEdit()
         self.pathLine.setObjectName("pathLine")
+        self.pathLine.setProperty("textcolor", "on")
         self.pathLine.setProperty("background", "browser")
         self.pathLine.setProperty("border", "none")
         toolkit.core.ui.setFont(
@@ -245,7 +254,7 @@ class Bar (QtWidgets.QWidget):
         self.pathLine.setFixedHeight(UIGlobals.Path.height)
         self.pathLine.setObjectName("pathLine")
         self.subdirLayout.addWidget(self.pathLine)
-        self.pathLine.editingFinished.connect(self.changeSubdir)
+        self.pathLine.editingFinished.connect(self.goQuery)
 
         self.mainLayout.setStretch(0, 0)
         self.mainLayout.setStretch(1, 1)
@@ -253,9 +262,285 @@ class Bar (QtWidgets.QWidget):
 
 
 
-    def resizeEvent (self, event):
-        super(Bar, self).resizeEvent(event)
-        self.uiVisibility()
+    def getUI (self, root=False):
+
+        pathUI = self.rootButton.text()
+
+        subdir  = self.pathLine.text()
+        if subdir and not root:
+            pathUI += "/"+ subdir
+
+        return pathUI
+
+
+
+    def setUI (self, pathUI):
+
+        path = self.resolve(pathUI)
+
+        if pathUI and not path: return
+        if not pathUI: path = ""
+
+        subdir  = pathUI.split("/")
+        libname = subdir[0]
+        subdir.remove(libname)
+        subdir = "/".join(subdir)
+
+        self.rootButton.setText(libname)
+        self.pathLine.setText(subdir)
+
+        with Settings.Manager(self.theme.app, True) as settings:
+            settings["location"] = pathUI
+
+        self.goEmit(path)
+
+
+
+    def resolve (self, pathUI=None ):
+
+        if pathUI == None:
+            pathUI = self.getUI()
+
+        subdir  = pathUI.split("/")
+        libname = subdir[0]
+        subdir.remove(libname)
+
+
+        path = self.libraries.get(libname, "")
+        for item in subdir:
+            path = os.path.join(path, item)
+
+            if os.path.exists(path):
+                continue
+
+            dirname = os.path.dirname(path)
+            metadata = os.path.join(dirname, Metadata.NAME)
+            if not os.path.exists(metadata):
+                continue
+
+            data = stream.dataread(metadata)
+            dataType = data.get("type")
+
+            if dataType == "foldercolors":
+                for filename in os.listdir(dirname):
+
+                    if not re.search(r"\.json*$", filename):
+                        continue
+                    elif filename == Metadata.NAME:
+                        continue
+
+                    filepath = os.path.join(dirname, filename)
+                    data = stream.dataread(filepath)
+
+                    if data.get("title") == item:
+                        path = os.path.join(dirname, filename)
+                        break
+
+
+        if os.path.exists(path):
+            return path
+
+
+
+    def exists (self, pathUI):
+
+        result = False
+        itemUI = None
+
+        components = pathUI.split(":")
+        if len(components) == 2:
+            pathUI, itemUI = components
+
+        path = self.resolve(pathUI)
+
+        if path and not itemUI:
+            result = True
+        
+        elif path and itemUI:
+
+            if self.isColors(path):
+                data = stream.dataread(path)
+                records = data.get("records", {})
+
+                for name,color in records.items():
+                    code = color.get("code")
+
+                    if code == itemUI:
+                        result = True
+                        break
+
+        return result
+
+
+
+    def isRoot (self, path ):
+
+        if path == "":
+            return True
+
+        return False
+
+
+    def isUsdAsset (self, path=None ):
+
+        if path == None:
+            path = self.resolve()
+
+        if os.path.isdir(path):
+            dataType = toolkit.core.metadata.getType(path)
+
+            if dataType == "usdasset":
+                return True
+
+        return False
+
+
+
+    def isFolderColors (self, path=None ):
+
+        if path == None:
+            path = self.resolve()
+
+        if os.path.isdir(path):
+            dataType = toolkit.core.metadata.getType(path)
+
+            if dataType == "foldercolors":
+                return True
+
+        return False
+
+
+
+    def isColors (self, path=None ):
+
+        if path == None:
+            path = self.resolve()
+
+        if os.path.isfile(path):
+            path = os.path.dirname(path)
+            dataType = toolkit.core.metadata.getType(path)
+
+            if dataType == "foldercolors":
+                return True
+
+        return False
+
+
+
+    def goEmit (self, path):
+
+        bookmarks = []
+        with Settings.Manager(self.theme.app, False) as settings:
+            bookmarks = settings.get("bookmarks")
+
+        pathUI = self.getUI()
+        if pathUI in bookmarks:
+            self.bookmarkButton.setChecked(True)
+        else:
+            self.bookmarkButton.setChecked(False)
+        
+        self.pathChanged.emit(path)
+
+
+
+    def goQuery (self):
+
+        pathUI = self.getUI()
+        self.setUI(pathUI)
+
+        with Settings.Manager(self.theme.app, False) as settings:
+            pathUI = settings.get("location")
+
+        subdir  = pathUI.split("/")
+        libname = subdir[0]
+        subdir.remove(libname)
+        subdir = "/".join(subdir)
+
+        self.pathLine.setText(subdir)
+
+
+
+    def goForward (self, name):
+
+        pathUI = os.path.join(self.getUI(), name)
+        path = self.resolve(pathUI)
+        if not path: return
+
+        text = os.path.join(self.pathLine.text(), name)
+        self.pathLine.setText(text)
+
+        with Settings.Manager(self.theme.app, True) as settings:
+                settings["location"] = pathUI
+        
+        self.goEmit(path)
+
+
+
+    def goBack (self):
+
+        pathUI = os.path.dirname(self.getUI())
+        path = self.resolve(pathUI)
+
+        if pathUI and not path: return
+        if not pathUI: path = ""
+
+        text = os.path.dirname(self.pathLine.text())
+        self.pathLine.setText(text)
+
+        with Settings.Manager(self.theme.app, True) as settings:
+            settings["location"] = pathUI
+    
+        self.goEmit(path)
+
+
+
+    def goLibrary (self):
+
+        pathUI = self.getUI(root=True)
+        path = self.resolve(pathUI)
+        if not path: return
+
+        self.pathLine.setText("")
+
+        with Settings.Manager(self.theme.app, True) as settings:
+            settings["location"] = pathUI
+
+        self.goEmit(path)
+
+
+
+    def getLibraries (self):
+
+        libraries = dict()
+        
+        if not os.getenv("ASSETLIBS", ""):
+
+            libsDir = os.path.join(
+                rootDir, "examples", "libraries" )
+
+            os.environ["ASSETLIBS"] = "{}:{}".format(
+                os.path.join(libsDir, "Colors" ) ,
+                os.path.join(libsDir, "Models" ) )
+
+        path = os.getenv("ASSETLIBS", "")
+
+        for rootPath in path.split(":"):
+            assetPath = os.path.join(rootPath, Metadata.NAME)
+
+            if os.path.exists(assetPath):
+                data = toolkit.system.stream.dataread(assetPath)
+
+                if data["type"] == "root":
+                    name = data["name"]
+                    libraries[name] = rootPath
+
+        return libraries
+
+
+
+    def switchBookmark (self):
+        
+        self.bookmarkClicked.emit()
 
 
 
@@ -270,7 +555,7 @@ class Bar (QtWidgets.QWidget):
 
         sumwidth = (
             self.backButton.width()
-            + self.pathRoot.width()
+            + self.rootButton.width()
             + SPACE * 3
             + textWidth )
 
@@ -284,125 +569,6 @@ class Bar (QtWidgets.QWidget):
 
 
 
-    def actionBookmark (self):
-        
-        self.bookmarkClicked.emit()
-
-
-
-    def setRoot (self, name, path, finish=True):
-
-        self.pathRoot.setText(name)
-        self.root = path
-
-        with Settings.Manager(update=True) as settings:
-            subdirLibrary = settings["subdirLibrary"]
-
-            if os.path.exists(os.path.join(path, subdirLibrary)):
-                self.pathLine.setText(subdirLibrary)
-            else:
-                settings["subdirLibrary"] = ""
-                self.pathLine.setText("")
-
-        if finish:
-            path = os.path.join(self.root, self.pathLine.text())
-            self.pathChanged.emit(path)
-
-
-
-    def resetRoot (self):
-
-        if self.group:
-            self.group = str()
-
-        with Settings.Manager(update=True) as settings:
-            settings["subdirLibrary"] = ""
-            self.pathLine.setText("")
-
-        self.pathChanged.emit(self.root)
-
-
-
-    def moveForward (self, name):
-
-        subdir = os.path.join(self.pathLine.text(), name)
-        path   = os.path.join(self.root, subdir)
-
-        if os.path.exists(path):
-            with Settings.Manager(update=True) as settings:
-
-                settings["subdirLibrary"] = subdir
-                self.pathLine.setText(subdir)
-            
-            self.pathChanged.emit(path)
-
-
-
-    def moveBack (self):
-
-        if self.group:
-            self.group = str()
-
-            path = os.path.join(
-                self.root, self.pathLine.text())
-            self.pathChanged.emit(path)
-            return
-
-
-        if not self.pathLine.text():
-            with Settings.Manager(update=True) as settings:
-                settings["focusLibrary"] = ""
-                
-            self.pathChanged.emit("")
-            return
-
-        subdir = os.path.dirname(self.pathLine.text())
-        path   = os.path.join(self.root, subdir)
-
-        if os.path.exists(path):
-            with Settings.Manager(update=True) as settings:
-
-                settings["subdirLibrary"] = subdir
-                self.pathLine.setText(subdir)
-            
-            self.pathChanged.emit(path)
-
-
-
-    def changeSubdir (self, text=None):
-
-        success = True
-
-        if text is not None:
-            self.pathLine.setText(text)
-        else:
-            text = self.pathLine.text()
-
-        with Settings.Manager(update=True) as settings:
-
-            path = os.path.join(self.root, text)
-            if os.path.exists(path):
-                
-                if self.group:
-                    self.group = str()
-
-                settings["subdirLibrary"] = text
-                self.pathChanged.emit(path)
-
-            else:
-                subdir = settings["subdirLibrary"]
-                self.pathLine.setText(subdir)
-                settings["subdirLibrary"] = subdir
-
-                success = False
-
-
-        return success
-
-
-
-    def get (self):
-
-        return os.path.join(
-            self.root,
-            self.pathLine.text() )
+    def resizeEvent (self, event):
+        super(Bar, self).resizeEvent(event)
+        self.uiVisibility()

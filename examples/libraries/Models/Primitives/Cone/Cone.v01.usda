@@ -1,0 +1,35 @@
+#usda 1.0
+(
+    defaultPrim = "Cone"
+)
+
+def Xform "Cone" (
+    assetInfo = {
+        string name = "Cone"
+    }
+    kind = "assembly"
+    variants = {
+        string geo = "render"
+    }
+    prepend variantSets = "geo"
+)
+{
+    variantSet "geo" = {
+        "proxy" {
+            over "Cone"
+            {
+            }
+
+        }
+        "render" {
+            over "Cone" (
+                kind = "component"
+                prepend payload = @./modelling/Cone.v01.usdc@
+            )
+            {
+            }
+
+        }
+    }
+}
+

@@ -1,0 +1,190 @@
+
+
+
+
+
+*[background="transparent"] { background: transparent; }
+*[background="browser"] { background: $BROWSER_BACKGROUND; }
+*[background="options"] { background: $OPTION_BACKGROUND; }
+*[background="black"] { background: $BLACK_COLOR; }
+
+*[border="none"] { border: none; }
+*[border="round"] { border-radius: 4px; }
+
+*[textcolor="kicker"] { color: $KICKER; }
+*[textcolor="white"] { color: $WHITE_COLOR; }
+*[textcolor="on"] { color: $TEXT_ON; }
+*[textcolor="off"] { color: $TEXT_OFF; }
+*[textcolor="dim"] { color: $TEXT_DIM; }
+*[textcolor="disabled"] { color: $OPTION_DISABLE; }
+*[textcolor="weak"] { color: $TEXT_LOCK; }
+*[textcolor="violet"] { color: $VIOLET_COLOR; }
+*[textcolor="error"] { color: $TEXT_ERROR; }
+
+*[fontsize="6"] { font-size: 6px; }
+*[fontsize="7"] { font-size: 7px; }
+*[fontsize="8"] { font-size: 8px; }
+*[fontsize="9"] { font-size: 9px; }
+*[fontsize="10"] { font-size: 10px; }
+*[fontsize="11"] { font-size: 11px; }
+*[fontsize="12"] { font-size: 12px; }
+*[fontsize="13"] { font-size: 13px; }
+*[fontsize="14"] { font-size: 14px; }
+*[fontsize="15"] { font-size: 15px; }
+*[fontsize="16"] { font-size: 16px; }
+*[fontsize="17"] { font-size: 17px; }
+*[fontsize="18"] { font-size: 18px; }
+*[fontsize="19"] { font-size: 19px; }
+*[fontsize="20"] { font-size: 20px; }
+
+*[fontfamily="cantarell"] { font-family: "Cantarell"; }
+
+
+
+
+QSlider::groove:horizontal {
+    border: none;
+    height: 12px;
+    background: $HANDLE_SOCKET;
+    margin: 0px 0;
+    border-radius: 6px;
+}
+
+QSlider::handle:horizontal {
+    background: $BROWSER_HANDLE;
+    border: none;
+    width: 12px;
+    margin: 0px 0;
+    border-radius: 6px;
+}
+
+
+
+
+
+QScrollBar:horizontal,
+QScrollBar:vertical {
+    background: $BROWSER_BACKGROUND;
+    border: none;
+    border-radius: 3px;
+}
+
+QScrollBar:horizontal {
+    height:0px;
+    margin-bottom: 0px;
+}
+
+QScrollBar:vertical {
+    width:9px;
+    margin-right: 3px;
+}
+
+QScrollBar::handle:horizontal { min-width:45px; }
+QScrollBar::handle:vertical { min-height:45px; }
+
+QScrollBar::handle:horizontal,
+QScrollBar::handle:vertical {
+    background: $BROWSER_HANDLE;
+    border: none;
+    border-radius: 3px;
+}
+
+QScrollBar:left-arrow:horizontal,
+QScrollBar::right-arrow:horizontal,
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal,
+QScrollBar:left-arrow:vertical,
+QScrollBar::right-arrow:vertical,
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical  {
+    background: transparent;
+}
+
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal,
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+
+
+
+
+QPushButton[objectName~="rootButton"] {
+    color: $TEXT_ON;
+}
+
+QPushButton::pressed[objectName~="rootButton"] {
+    color: $KICKER;
+}
+
+
+
+
+
+QPushButton:checked[objectName~="modelingOverwrite"],
+QPushButton:checked[objectName~="surfacingOverwrite"],
+QPushButton:checked[objectName~="animationOverwrite"] {
+    color: $WHITE_COLOR;
+    background: $BLACK_COLOR;
+    border-radius: 8px;
+    border: none;
+}
+
+QPushButton[objectName~="modelingOverwrite"],
+QPushButton[objectName~="surfacingOverwrite"],
+QPushButton[objectName~="animationOverwrite"],
+QPushButton:disabled[objectName~="modelingOverwrite"],
+QPushButton:disabled[objectName~="surfacingOverwrite"],
+QPushButton:disabled[objectName~="animationOverwrite"] {
+    color: $TEXT_OVER;
+    background: $OPTION_DISABLE;
+    border-radius: 8px;
+    border: none;
+}
+
+
+
+
+
+QComboBox:editable[textcolor="violet"] {
+    color: $VIOLET_COLOR;
+    background: transparent;
+    border: none;
+}
+
+QComboBox:editable[textcolor="error"] {
+    color: $TEXT_ERROR;
+    background: transparent;
+    border: none;
+}
+
+QComboBox:editable {
+    color: $TEXT_ON;
+    background: transparent;
+    border: none;
+}
+
+QComboBox::drop-down {
+    border: none;
+    background: transparent;
+}
+
+QComboBox QAbstractItemView {
+    border: none;
+    color: $TEXT_ON;
+    background: transparent;
+    selection-background-color: $BLACK_COLOR;
+}
+
+
+
+
+QComboBox,
+QSpinBox,
+QLineEdit,
+QTextEdit {
+    selection-color: $SELECTION_COLOR;
+    selection-background-color: $SELECTION_BACKGROUND;
+}

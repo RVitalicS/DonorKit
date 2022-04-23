@@ -31,6 +31,7 @@ class Painter (object):
         self.iconRect = QtCore.QRect()
 
         self.previewImage = QtGui.QImage()
+        self.previewColor = QtGui.QColor()
 
 
 
@@ -55,9 +56,11 @@ class Painter (object):
 
         self.checked = self.index.data(QtCore.Qt.StatusTipRole)
 
-        self.data = self.index.data(QtCore.Qt.EditRole).get("data")
-        self.type = self.index.data(QtCore.Qt.EditRole).get("type")
-        if self.type != "asset":
+        self.data = self.index.data(QtCore.Qt.EditRole)
+        self.type = self.data.get("type")
+        if self.type not in [
+                "usdasset", "usdfile",
+                "colorguide", "color"]:
             self.radius = 0
 
         self.width  = self.option.rect.width()
@@ -75,7 +78,7 @@ class Painter (object):
         self.hover = False
         if self.iconRect.contains(self.pointer):
             self.hover = True
-        
+
         clipPath = QtGui.QPainterPath()
         clipPath.addRoundedRect(
             QtCore.QRectF(self.iconRect),
@@ -111,13 +114,12 @@ class Painter (object):
                 self.copyPreviewCrop(rect) )
             if not lightness:
                 lightness = QtGui.QColor(
-                    self.theme.color.iconSpace ).lightnessF()
+                    self.theme.color.iconSpace ).valueF()
         else:
-            lightness = QtGui.QColor(
-                self.theme.color.iconSpace ).lightnessF()
+            lightness = self.previewColor.valueF()
 
         color = QtGui.QColor(hexValue)
-        if abs(lightness - color.lightnessF()) < 0.5:
+        if abs(lightness - color.valueF()) < 0.5:
             hexValue = self.theme.color.black
 
         return hexValue

@@ -1,0 +1,23 @@
+#usda 1.0
+(
+    defaultPrim = "Camera"
+    endTimeCode = 60
+    framesPerSecond = 30
+    startTimeCode = 1
+)
+
+def Xform "Camera"
+{
+    float3 xformOp:rotateXYZ = (-17.738352, 52.2, -1.2973234e-15)
+    double3 xformOp:translate = (4.023246641256704, 2.115630272746738, 3.1241782247564265)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+
+    def Camera "CameraShape"
+    {
+        float2 clippingRange = (0.001, 100)
+        float focalLength = 60
+        float horizontalAperture = 42.66658
+        float verticalAperture = 23.999952
+    }
+}
+

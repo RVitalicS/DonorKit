@@ -25,6 +25,10 @@ class DonorManager (
         actions.loadUsdFile(path)
 
 
+    def loadColor (self, data):
+        actions.loadColor(data)
+
+
 
 
 

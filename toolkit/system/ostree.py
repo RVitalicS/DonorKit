@@ -5,6 +5,7 @@ import os
 import re
 
 import toolkit.core.naming
+from widgets.Metadata import NAME as metafile
 
 
 # define names of directories
@@ -81,16 +82,16 @@ def buildUsdRoot ( root,
         if not os.path.exists(surfacing):
             os.mkdir(surfacing)
 
-        textures = os.path.join(surfacing, SUBDIR_TEXTURES)
-        if not os.path.exists(textures):
-            os.mkdir(textures)
+        # textures = os.path.join(surfacing, SUBDIR_TEXTURES)
+        # if not os.path.exists(textures):
+        #     os.mkdir(textures)
 
 
 
 
 
 
-def getItemsCount (path):
+def getItemCount (path):
 
     count = int()
 
@@ -99,6 +100,27 @@ def getItemsCount (path):
         itempath = os.path.join(path, item)
         if not os.path.isdir(itempath):
             continue
+        count += 1
+
+    return count
+
+
+
+
+
+
+def getGroupCount (path):
+
+    count = int()
+
+    for item in os.listdir(path):
+
+        if item == metafile:
+            continue
+
+        if not re.search(r"\.json$", item):
+            continue
+
         count += 1
 
     return count

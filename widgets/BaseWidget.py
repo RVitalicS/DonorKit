@@ -8,6 +8,7 @@ import re
 import toolkit.system.ostree
 import toolkit.system.stream
 
+import toolkit.core.metadata
 import toolkit.core.naming
 import toolkit.core.timing
 
@@ -30,13 +31,14 @@ from . import Settings
 
 
 
-class Bookmark (QtWidgets.QWidget):
+
+class Bookmark (object):
 
 
 
     def bookmarkIndex (self):
 
-        pathUI = self.getPathUI()
+        pathUI = self.AssetPath.getUI()
         count = self.BarBottom.bookmarkCombobox.count()
 
         for index in range(count):
@@ -47,184 +49,51 @@ class Bookmark (QtWidgets.QWidget):
 
 
 
-    def actionBookmark (self):
+    def switchBookmark (self):
 
         index = self.bookmarkIndex()
-        if index is not None:
+        if index != None:
 
-            pathID = self.BarBottom.bookmarkCombobox.itemData(index)
-            with Settings.Manager(update=True) as settings:
-                if pathID in settings["bookmarks"]:
-                    settings["bookmarks"].remove(pathID)
+            pathUI = self.BarBottom.bookmarkCombobox.itemText(index)
+            with Settings.Manager(self.theme.app, True) as settings:
+                if pathUI in settings["bookmarks"]:
+                    settings["bookmarks"].remove(pathUI)
 
             self.BarBottom.bookmarkCombobox.removeItem(index)
 
         else:
-            pathUI = self.getPathUI()
-            pathID = self.getPathID()
+            pathUI = self.AssetPath.getUI()
+            with Settings.Manager(self.theme.app, True) as settings:
+                settings["bookmarks"].append(pathUI)
 
-            with Settings.Manager(update=True) as settings:
-                settings["bookmarks"] += [pathID]
-
-            self.BarBottom.bookmarkCombobox.addItem(pathUI, pathID)
+            self.BarBottom.bookmarkCombobox.addItem(pathUI)
             self.sortBookmarks()
 
 
 
-    def getPathUI (self):
+    def jumpBookmark (self, pathUI):
 
-        root   = self.AssetPath.pathRoot.text()
-        subdir = self.AssetPath.pathLine.text()
+        if pathUI == self.AssetPath.getUI():
+            return
+        self.AssetPath.setUI(pathUI)
 
-        if subdir:
-            return root +"/"+ subdir
-        else:
-            return root
-
-
-
-    def getPathID (self, asset=None):
-
-        library = self.AssetPath.pathRoot.text()
-        subdir  = self.AssetPath.pathLine.text()
-
-        path = "{"+ library +"}" + subdir
-
-        if asset is not None:
-            path += "/" + asset
-
-        return path
-
-
-
-    def jumpBookmark (self, pathID):
-
-        bookmark = self.interpretID(pathID)
-        if bookmark is not None:
-            library, subdir = bookmark
-
-            newRoot = False
-            if library != self.AssetPath.pathRoot.text():
-                newRoot = True
-
-            newSubd = False
-            if subdir != self.AssetPath.pathLine.text():
-                newSubd = True
-
-            if not newRoot and not newSubd:
-                return
-
-            self.setLibrary(library, finish=False)
-            success = self.AssetPath.changeSubdir(subdir)
-
-            if not success:
-                with Settings.Manager(update=True) as settings:
-                    if pathID in settings["bookmarks"]:
-                        settings["bookmarks"].remove(pathID)
-
-                count = self.BarBottom.bookmarkCombobox.count()
-                for index in range(count):
-                    data = self.BarBottom.bookmarkCombobox.itemData(index)
-                    if pathID == data:
-                        self.BarBottom.bookmarkCombobox.removeItem(index)
-                        break
-
-            self.BarBottom.bookmarkCombobox.setCurrentIndex(-1)
-
-
-
-    def interpretID (self, pathID):
-
-        key = re.search(r"\{.*\}", pathID)
-        if key:
-            key = key.group()
-
-            library = re.sub(r"[\{\}]", "", key)
-            subdir = re.sub(key, "", pathID)
-
-            return (library, subdir)
-
-
-
-    def translateID (self, pathID):
-
-        path = ""
-        bookmark = self.interpretID(pathID)
-
-        if bookmark is not None:
-            root, subdir = bookmark
-
-            root = self.libraries.get(root)
-            if root is not None:
-
-                if subdir:
-                    path = root +"/"+ subdir
-                else:
-                    path = root
-
-        return path
+        self.BarBottom.bookmarkCombobox.setCurrentIndex(-1)
 
 
 
     def sortBookmarks (self):
 
-        count = self.BarBottom.bookmarkCombobox.count()
         bookmarks = []
 
+        count = self.BarBottom.bookmarkCombobox.count()
         for index in range(count):
             pathUI = self.BarBottom.bookmarkCombobox.itemText(index)
-            pathID = self.BarBottom.bookmarkCombobox.itemData(index)
-            bookmarks += [ { "UI":pathUI, "ID":pathID } ]
+            bookmarks.append(pathUI)
+
+        bookmarks.sort()
 
         self.BarBottom.bookmarkCombobox.clear()
-        bookmarks.sort( key=lambda item : item.get("ID") )
-
-        for item in bookmarks:
-            pathUI = item.get("UI")
-            pathID = item.get("ID")
-            self.BarBottom.bookmarkCombobox.addItem(pathUI, pathID)
-
-
-
-    def applyUiSettings (self):
-
-        blacklist = []
-        with Settings.Manager(update=False) as settings:
-
-            if settings.get("favoriteFilter"):
-                self.BarBottom.favorite.button.setChecked(True)
-
-
-            self.BarBottom.bookmarkCombobox.clear()
-            bookmarks = settings.get("bookmarks")
-            for data in bookmarks:
-                bookmark = self.interpretID(data)
-                if bookmark is not None:
-                    library, subdir = bookmark
-
-                    name = library
-                    if subdir: name += "/"+ subdir
-
-                    if library not in self.libraries:
-                        blacklist.append(data)
-                        continue
-
-                    root = self.libraries.get(library, "")
-                    path = os.path.join(root, name)
-                    if os.path.exists(path):
-                        blacklist.append(data)
-                        continue
-
-                    self.BarBottom.bookmarkCombobox.addItem(name, data)
-
-        if blacklist:
-            with Settings.Manager(update=True) as settings:
-                for data in blacklist:
-                    settings["bookmarks"].remove(data)
-
-
-        self.sortBookmarks()
-        self.BarBottom.bookmarkCombobox.setCurrentIndex(-1)
+        self.BarBottom.bookmarkCombobox.addItems(bookmarks)
 
 
 
@@ -232,7 +101,8 @@ class Bookmark (QtWidgets.QWidget):
 
 
 
-class Favorite (QtWidgets.QWidget):
+
+class Favorite (object):
 
 
 
@@ -242,18 +112,36 @@ class Favorite (QtWidgets.QWidget):
         iconItem = model.item(index.row())
         data = index.data(QtCore.Qt.EditRole)
 
-        name = data.get("data").get("name")
-        pathID = self.getPathID(asset=name)
+        dataType = data.get("type")
 
-        with Settings.Manager(update=True) as settings:
+        if dataType == "usdasset":
+            name = data.get("name")
+            pathUI = os.path.join(
+                self.AssetPath.getUI(), name)
 
-            if pathID not in settings.get("favorites"):
-                settings["favorites"] += [pathID]
-                data["data"]["favorite"] = True
+        elif dataType == "colorguide":
+            title = data.get("title")
+            name = data.get("name")
+            pathUI = os.path.join(
+                self.AssetPath.getUI(), title + name )
+
+        elif dataType == "color":
+            code = data.get("code")
+            pathUI = ":".join([
+                self.AssetPath.getUI(), code ])
+
+        else: return
+
+
+        with Settings.Manager(self.theme.app, True) as settings:
+
+            if pathUI not in settings.get("favorites"):
+                settings["favorites"].append(pathUI)
+                data["favorite"] = True
 
             else:
-                settings["favorites"].remove(pathID)
-                data["data"]["favorite"] = False
+                settings["favorites"].remove(pathUI)
+                data["favorite"] = False
 
         iconItem.setData(data, QtCore.Qt.EditRole)
 
@@ -267,18 +155,18 @@ class Favorite (QtWidgets.QWidget):
         favoriteFilter = self.BarBottom.favorite.button.isChecked()
 
         if not update:
-            with Settings.Manager(update=True) as settings:
+            with Settings.Manager(self.theme.app, True) as settings:
                 settings["favoriteFilter"] = favoriteFilter
 
                 if favoriteFilter:
                     favorites = []
-                    for pathID in settings.get("favorites"):
-                        path = self.translateID(pathID)
-                        if os.path.exists(path):
-                            favorites.append(pathID)
+                    for pathUI in settings.get("favorites"):
+                        if self.AssetPath.exists(pathUI):
+                            favorites.append(pathUI)
                     settings["favorites"] = favorites
 
-        self.drawBrowserItems( self.AssetPath.get() )
+        path = self.AssetPath.resolve()
+        self.drawDecision(path)
 
 
 
@@ -287,13 +175,13 @@ class Favorite (QtWidgets.QWidget):
 
 
 
-class Slider (QtWidgets.QWidget):
+class Slider (object):
 
 
 
     def sliderAction (self, value):
 
-        with Settings.Manager(update=True) as settings:
+        with Settings.Manager(self.theme.app, True) as settings:
             settings["iconSize"] = value
 
         self.AssetBrowser.setGrid()
@@ -306,7 +194,7 @@ class Slider (QtWidgets.QWidget):
 
 
 
-class Folder (QtWidgets.QWidget):
+class Folder (object):
 
 
 
@@ -315,9 +203,7 @@ class Folder (QtWidgets.QWidget):
         model = self.AssetBrowser.model()
         iconItem = model.item(index.row())
 
-        dataItem = dict(type="folderquery", data=dict(
-                            name="",
-                            items=0 ))
+        dataItem = dict( type="folderquery", name="", items=0 )
         iconItem.setData(dataItem, QtCore.Qt.EditRole)
 
         self.AssetBrowser.setCurrentIndex(index)
@@ -331,25 +217,23 @@ class Folder (QtWidgets.QWidget):
         updateItem = model.item(index.row())
 
         newPath = os.path.join(
-            self.AssetPath.get(), name)
+            self.AssetPath.resolve(), name)
         if not name or os.path.exists(newPath):
-            updateData = dict(type="plusfolder", data=dict())
-            updateItem.setData(updateData, QtCore.Qt.EditRole)
+            updateItem.setData(
+                dict( type="plusfolder" ), QtCore.Qt.EditRole)
             self.AssetBrowser.repaint()
 
         else:
-            updateData = dict(type="folder", data=dict(
-                            name=name, items=0 ))
-            updateItem.setData(updateData, QtCore.Qt.EditRole)
+            updateItem.setData(
+                dict( type="folder", name=name, items=0 ),
+                QtCore.Qt.EditRole)
 
             plusItem = QtGui.QStandardItem()
             plusItem.setCheckable(False)
             plusItem.setEditable(True)
             plusItem.setData(0, QtCore.Qt.StatusTipRole)
 
-            plusItem.setData(
-                dict(type="plusfolder", data=dict()),
-                QtCore.Qt.EditRole)
+            plusItem.setData(dict(type="plusfolder"), QtCore.Qt.EditRole)
 
             model.appendRow(plusItem)
 
@@ -358,182 +242,25 @@ class Folder (QtWidgets.QWidget):
 
 
 
-    def openFolder (self, index):
 
-        model = self.AssetBrowser.model()
-        updateItem = model.item(index.row())
-        data = index.data(QtCore.Qt.EditRole)
 
-        path = os.path.join(
-            self.AssetPath.get(),
-            data.get("data").get("name") )
 
-        if os.path.exists(path):
-            toolkit.system.stream.openFolder(path)
 
 
+class Browser (object):
 
 
+    def __init__(self):
+        self.metafile = Metadata.NAME
+        self.assetsNames = list()
 
 
 
-
-class Library (QtWidgets.QWidget):
-
-
-
-    def getAssetRoots (self):
-
-        libraries = dict()
-        
-        if not os.getenv("ASSETLIBS", ""):
-            os.environ["ASSETLIBS"] = os.path.join(
-                os.path.dirname(
-                    os.path.dirname(__file__)),
-                "examples", "library" )
-        path = os.getenv("ASSETLIBS", "")
-
-        for rootPath in path.split(":"):
-            assetPath = os.path.join(rootPath, self.metafile)
-
-            if os.path.exists(assetPath):
-                data = toolkit.system.stream.dataread(assetPath)
-
-                if data["type"] == "root":
-                    name = data["name"]
-                    libraries[name] = rootPath
-
-        return libraries
-
-
-
-    def setLibrary (self, name=None, finish=True):
-
-        self.setIsolation(False)
-
-        if name:
-
-            path = self.libraries.get(name, None)
-            if path is not None:
-
-                with Settings.Manager(update=True) as settings:
-
-                    settings["subdirLibrary"] = ""
-                    settings["focusLibrary"]  = name
-                    self.AssetPath.setRoot(name, path, finish)
-                    return
-
-
-        with Settings.Manager(update=False) as settings:
-
-            name = settings["focusLibrary"]
-            
-            path = self.libraries.get(name, None)
-            if path is not None:
-                
-                self.AssetPath.setRoot(name, path, finish)
-                return
-
-            elif name == "":
-                self.drawBrowserItems("")
-                return
-
-
-        for name, path in self.libraries.items():
-            with Settings.Manager(update=True) as settings:
-
-                settings["subdirLibrary"] = ""
-                settings["focusLibrary"]  = name
-            
-            self.AssetPath.setRoot(name, path, finish)
-            return
-
-
-        self.AssetPath.setRoot("", "", finish)
-
-
-
-    def sort (self, library):
-
-        labelL    = []
-        labelF    = []
-        labelA    = []
-        plus      = []
-        libraries = []
-        folders   = []
-        usdasset  = []
-        usdfile   = []
-
-        for data in library:
-            dataType = data.get("type")
-
-            if dataType == "labellibrary":
-                labelL += [data]
-            elif dataType == "labelfolder":
-                labelF += [data]
-            elif dataType == "labelasset":
-                labelA += [data]
-            elif dataType == "plusfolder":
-                plus += [data]
-            elif dataType == "library":
-                libraries += [data]
-            elif dataType == "folder":
-                folders += [data]
-
-            elif dataType == "asset":
-                assetType = data.get("data").get("type")
-
-                if assetType == "usdasset":
-                    usdasset += [data]
-                elif assetType == "usdfile":
-                    usdfile += [data]
-
-        for data in [libraries, folders, usdasset]:
-            data.sort(
-                key=lambda item : item.get("data").get("name") )
-
-        for data in [usdfile]:
-            data.sort(
-                key=lambda item : "{}{}{}{}".format(
-                    item.get("data").get("name"),
-                    item.get("data").get("version"),
-                    item.get("data").get("variant"),
-                    item.get("data").get("animation") ))
-
-        library = (
-            labelL
-            + labelF
-            + labelA
-            + plus
-            + libraries
-            + folders
-            + usdasset
-            + usdfile
-        )
-
-        return library
-
-
-
-
-
-
-
-
-class Browser (QtWidgets.QWidget):
-
-
-
-    def setIsolation (self, flag):
-
-        flag = not flag
-
-        self.AssetPath.setVisible(flag)
-        self.BarBottom.setVisible(flag)
-
-
-
-    def getDirItems (self, path, filterFavorites=False):
+    def getDirItems (self, path,
+            filterFavorites=False,
+            showTypes=[
+                "foldercolors",
+                "usdasset" ] ):
 
         if not path:
             return []
@@ -542,7 +269,7 @@ class Browser (QtWidgets.QWidget):
         self.assetsNames = []
 
         favorites = []
-        with Settings.Manager(update=False) as settings:
+        with Settings.Manager(self.theme.app, False) as settings:
             favorites = settings.get("favorites", [])
 
         for name in os.listdir(path):
@@ -551,11 +278,11 @@ class Browser (QtWidgets.QWidget):
                 continue
 
             folderPath = os.path.join(path, name)
+            dataType = toolkit.core.metadata.getType(folderPath)
 
-            assetPath = os.path.join(
-                folderPath, self.metafile)
-
-            if os.path.exists(assetPath):
+            if dataType == "usdasset":
+                if dataType not in showTypes:
+                    continue
 
                 data = {}
                 with Metadata.MetadataManager(
@@ -567,41 +294,52 @@ class Browser (QtWidgets.QWidget):
                 versionCount = toolkit.core.naming.getVersionList(folderPath)
                 versionCount = len(versionCount)
 
-                dataType = data["type"]
-                dataTime = data["items"][chosenItem]["published"]
+                dataTime = data.get("items").get(chosenItem).get("published")
                 publishedTime = toolkit.core.timing.getTimeDifference(dataTime)
 
-                if dataType == "usdasset":
+                favorite = False
+                pathUI = os.path.join(self.AssetPath.getUI(), name)
+                if pathUI in favorites:
+                    favorite = True
 
-                    favorite = False
-                    pathID = self.getPathID(asset=name)
-                    if pathID in favorites:
-                        favorite = True
+                if filterFavorites and not favorite:
+                    continue
 
-                    if filterFavorites and not favorite:
-                        continue
+                library.append(dict(
+                    type=dataType,
+                    name=name,
+                    previews=toolkit.core.naming.getUsdPreviews(folderPath, chosenItem),
+                    version=toolkit.core.naming.getVersion(chosenItem),
+                    count=versionCount,
+                    variant=toolkit.core.naming.getVariantName(chosenItem),
+                    animation=toolkit.core.naming.getAnimationName(chosenItem),
+                    published=publishedTime,
+                    status=data.get("status"),
+                    favorite=favorite ))
+                self.assetsNames.append(name)
 
-                    library.append(
-                        dict(type="asset",  data=dict(
-                            name=name,
-                            previews=toolkit.core.naming.getUsdPreviews(folderPath, chosenItem),
-                            type=dataType,
-                            version=toolkit.core.naming.getVersion(chosenItem),
-                            count=versionCount,
-                            variant=toolkit.core.naming.getVariantName(chosenItem),
-                            animation=toolkit.core.naming.getAnimationName(chosenItem),
-                            published=publishedTime,
-                            status=data["status"],
-                            favorite=favorite )) )
-                    self.assetsNames.append(name)
+
+            elif dataType == "foldercolors":
+                if dataType not in showTypes:
+                    continue
+
+                data = {}
+                with Metadata.MetadataManager(
+                        folderPath, "foldercolors") as metadata:
+                    data = metadata
+
+                library.append(dict(
+                    type="foldercolors",
+                    name=name,
+                    items=toolkit.system.ostree.getGroupCount(folderPath) ))
 
 
             elif os.path.exists(folderPath):
                 if os.path.isdir(folderPath):
-                    library.append(
-                        dict(type="folder", data=dict(
-                            name=name,
-                            items=toolkit.system.ostree.getItemsCount(folderPath) )) )
+                    library.append(dict(
+                        type="folder",
+                        name=name,
+                        items=toolkit.system.ostree.getItemCount(folderPath) ))
 
 
         return library
@@ -613,36 +351,36 @@ class Browser (QtWidgets.QWidget):
         libraries = []
         self.assetsNames = []
 
-        for name, path in self.libraries.items():
-            libraries.append(
-                dict(type="library", data=dict(
-                    name=name )) )
+        for name, path in self.AssetPath.libraries.items():
+            libraries.append(dict( type="library", name=name ))
 
         return libraries
 
 
 
-    def drawBrowserItems (self, path):
-        
-        if not self.bookmarkIndex() is None:
-            self.AssetPath.bookmarkButton.setChecked(True)
-        else:
-            self.AssetPath.bookmarkButton.setChecked(False)
+    def drawDecision (self, path):
+
+        flag = self.BarBottom.favorite.button.isChecked()
+        self.drawBrowserItems(path, filterFavorites=flag)
+
+
+
+    def drawBrowserItems (self, path,
+            filterFavorites=False):
 
 
         if not path:
-            self.setIsolation(True)
-            library = self.getLibraries()
+            browserItems = self.getLibraries()
         else:
-            library = self.getDirItems(
+            browserItems = self.getDirItems(
                 path,
-                filterFavorites=self.BarBottom.favorite.button.isChecked() )
+                filterFavorites=filterFavorites )
 
 
         hasLibrary = False
         hasFolder  = False
         hasAsset   = False
-        for item in library:
+        for item in browserItems:
             if hasLibrary:
                 break
             elif hasAsset and hasFolder:
@@ -651,26 +389,26 @@ class Browser (QtWidgets.QWidget):
             elif item["type"] == "library" and not hasLibrary:
                 hasLibrary = True
 
-            elif item["type"] == "folder" and not hasFolder:
+            elif item["type"] in ["folder", "foldercolors"] and not hasFolder:
                 hasFolder = True
 
-            elif item["type"] == "asset" and not hasAsset:
+            elif item["type"] == "usdasset" and not hasAsset:
                 hasAsset = True
 
         if hasLibrary:
-            library.append( dict(type="labellibrary", data=dict(text="Libraries")) )
+            browserItems.append(dict( type="labellibrary", text="Libraries" ))
 
-        if hasFolder or not hasLibrary and not hasAsset:
-            library.append( dict(type="labelfolder", data=dict(text="Folders")) )
-            library.append( dict(type="plusfolder", data=dict()) )
+        if hasFolder or not hasLibrary and not hasAsset and not filterFavorites:
+            browserItems.append(dict( type="labelfolder", text="Folders" ))
+            browserItems.append(dict( type="plusfolder" ))
 
         if hasAsset:
-            library.append( dict(type="labelasset", data=dict(text="Assets")) )
+            browserItems.append(dict( type="labelasset", text="Assets" ))
 
 
         iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
 
-        for item in self.sort(library):
+        for item in self.sortItems(browserItems):
 
             iconItem = QtGui.QStandardItem()
 
@@ -681,11 +419,9 @@ class Browser (QtWidgets.QWidget):
                 0,
                 QtCore.Qt.StatusTipRole)
 
-            iconItem.setData(
-                dict(type=item["type"], data=item["data"]),
-                QtCore.Qt.EditRole)
+            iconItem.setData(item, QtCore.Qt.EditRole)
 
-            if self.checkedName == item.get("data").get("name"):
+            if self.checkedName == item.get("name"):
                 iconItem.setData(1, QtCore.Qt.StatusTipRole)
 
             iconModel.appendRow(iconItem)
@@ -711,3 +447,188 @@ class Browser (QtWidgets.QWidget):
 
 
         self.AssetBrowser.setGrid()
+
+
+
+    def sortItems (self, library):
+
+        labelL    = []
+        labelF    = []
+        labelA    = []
+        plus      = []
+        libraries = []
+        folders   = []
+        usdasset  = []
+        usdfile   = []
+        guides    = []
+        colors    = []
+
+        for data in library:
+            dataType = data.get("type")
+
+            if dataType == "labellibrary":
+                labelL += [data]
+            elif dataType == "labelfolder":
+                labelF += [data]
+            elif dataType == "labelasset":
+                labelA += [data]
+            elif dataType == "plusfolder":
+                plus += [data]
+            elif dataType == "library":
+                libraries += [data]
+            elif dataType in ["folder", "foldercolors"]:
+                folders += [data]
+            elif dataType == "usdasset":
+                usdasset += [data]
+            elif dataType == "usdfile":
+                usdfile += [data]
+            elif dataType == "colorguide":
+                guides += [data]
+            elif dataType == "color":
+                colors += [data]
+
+        for data in [
+                libraries,
+                folders,
+                usdasset,
+                guides]:
+            data.sort(
+                key=lambda item : item.get("name")
+            )
+
+        for data in [usdfile]:
+            data.sort(
+                key=lambda item : "{}{}{}{}".format(
+                    item.get("name"),
+                    item.get("version"),
+                    item.get("variant"),
+                    item.get("animation")
+                )
+            )
+
+
+        def code (item):
+
+            value = item.get("code")
+
+            match = re.search(r"^\d*-0D", value)
+            if match:
+                match = match.group()
+                string = re.sub(r"0D$", "10D", match)
+                value = re.sub(match, string, value)
+
+            match = re.search(r"^\d*-\dD", value)
+            if match:
+                value = value[:-2] +"0"+ value[-2:]
+
+            dot = False
+            sting = ""
+
+            for character in value:
+
+                if character.isdigit():
+                    sting += character
+
+                elif character in ["-", " "]:
+                    if not dot:
+                        dot = True
+                        sting += "."
+                else:
+                    sting += str(ord(character))
+
+            return float(sting)
+
+        for data in [colors]:
+            data.sort(key=code)
+
+
+        library = (
+            labelL
+            + labelF
+            + labelA
+            + plus
+            + libraries
+            + folders
+            + usdasset
+            + usdfile
+            + guides
+            + colors
+        )
+
+        return library
+
+
+
+    def linkAction (self, index):
+
+        data = index.data(QtCore.Qt.EditRole)
+        dataType = data.get("type")
+
+        if dataType in ["folder", "usdasset"]:
+            path = os.path.join(
+                self.AssetPath.resolve(),
+                data.get("name") )
+            if os.path.exists(path):
+                toolkit.system.stream.openFolder(path)
+        
+        elif dataType == "usdfile":
+            path = os.path.join(
+                self.AssetPath.resolve(),
+                data.get("filename") )
+            if os.path.exists(path):
+                toolkit.system.stream.openUsd(path)
+
+
+
+
+
+
+
+
+class State (object):
+
+
+
+    def applyUiSettings (self):
+
+        blacklist = []
+        with Settings.Manager(self.theme.app, False) as settings:
+
+            if settings.get("favoriteFilter"):
+                self.BarBottom.favorite.button.setChecked(True)
+
+
+            self.BarBottom.bookmarkCombobox.clear()
+            bookmarks = settings.get("bookmarks")
+            for pathUI in bookmarks:
+                if not self.AssetPath.exists(pathUI):
+                    blacklist.append(pathUI)
+
+                self.BarBottom.bookmarkCombobox.addItem(pathUI)
+
+            size = settings.get("size")
+            self.resize(*size)
+
+
+        if blacklist:
+            with Settings.Manager(self.theme.app, True) as settings:
+                for pathUI in blacklist:
+                    settings["bookmarks"].remove(pathUI)
+
+
+        self.sortBookmarks()
+        self.BarBottom.bookmarkCombobox.setCurrentIndex(-1)
+
+
+
+
+    def setUiPath (self, pathUI=None):
+
+        if not pathUI:
+            with Settings.Manager(self.theme.app, False) as settings:
+                pathUI = settings.get("location")
+
+        if not self.AssetPath.exists(pathUI):
+            pathUI = ""
+        
+        self.AssetPath.setUI(pathUI)

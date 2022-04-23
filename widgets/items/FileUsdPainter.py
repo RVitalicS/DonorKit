@@ -3,22 +3,23 @@
 
 
 from .BasePainterGeneral import (
+    initialize,
+    checked,
     clear,
     label )
 
 from .BasePainterUsd import (
     background,
-    initialize,
     accent,
     preview,
     animation,
+    link,
     icon,
     division,
     published,
     size,
     name,
-    token,
-    checked )
+    token )
 
 from toolkit.ensure.QtCore import *
 from . import BaseItem
@@ -31,6 +32,16 @@ UIGlobals = Settings.UIGlobals
 
 
 class Base (object):
+
+
+    def __init__ (self):
+
+        self.linkArea = QtCore.QRect()
+
+        self.token = False
+        self.tokenArea = QtCore.QRect()
+
+        self.controlMode = False
 
 
 
@@ -48,6 +59,7 @@ class Base (object):
     @published
     @division
     @icon
+    @link
     @animation
     @preview
     @background
@@ -65,9 +77,7 @@ class Item (BaseItem.Painter, Base):
 
     def __init__ (self, theme):
         BaseItem.Painter.__init__(self, theme)
-
-        self.token = False
-        self.tokenArea = QtCore.QRect()
+        Base.__init__(self)
 
 
     def paint (self, painter, option, index):
@@ -76,7 +86,6 @@ class Item (BaseItem.Painter, Base):
         if self.type == "labelasset":
             self.paintLabel()
 
-        elif self.type == "asset":
-            if self.data.get("type") == "usdfile":
-                self.token = self.data.get("token", False)
-                self.paintFileUsd()
+        elif self.type == "usdfile":
+            self.token = self.data.get("token", False)
+            self.paintFileUsd()

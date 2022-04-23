@@ -53,7 +53,10 @@ class Base (object):
 
 
         # ICON
-        folderImage = QtGui.QImage(":/icons/folder.png")
+        if self.type == "foldercolors":
+            folderImage = QtGui.QImage(":/icons/colors.png")
+        else:
+            folderImage = QtGui.QImage(":/icons/folder.png")
 
         folderOffset = int((
             self.height - self.space*2 - folderImage.height() )/2)
@@ -88,7 +91,7 @@ class Base (object):
             int(self.height/2) - int(self.space/2) -offsetText )
 
 
-        name = self.data.get("name")
+        textName = self.data.get("name")
 
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
@@ -96,7 +99,7 @@ class Base (object):
 
         self.painter.drawText(
             QtCore.QRectF(self.folderNameArea),
-            name,
+            textName,
             textOption)
 
 
@@ -138,7 +141,7 @@ class Base (object):
 
 
         # LINK
-        if self.hover and self.controlMode and name != "":
+        if self.hover and self.controlMode and textName != "":
 
             linkImage = QtGui.QImage(":/icons/linkarrow.png")
             linkImage = toolkit.core.graphics.recolor(
@@ -209,7 +212,8 @@ class Item (BaseItem.Painter, Base):
 
         elif self.type in [
                 "folder"      ,
-                "folderquery" ]:
+                "folderquery",
+                "foldercolors" ]:
             self.paintFolder()
 
         elif self.type == "plusfolder":

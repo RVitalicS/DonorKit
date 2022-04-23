@@ -26,6 +26,15 @@ def nameditor (outputName, prman=True):
         elif outputName == "uvCoord":
             outputName = "st"
 
+        elif outputName == "rotateUV":
+            outputName = "rotation"
+
+        elif outputName == "repeatUV":
+            outputName = "scale"
+
+        elif outputName == "offset":
+            outputName = "translation"
+
         elif outputName == "outUV":
             outputName = "result"
 
@@ -101,10 +110,7 @@ def CreateInput (shader, name, data):
         sdfType = Sdf.ValueTypeNames.Color3f
 
     elif inputType == "float2":
-        if name == "repeatUV":
-            pass
-        else:
-            sdfType = Sdf.ValueTypeNames.Float2
+        sdfType = Sdf.ValueTypeNames.Float2
 
     elif inputType == "float3":
         if name in [
@@ -135,6 +141,8 @@ def CreateInput (shader, name, data):
 
         if not connection:
             ShaderInput.Set(inputValue)
+
+
 
 
 

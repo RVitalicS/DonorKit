@@ -3,6 +3,10 @@
 
 import os
 
+thisDir = os.path.dirname(__file__)
+rootDir = os.path.dirname(thisDir)
+
+
 import toolkit.system.stream
 import toolkit.core.ui
 
@@ -25,96 +29,39 @@ STATUS_LIST = [
 
 
 
-class ExportData (object):
-
-
-    def __init__ (self):
-
-        self.defaults = dict(
-            modelling=True,
-            surfacing=True,
-            animation=False,
-            modellingOverwrite=False,
-            surfacingOverwrite=False,
-            animationOverwrite=False,
-            rangeStart=1,
-            rangeEnd=1,
-            link=True,
-            theme="dark" )
-
-        self.path = os.path.join(
-            os.path.dirname(__file__),
-            "databank",
-            ".UsdExportSettings.json")
-
-        if not os.path.exists(self.path):
-            self.defaultSettings(self.path)
-
-        elif not toolkit.system.stream.validJSON(self.path):
-            self.defaultSettings(self.path)
-
-
-    def defaultSettings (self, path):
-        toolkit.system.stream.datawrite(path, self.defaults)
-
-
-    def load (self):
-        return toolkit.system.stream.dataread(self.path)
-
-
-    def save (self, data):
-        toolkit.system.stream.datawrite(self.path, data)
-
-
-
-
-
-
-
-class Export (object):
-
-
-    def __init__ (self, update=True):
-
-        self.update = update
-
-
-    def __enter__(self):
-
-        self.data = ExportData().load()
-        return self.data
-
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-
-        if self.update:
-            ExportData().save(self.data)
-
-
-
-
-
-
-
 class ManagerData (object):
 
 
-    def __init__ (self):
+    def __init__ (self, app):
 
+        filename = ".ManagerSettings.json"
         self.defaults = dict(
             scrollPosition=0.0,
+            size=[820, 590],
             iconSize=1,
-            focusLibrary="",
-            subdirLibrary="",
+            location="",
             bookmarks=[],
             favorites=[],
             favoriteFilter=False,
             theme="dark" )
 
+        if app == "export":
+
+            filename = ".UsdExportSettings.json"
+            self.defaults.update( dict(
+                modelling=True,
+                surfacing=True,
+                animation=False,
+                modellingOverwrite=False,
+                surfacingOverwrite=False,
+                animationOverwrite=False,
+                rangeStart=1,
+                rangeEnd=1,
+                link=True ))
+
         self.path = os.path.join(
-            os.path.dirname(__file__),
-            "databank",
-            ".AssetDonorSettings.json")
+            rootDir, "databank", filename )
+
 
         if not os.path.exists(self.path):
             self.defaultSettings(self.path)
@@ -143,21 +90,22 @@ class ManagerData (object):
 class Manager (object):
 
 
-    def __init__ (self, update=True):
+    def __init__ (self, app="manager", update=True):
 
         self.update = update
+        self.app = app
 
 
     def __enter__(self):
 
-        self.data = ManagerData().load()
+        self.data = ManagerData(self.app).load()
         return self.data
 
 
     def __exit__(self, exc_type, exc_val, exc_tb):
 
         if self.update:
-            ManagerData().save(self.data)
+            ManagerData(self.app).save(self.data)
 
 
 
@@ -190,6 +138,9 @@ UIGlobals.AssetBrowser = DataClass()
 UIGlobals.AssetBrowser.margin = 16
 UIGlobals.AssetBrowser.path   = 32
 UIGlobals.AssetBrowser.scrollWidth = 14
+
+
+UIGlobals.AssetBrowser.fontMessage = toolkit.core.ui.makeFont(size=10)
 
 
 UIGlobals.AssetBrowser.Icon = DataClass()
@@ -229,7 +180,7 @@ UIGlobals.IconDelegate.space  = 6
 UIGlobals.IconDelegate.radius = 6
 UIGlobals.IconDelegate.radiusStatus = 2
 
-UIGlobals.IconDelegate.offsetLink = 9
+UIGlobals.IconDelegate.offsetLink = 7
 
 UIGlobals.IconDelegate.fontLibraries   = toolkit.core.ui.makeFont(size=11)
 UIGlobals.IconDelegate.fontLibraryName = toolkit.core.ui.makeFont(size=10)
@@ -243,6 +194,9 @@ UIGlobals.IconDelegate.fontAssetVersion = toolkit.core.ui.makeFont(size=7)
 UIGlobals.IconDelegate.fontAssetLabel   = toolkit.core.ui.makeFont(size=6)
 UIGlobals.IconDelegate.fontAssetStatus  = toolkit.core.ui.makeFont(size=7)
 UIGlobals.IconDelegate.fontAssetSize    = toolkit.core.ui.makeFont(size=7)
+
+UIGlobals.IconDelegate.fontColorTitle   = toolkit.core.ui.makeFont(size=8, weight=QtGui.QFont.Bold)
+UIGlobals.IconDelegate.fontColorName    = toolkit.core.ui.makeFont(size=7)
 
 UIGlobals.IconDelegate.Animation = DataClass()
 UIGlobals.IconDelegate.Animation.space  = 10

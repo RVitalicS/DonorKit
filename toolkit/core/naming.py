@@ -206,25 +206,31 @@ def getVersionList (path):
 def getUsdPreviews (root, name):
 
     previews = []
+    prman = []
+    hydra = []
+
     basename = re.sub(r"\.usd[ac]*$", "", name)
 
-    extension = None
+    extension = r"\.png$"
 
-    path = os.path.join(root, "previews")
+    path = os.path.join(root, "previews", basename)
     if not os.path.exists(path):
         return previews
 
     for item in os.listdir(path):
-        if re.search(r"^"+basename, item):
+        if re.search(extension, item):
+            frame = os.path.join(path, item)
 
-            if extension is None:
-                extension = r"\.png$"
-                if not re.search(extension, item):
-                    extension = r"\.jpg$"
+            if re.search(r"^Prman.*", item):
+                prman.append(frame)
 
-            if re.search(extension, item):
-                previews.append(
-                    os.path.join(path, item) )
+            elif re.search(r"^Hydra.*", item):
+                hydra.append(frame)
+    
+    if prman:
+        previews = prman
+    else:
+        previews = hydra
 
 
     def sorter (path):

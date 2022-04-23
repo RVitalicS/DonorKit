@@ -3,6 +3,8 @@
 
 
 import os, re
+OCIO = os.getenv("OCIO")
+
 
 from . import resources
 from . import theme
@@ -10,19 +12,26 @@ from . import theme
 import toolkit.usd.reporter
 import toolkit.system.ostree
 import toolkit.system.stream
+
 import toolkit.core.naming
 import toolkit.core.timing
+import toolkit.core.metadata
+from toolkit.core import colorspace
 
 from toolkit.ensure.QtWidgets import *
 from toolkit.ensure.QtCore import *
 from toolkit.ensure.QtGui import *
 
 from .items import FileUsdDelegate
+from .items import ColorGuideDelegate
+from .items import ColorDelegate
+
 from . import BaseWidget
 from . import DonorUI
 
 from . import Metadata
 from . import Settings
+
 UIGlobals = Settings.UIGlobals
 
 
@@ -35,43 +44,47 @@ UIGlobals = Settings.UIGlobals
 def Make (base):
 
 
-    class DonorBase (base):
+    pack = [base]
+
+    widget = QtWidgets.QWidget
+    if base != widget:
+        pack.append(widget)
+
+
+    class DonorBase (*pack):
 
 
         def __init__(self, parent=None):
-            super(DonorBase, self).__init__(parent)
+            super(DonorBase, self).__init__(parent=parent)
 
-            self.theme = theme.Theme(application="manager")
+            self.theme = theme.Theme("manager")
             self.setStyleSheet( self.theme.getStyleSheet() )
 
 
 
     class Donor (
             DonorBase,
-            BaseWidget.Library,
             BaseWidget.Browser,
             BaseWidget.Bookmark,
             BaseWidget.Favorite,
             BaseWidget.Slider,
-            BaseWidget.Folder ):
+            BaseWidget.Folder,
+            BaseWidget.State ):
 
 
 
         def __init__(self, parent=None):
-            super(Donor, self).__init__(parent)
+            super(Donor, self).__init__(parent=parent)
+            BaseWidget.Browser.__init__(self)
+
             DonorUI.setupUi(self, self.theme)
             self.connectUi()
 
-            self.metafile    = Metadata.NAME
-            self.metapath    = str()
-            self.metadata    = dict()
+            self.metapath = str()
+            self.metadata = dict()
 
-            self.libraries   = self.getAssetRoots()
-            self.assetsNames = list()
-
+            self.setUiPath()
             self.applyUiSettings()
-            self.setLibrary()
-            self.resize(820, 580)
 
             self.AssetBrowser.setFocus(QtCore.Qt.MouseFocusReason)
 
@@ -82,13 +95,13 @@ def Make (base):
             self.AssetBrowser.iconClicked.connect(self.iconClicked)
             self.AssetBrowser.tokenClicked.connect(self.tokenClicked)
             self.AssetBrowser.favoriteClicked.connect(self.favoriteClicked)
-            self.AssetBrowser.link.connect(self.openFolder)
+            self.AssetBrowser.link.connect(self.linkAction)
             self.AssetBrowser.createFolderQuery.connect(self.createFolderQuery)
             self.AssetBrowser.createFolder.connect(self.createFolder)
 
-            self.AssetPath.pathChanged.connect(self.drawBrowserItems)
+            self.AssetPath.pathChanged.connect(self.drawDecision)
             self.AssetPath.pathChanged.connect(self.uiVisibility)
-            self.AssetPath.bookmarkClicked.connect(self.actionBookmark)
+            self.AssetPath.bookmarkClicked.connect(self.switchBookmark)
 
             self.BarBottom.preview.slider.valueChanged.connect(self.sliderAction)
             self.BarBottom.favorite.button.released.connect(self.favoriteFilter)
@@ -113,8 +126,8 @@ def Make (base):
             item = model.item(index.row())
             data = index.data(QtCore.Qt.EditRole)
 
-            state = not data.get("data").get("token")
-            data["data"]["token"] = state
+            state = not data.get("token")
+            data["token"] = state
 
 
             statusdata = item.data(QtCore.Qt.StatusTipRole)
@@ -137,7 +150,7 @@ def Make (base):
 
                     data = item.data(QtCore.Qt.EditRole)
                     state = self.UsdLoadOptions.link.isChecked()
-                    data["data"]["token"] = state
+                    data["token"] = state
                     item.setData(data, QtCore.Qt.EditRole)
                     self.linkManager(data)
                     break
@@ -146,7 +159,6 @@ def Make (base):
 
         def linkManager (self, data):
 
-            data = data.get("data")
             name      = data.get("name")
             version   = data.get("version")
             variant   = data.get("variant")
@@ -157,9 +169,9 @@ def Make (base):
                 variant=variant,
                 animation=animation )
 
+            directory = self.AssetPath.resolve()
             toolkit.system.ostree.linkUpdate(
-                os.path.join(self.AssetPath.get(), name),
-                filename,
+                directory, filename,
                 create = data.get("token") )
 
             self.tokensUpdate()
@@ -168,7 +180,7 @@ def Make (base):
 
         def tokensUpdate (self):
 
-            directory = self.AssetPath.get()
+            directory = self.AssetPath.resolve()
 
             model = self.AssetBrowser.model()
             for index in range(model.rowCount()):
@@ -176,14 +188,13 @@ def Make (base):
                 item = model.item(index)
                 data = item.data(QtCore.Qt.EditRole)
 
-                if data.get("type") != "asset":
+                if data.get("type") not in ["usdfile"]:
                     continue
 
-                filedata = data.get("data")
-                name      = filedata.get("name")
-                version   = filedata.get("version")
-                variant   = filedata.get("variant")
-                animation = filedata.get("animation")
+                name      = data.get("name")
+                version   = data.get("version")
+                variant   = data.get("variant")
+                animation = data.get("animation")
 
                 filename = toolkit.core.naming.createAssetName(
                     name, version,
@@ -193,47 +204,38 @@ def Make (base):
                 finalname = toolkit.core.naming.makeFinal(filename)
 
                 token = False
-                finalpath = os.path.join(directory, name, finalname)
+                finalpath = os.path.join(directory, finalname)
                 if os.path.exists(finalpath):
                     realpath = os.path.realpath(finalpath)
                     realname = os.path.basename(realpath)
                     if realname == filename:
                         token = True
 
-                if filedata.get("token") != token:
-                    data["data"]["token"] = token
+                if data.get("token") != token:
+                    data["token"] = token
 
                 item.setData(data, QtCore.Qt.EditRole)
 
 
 
-        def uiVisibility (self, path=""):
+        def uiVisibility (self, path):
             
-            if self.AssetPath.group:
+            if self.AssetPath.isRoot(path):
+                self.AssetPath.hide()
+                self.BarBottom.hide()
+            
+            elif self.AssetPath.isUsdAsset(path):
                 self.ResizeButton.show()
-                self.AssetPath.bookmarkButton.setEnabled(False)
-                self.BarBottom.favoriteHideForce = True
-                self.BarBottom.bookmarkHideForce = True
-                self.BarBottom.themeHideForce    = True
-                self.BarBottom.groupsLayout.setStretch(2, 0)
-                self.BarBottom.groupsLayout.setStretch(5, 1)
-                self.BarBottom.uiVisibility()
-                
                 self.UsdLoadOptions.show()
 
                 self.checkedName = ""
-                self.assetChecked()
+                self.usdfileChecked()
 
             else:
-                self.ResizeButton.hide()
-                self.AssetPath.bookmarkButton.setEnabled(True)
-                self.BarBottom.favoriteHideForce = False
-                self.BarBottom.bookmarkHideForce = False
-                self.BarBottom.themeHideForce    = False
-                self.BarBottom.groupsLayout.setStretch(2, 1)
-                self.BarBottom.groupsLayout.setStretch(5, 0)
-                self.BarBottom.uiVisibility()
+                self.AssetPath.show()
+                self.BarBottom.show()
 
+                self.ResizeButton.hide()
                 self.UsdLoadOptions.hide()
 
 
@@ -243,63 +245,90 @@ def Make (base):
             data = index.data(QtCore.Qt.EditRole)
             if not data:
                 self.checkedName = ""
-                self.assetChecked()
+                self.usdfileChecked()
 
             else:
                 dataType = data.get("type")
 
 
                 if dataType == "library":
-                    name = data.get("data").get("name")
+                    libname = data.get("name")
 
                     self.checkedName = ""
-                    self.setLibrary(name)
+                    self.setUiPath(libname)
 
 
                 elif dataType == "folder":
-                    name = data.get("data").get("name")
+                    name = data.get("name")
 
                     self.checkedName = ""
-                    self.AssetPath.moveForward(name)
+                    self.AssetPath.goForward(name)
 
 
-                elif dataType == "asset":
-                    assetdata = data.get("data")
-                    assetType = assetdata.get("type")
+                elif dataType == "usdasset":
+
+                    self.checkedName = ""
+                    
+                    name = data.get("name")
+                    self.AssetPath.goForward(name)
 
 
-                    if assetType == "usdasset":
+                elif dataType == "usdfile":
+                    name = data.get("filename")
 
+                    if self.checkedName == name:
                         self.checkedName = ""
-                        path = self.AssetPath.get()
-                        name = assetdata.get("name")
-                        self.drawUsdItems(path, name)
+                    else:
+                        self.checkedName = name
+
+                    self.usdfileChecked()
 
 
-                    elif assetType == "usdfile":
-                        name = data.get("data").get("filename")
+                elif dataType == "foldercolors":
 
-                        if self.checkedName == name:
-                            self.checkedName = ""
-                        else:
-                            self.checkedName = name
-
-                        self.assetChecked()
+                    name = data.get("name")
+                    self.AssetPath.goForward(name)
 
 
+                elif dataType == "colorguide":
 
-        def getUsdItems (self, root, name):
+                    title = data.get("title")
+                    name = data.get("name")
 
-            path = os.path.join(root, name)
+                    self.AssetPath.goForward(title + name)
 
-            if not os.path.exists(path):
-                return []
+
+                elif dataType == "color":
+
+                    data = data.get("rgb")
+                    self.loadColor(data)
+
+
+
+        def drawDecision (self, path):
+            
+            flag = self.BarBottom.favorite.button.isChecked()
+
+            if self.AssetPath.isUsdAsset(path):
+                self.drawUsdItems(path)
+
+            elif self.AssetPath.isFolderColors(path):
+                self.drawColorGuideItems(path, filterFavorites=flag)
+
+            elif self.AssetPath.isColors(path):
+                self.drawColorItems(path, filterFavorites=flag)
+
+            else:
+                self.drawBrowserItems(path, filterFavorites=flag)
+
+
+
+        def getUsdItems (self, path):
 
             library = [dict(
-                type="labelasset",
-                data=dict(text="Files") )]
+                type="labelasset", text="USD Files" )]
+            name = os.path.basename(path)
 
-            self.assetsNames = []
             data = {}
             with Metadata.MetadataManager(
                     path, "usdasset") as metadata:
@@ -334,31 +363,31 @@ def Make (base):
                         filesize = toolkit.usd.reporter.getResolvedSize(
                             os.path.join(path, filename) )
 
-                        library.append(
-                            dict(type="asset",  data=dict(
-                                filename=filename,
-                                name=name,
-                                previews=toolkit.core.naming.getUsdPreviews(path, filename),
-                                type="usdfile",
-                                size=filesize,
-                                version=version,
-                                variant=variant,
-                                animation=animation,
-                                published=publishedTime,
-                                token=token )) )
-                        self.assetsNames.append(filename)
+                        library.append(dict(
+                            type="usdfile",
+                            filename=filename,
+                            name=name,
+                            previews=toolkit.core.naming.getUsdPreviews(path, filename),
+                            size=filesize,
+                            version=version,
+                            variant=variant,
+                            animation=animation,
+                            published=publishedTime,
+                            token=token ))
 
             return library
 
 
 
-        def drawUsdItems (self, path, name):
-
+        def drawUsdItems (self, path):
 
             iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
 
-            library = self.getUsdItems(path, name)
-            for item in self.sort(library):
+            self.AssetBrowser.setModel(iconModel)
+            self.AssetBrowser.setMessage("Loading")
+
+            browserItems = self.getUsdItems(path)
+            for item in self.sortItems(browserItems):
 
                 iconItem = QtGui.QStandardItem()
 
@@ -369,9 +398,7 @@ def Make (base):
                     0,
                     QtCore.Qt.StatusTipRole)
 
-                iconItem.setData(
-                    dict(type=item.get("type"), data=item.get("data")),
-                    QtCore.Qt.EditRole)
+                iconItem.setData(item, QtCore.Qt.EditRole)
 
                 iconModel.appendRow(iconItem)
 
@@ -381,16 +408,203 @@ def Make (base):
                 FileUsdDelegate.Delegate(self.AssetBrowser, self.theme) )
 
 
-            self.loadUsdInfo(path, name)
+            self.loadUsdInfo(path)
             self.loadUsdComment()
 
             self.AssetBrowser.setGrid()
-            self.AssetPath.group = name
-            self.uiVisibility()
+            self.AssetBrowser.clearMessage()
 
 
 
-        def assetChecked (self):
+        def getColorGuideItems (self, path,
+                filterFavorites=False ):
+            
+            library = [dict(
+                type="labelasset", text="Color Guides" )]
+            name = os.path.basename(path)
+
+            favorites = []
+            with Settings.Manager(self.theme.app, False) as settings:
+                favorites = settings.get("favorites", [])
+
+            for filename in os.listdir(path):
+
+                if not re.search(r"\.json*$", filename):
+                    continue
+                elif filename == self.metafile:
+                    continue
+
+                filepath = os.path.join(path, filename)
+                if toolkit.system.stream.validJSON(filepath):
+                    data = toolkit.system.stream.dataread(filepath)
+
+                    prefix = data.get("prefix", "")
+                    prefix = re.sub(r"\s*$", "", prefix)
+                    title = data.get("title", "")
+                    name = re.sub(prefix, "", title)
+                    name = re.sub(r"^[^\w]+", "", name)
+
+                    favorite = False
+                    pathUI = os.path.join(
+                        self.AssetPath.getUI(), title + name )
+
+                    if pathUI in favorites:
+                        favorite = True
+
+                    if filterFavorites and not favorite:
+                        continue
+
+                    library.append(dict(
+                        filename=filename,
+                        type="colorguide",
+                        title=title.replace(name, ""),
+                        name=name,
+                        count=data.get("colorCount", int()),
+                        space=data.get("colorSpace", "<colorSpace>"),
+                        favorite=favorite ))
+
+            return library
+
+
+
+        def drawColorGuideItems (self, path,
+                filterFavorites=False ):
+
+
+            iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
+
+            browserItems = self.getColorGuideItems(path, filterFavorites=filterFavorites)
+            for item in self.sortItems(browserItems):
+
+                iconItem = QtGui.QStandardItem()
+                iconItem.setCheckable(False)
+                iconItem.setEditable(True)
+
+                iconItem.setData(0, QtCore.Qt.StatusTipRole)
+
+                iconItem.setData(item, QtCore.Qt.EditRole)
+
+                iconModel.appendRow(iconItem)
+
+
+            self.AssetBrowser.setModel(iconModel)
+            self.AssetBrowser.setItemDelegate(
+                ColorGuideDelegate.Delegate(self.AssetBrowser, self.theme) )
+
+            self.AssetBrowser.setGrid()
+
+
+
+        def getColorItems (self, filepath,
+                filterFavorites=False ):
+
+            library = list()
+
+            if not toolkit.system.stream.validJSON(filepath):
+                return library
+
+            library.append(dict(
+                type="labelasset", text="Colors" ))
+
+            favorites = []
+            with Settings.Manager(self.theme.app, False) as settings:
+                favorites = settings.get("favorites", [])
+
+            data = toolkit.system.stream.dataread(filepath)
+            prefix = data.get("prefix")
+            space = data.get("colorSpace")
+
+            CGATS = dict()
+            if space == "CMYK":
+                CGATS = toolkit.system.stream.readCGATS()
+
+            for key, item in data.get("records").items():   
+
+                favorite = False
+                pathUI = ":".join([
+                    self.AssetPath.getUI(),
+                    item.get("code") ])
+
+                if pathUI in favorites:
+                    favorite = True
+
+                if filterFavorites and not favorite:
+                    continue
+
+                RGB   = None
+                color = None
+
+                components = item.get("components")
+                if space == "CMYK":
+                    XYZ = colorspace.CMYK_XYZ(components, CGATS)
+                elif space == "LAB":
+                    XYZ = colorspace.Lab_XYZ(components)
+                elif space == "RGB":
+                    RGB = components
+                    XYZ = colorspace.lRGB_XYZ(components)
+                elif space == "HEX":
+                    color = components
+                    XYZ = colorspace.HEX_XYZ(components)
+                elif space == "XYZ":
+                    XYZ = components
+                else:
+                    XYZ = [0.0,0.0,0.0]
+
+                RGB   = colorspace.XYZ_lRGB(XYZ) if not RGB else RGB
+                color = colorspace.lRGB_HEX(RGB) if not color else color
+
+                if OCIO:
+                    RGB = colorspace.lRGB_ACEScg(RGB)
+                
+                RGB = colorspace.clampBlack(RGB)
+
+                library.append(dict(
+                    type="color",
+                    title=prefix,
+                    name=item.get("name").replace(prefix, ""),
+                    code=item.get("code"),
+                    color=color,
+                    rgb=RGB,
+                    xyz=XYZ,
+                    favorite=favorite ))
+
+            return library
+
+
+
+        def drawColorItems (self, filepath,
+                filterFavorites=False ):
+
+
+            iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
+
+            self.AssetBrowser.setModel(iconModel)
+            self.AssetBrowser.setMessage("Loading")
+
+            browserItems = self.getColorItems(filepath, filterFavorites=filterFavorites)
+            for item in self.sortItems(browserItems):
+
+                iconItem = QtGui.QStandardItem()
+                iconItem.setCheckable(False)
+                iconItem.setEditable(True)
+
+                iconItem.setData(0, QtCore.Qt.StatusTipRole)
+
+                iconItem.setData(item, QtCore.Qt.EditRole)
+
+                iconModel.appendRow(iconItem)
+
+
+            self.AssetBrowser.setModel(iconModel)
+            self.AssetBrowser.setItemDelegate(
+                ColorDelegate.Delegate(self.AssetBrowser, self.theme) )
+
+            self.AssetBrowser.setGrid()
+            self.AssetBrowser.clearMessage()
+
+
+
+        def usdfileChecked (self):
 
             self.loadUsdComment()
             self.UsdLoadOptions.link.setChecked(False)
@@ -402,46 +616,39 @@ def Make (base):
             for raw in range(model.rowCount()):
 
                 item = model.item(raw)
-                data = item.data(QtCore.Qt.EditRole)
-                dataType = data.get("type")
-
-
                 item.setData(0, QtCore.Qt.StatusTipRole)
-                if dataType == "asset":
-                    assetType = data.get("data").get("type")
+                data = item.data(QtCore.Qt.EditRole)
 
-                    if assetType == "usdfile":
-                        filename = data.get("data").get("filename")
+                dataType = data.get("type")
+                if dataType == "usdfile":
+                    filename = data.get("filename")
 
-                        if filename == self.checkedName:
-                            item.setData(1, QtCore.Qt.StatusTipRole)
-                            self.loadUsdComment(filename)
-                            self.UsdLoadOptions.link.setChecked(
-                                data.get("data").get("token"))
+                    if filename == self.checkedName:
+                        item.setData(1, QtCore.Qt.StatusTipRole)
+                        self.loadUsdComment(filename)
+                        self.UsdLoadOptions.link.setChecked(
+                            data.get("token"))
 
-                            self.UsdLoadOptions.commentEdit.setEnabled(True)
-                            self.UsdLoadOptions.link.setEnabled(True)
+                        self.UsdLoadOptions.commentEdit.setEnabled(True)
+                        self.UsdLoadOptions.link.setEnabled(True)
 
 
 
-        def loadUsdInfo (self, path, name):
+        def loadUsdInfo (self, path):
 
-            metadataPath = os.path.join(
-                path, name, self.metafile)
+            self.metapath = path
+            self.metadata = toolkit.system.stream.dataread(
+                os.path.join(path, self.metafile) )
 
-            if os.path.exists(metadataPath):
-                self.metapath = os.path.join(path, name)
-                self.metadata = toolkit.system.stream.dataread(metadataPath)
+            info = self.metadata.get("info")
+            if info:
+                self.UsdLoadOptions.infoEdit.set(info)
+            else:
+                self.UsdLoadOptions.infoEdit.setDefault()
 
-                info = self.metadata.get("info")
-                if info:
-                    self.UsdLoadOptions.infoEdit.set(info)
-                else:
-                    self.UsdLoadOptions.infoEdit.setDefault()
-
-                status = self.metadata.get("status")
-                if status:
-                    self.UsdLoadOptions.status.set(status)
+            status = self.metadata.get("status")
+            if status:
+                self.UsdLoadOptions.status.set(status)
 
 
 
@@ -561,6 +768,14 @@ def Make (base):
 
 
 
+        def resizeEvent (self, event):
+            super(Donor, self).resizeEvent(event)
+
+            with Settings.Manager(self.theme.app, True) as settings:
+                settings["size"] = [ self.width(), self.height() ]
+
+
+
         def loadQuery (self):
 
             state = "enabled"
@@ -578,8 +793,8 @@ def Make (base):
             if self.UsdLoadOptions.loadButton.property("state") != "enabled":
                 return
 
-            directory = self.AssetPath.get()
-            path = ""
+            directory = self.AssetPath.resolve()
+            filepath  = ""
 
             model = self.AssetBrowser.model()
             for index in range(model.rowCount()):
@@ -591,11 +806,10 @@ def Make (base):
                     data = item.data(QtCore.Qt.EditRole)
                     state = self.UsdLoadOptions.link.isChecked()
 
-                    filedata = data.get("data")
-                    name      = filedata.get("name")
-                    version   = filedata.get("version")
-                    variant   = filedata.get("variant")
-                    animation = filedata.get("animation")
+                    name      = data.get("name")
+                    version   = data.get("version")
+                    variant   = data.get("variant")
+                    animation = data.get("animation")
 
                     filename = toolkit.core.naming.createAssetName(
                         name, version,
@@ -603,16 +817,22 @@ def Make (base):
                         animation=animation,
                         final=state )
 
-                    path = os.path.join(directory, name, filename)
+                    filepath = os.path.join(directory, filename)
                     break
 
-            if os.path.exists(path):
-                self.loadUsdFile(path)
+            if os.path.exists(filepath):
+                self.loadUsdFile(filepath)
 
 
 
         def loadUsdFile (self, path):
 
+            pass
+
+
+
+        def loadColor (self, data):
+            
             pass
 
 

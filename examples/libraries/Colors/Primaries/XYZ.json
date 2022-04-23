@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "title": "XYZ Color Guide",
+  "description": "",
+  "prefix": "XYZ ",
+  "colorCount": 6,
+  "colorSpace": "XYZ",
+  "records": {
+    "XYZ Cyan": {
+      "name": "XYZ Cyan",
+      "code": "0",
+      "components": [
+        15.02,
+        22.93,
+        52.85
+      ]
+    },
+    "XYZ Blue": {
+      "name": "XYZ Blue",
+      "code": "1",
+      "components": [
+        5.67,
+        4.10,
+        15.67
+      ]
+    },
+    "XYZ Magenta": {
+      "name": "XYZ Magenta",
+      "code": "2",
+      "components": [
+        33.03,
+        16.79,
+        15.01
+      ]
+    },
+    "XYZ Red": {
+      "name": "XYZ Red",
+      "code": "3",
+      "components": [
+        30.20,
+        16.02,
+        2.30
+      ]
+    },
+    "XYZ Yellow": {
+      "name": "XYZ Yellow",
+      "code": "4",
+      "components": [
+        69.17,
+        74.16,
+        7.04
+      ]
+    },
+    "XYZ Green": {
+      "name": "XYZ Green",
+      "code": "5",
+      "components": [
+        8.16,
+        18.42,
+        6.74
+      ]
+    }
+  }
+}

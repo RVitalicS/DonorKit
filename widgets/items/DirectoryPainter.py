@@ -36,8 +36,7 @@ class Item (BaseItem.Painter, FolderPainter.Base, AssetUsdPainter.Base):
         elif self.type == "plusfolder":
             self.paintPlus()
 
-        elif self.type == "asset":
-            if self.data.get("type") == "usdasset":
+        elif self.type == "usdasset":
                 
-                self.favorite = self.data.get("favorite", False)
-                self.paintAssetUsd()
+            self.favorite = self.data.get("favorite", False)
+            self.paintAssetUsd()

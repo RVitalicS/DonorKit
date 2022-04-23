@@ -158,10 +158,23 @@ def copyTimeSamples (source, target, units=1.0):
 
                 OverPrim = target.OverridePrim(source.GetPath())
 
-                newAttribute = OverPrim.CreateAttribute(
-                    Attribute.GetName(),
-                    Attribute.GetTypeName(),
-                    custom=Attribute.IsCustom() )
+                if attrBaseName == "translate":
+                    Xformable = UsdGeom.Xformable(OverPrim)
+                    newAttribute = Xformable.AddTranslateOp()
+
+                elif attrBaseName == "rotateXYZ":
+                    Xformable = UsdGeom.Xformable(OverPrim)
+                    newAttribute = Xformable.AddRotateXYZOp()
+
+                elif attrBaseName == "scale":
+                    Xformable = UsdGeom.Xformable(OverPrim)
+                    newAttribute = Xformable.AddScaleOp()
+
+                else:
+                    newAttribute = OverPrim.CreateAttribute(
+                        Attribute.GetName(),
+                        Attribute.GetTypeName(),
+                        custom=Attribute.IsCustom() )
 
                 for sample in timeSamples:
 

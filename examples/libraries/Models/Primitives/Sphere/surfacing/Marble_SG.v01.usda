@@ -1,0 +1,45 @@
+#usda 1.0
+(
+    defaultPrim = "Marble_SG"
+)
+
+def Material "Marble_SG"
+{
+    token outputs:surface.connect = </Marble_SG/Marble_PreviewSurface.outputs:surface>
+
+    def Shader "Marble_PreviewManifoldTransform"
+    {
+        uniform token info:id = "UsdTransform2d"
+        float2 inputs:in.connect = </Marble_SG/Marble_PreviewManifold.outputs:result>
+        float inputs:rotation = 0
+        float2 inputs:scale = (3, 2)
+        float2 inputs:translation = (0, 0)
+        float2 outputs:result
+    }
+
+    def Shader "Marble_PreviewSurface"
+    {
+        uniform token info:id = "UsdPreviewSurface"
+        color3f inputs:diffuseColor.connect = </Marble_SG/Marble_PreviewAlbedo.outputs:rgb>
+        float inputs:roughness = 0
+        token outputs:surface
+    }
+
+    def Shader "Marble_PreviewAlbedo"
+    {
+        uniform token info:id = "UsdUVTexture"
+        asset inputs:file = @./textures/Albedo.jpg@
+        float2 inputs:st.connect = </Marble_SG/Marble_PreviewManifoldTransform.outputs:result>
+        token inputs:wrapS = "repeat"
+        token inputs:wrapT = "repeat"
+        color3f outputs:rgb
+    }
+
+    def Shader "Marble_PreviewManifold"
+    {
+        uniform token info:id = "UsdPrimvarReader_float2"
+        token inputs:varname = "st"
+        float2 outputs:result
+    }
+}
+

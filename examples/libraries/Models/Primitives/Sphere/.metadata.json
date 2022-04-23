@@ -1,0 +1,13 @@
+{
+    "generation": 4,
+    "type": "usdasset",
+    "info": "A Standard Sphere Primitive",
+    "tags": [],
+    "items": {
+        "Sphere.v01.usda": {
+            "published": "01.01.2022 00.00",
+            "comment": "Marble shader with Renderman preview"
+        }
+    },
+    "status": "Final"
+}

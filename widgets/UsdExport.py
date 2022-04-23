@@ -34,14 +34,17 @@ UIGlobals = Settings.UIGlobals
 
 
 
-class Base (QtWidgets.QDialog):
+class ExportBase (QtWidgets.QDialog):
 
 
     def __init__(self, parent=None):
-        super(Base, self).__init__(parent)
+        super(ExportBase, self).__init__(parent)
 
-        self.theme = theme.Theme(application="export")
+        self.theme = theme.Theme("export")
         self.setStyleSheet( self.theme.getStyleSheet() )
+
+        self.setWindowTitle("USD Asset Export")
+        self.setObjectName("UsdExport")
 
 
 
@@ -51,32 +54,27 @@ class Base (QtWidgets.QDialog):
 
 
 class Dialog (
-        Base,
-        BaseWidget.Library,
+        ExportBase,
         BaseWidget.Browser,
         BaseWidget.Bookmark,
         BaseWidget.Favorite,
         BaseWidget.Slider,
-        BaseWidget.Folder ):
+        BaseWidget.Folder,
+        BaseWidget.State ):
 
 
 
     def __init__(self, parent=None):
         super(Dialog, self).__init__(parent)
+        BaseWidget.Browser.__init__(self)
+
         UsdExportUI.setupUi(self, self.theme)
         self.connectUi()
         
-        self.metafile    = Metadata.NAME
-        self.libraries   = self.getAssetRoots()
-        self.assetsNames = []
-        self.exported    = False
+        self.exported = False
 
+        self.setUiPath()
         self.applyUiSettings()
-        self.setLibrary()
-
-        self.setWindowTitle("USD Asset Export")
-        self.setObjectName("UsdExport")
-        self.resize(745, 485)
 
         self.AssetBrowser.setFocus(QtCore.Qt.MouseFocusReason)
 
@@ -86,12 +84,13 @@ class Dialog (
 
         self.AssetBrowser.iconClicked.connect(self.iconClicked)
         self.AssetBrowser.favoriteClicked.connect(self.favoriteClicked)
-        self.AssetBrowser.link.connect(self.openFolder)
+        self.AssetBrowser.link.connect(self.linkAction)
         self.AssetBrowser.createFolderQuery.connect(self.createFolderQuery)
         self.AssetBrowser.createFolder.connect(self.createFolder)
 
-        self.AssetPath.pathChanged.connect(self.drawBrowserItems)
-        self.AssetPath.bookmarkClicked.connect(self.actionBookmark)
+        self.AssetPath.pathChanged.connect(self.drawDecision)
+        self.AssetPath.pathChanged.connect(self.uiVisibility)
+        self.AssetPath.bookmarkClicked.connect(self.switchBookmark)
 
         self.BarBottom.preview.slider.valueChanged.connect(self.sliderAction)
         self.BarBottom.favorite.button.released.connect(self.favoriteFilter)
@@ -131,8 +130,40 @@ class Dialog (
         self.UsdExportOptions.exportButton.released.connect(self.exportAction)
 
 
-    def drawBrowserItems (self, path):
-        super(Dialog, self).drawBrowserItems(path)
+
+    def uiVisibility (self, path):
+        
+        if self.AssetPath.isRoot(path):
+            self.AssetPath.hide()
+            self.BarBottom.hide()
+
+            self.ResizeButton.hide()
+            self.UsdExportOptions.hide()
+
+        else:
+            self.AssetPath.show()
+            self.BarBottom.show()
+
+            self.ResizeButton.show()
+            self.UsdExportOptions.show()
+
+
+
+    def getDirItems (self, path,
+            filterFavorites=False,
+            showTypes=["usdasset"] ):
+
+        return super(Dialog, self).getDirItems(path,
+            filterFavorites=filterFavorites,
+            showTypes=showTypes )
+
+
+
+    def drawBrowserItems (self, path,
+            filterFavorites=False):
+    
+        super(Dialog, self).drawBrowserItems(path,
+            filterFavorites=filterFavorites)
 
         hasCheckedName = False
         model = self.AssetBrowser.model()
@@ -152,7 +183,7 @@ class Dialog (
 
     def setRangeStart (self, valueStart):
 
-        with Settings.Export(update=True) as settings:
+        with Settings.Manager(self.theme.app, True) as settings:
             settings["rangeStart"] = valueStart
 
         valueEnd = self.UsdExportOptions.animationOptions.range.end.value()
@@ -163,7 +194,7 @@ class Dialog (
 
     def setRangeEnd (self, valueEnd):
 
-        with Settings.Export(update=True) as settings:
+        with Settings.Manager(self.theme.app, True) as settings:
             settings["rangeEnd"] = valueEnd
 
         valueStart =  self.UsdExportOptions.animationOptions.range.start.value()
@@ -225,7 +256,7 @@ class Dialog (
 
     def linkWrap (self):
 
-        with Settings.Export(update=True) as settings:
+        with Settings.Manager(self.theme.app, True) as settings:
             settings["link"] = self.UsdExportOptions.mainOptions.linkButton.isChecked()
 
         self.interpretTags("")
@@ -303,7 +334,9 @@ class Dialog (
     def versionChoice (self, text):
 
         if text:
-            directory = self.AssetPath.get()
+            directory = self.AssetPath.resolve()
+            if not directory: return
+            
             name = self.UsdExportOptions.nameEdit.text()
             path = os.path.join(directory, name)
 
@@ -345,7 +378,7 @@ class Dialog (
     def getAssetPath (self):
 
         return os.path.join(
-            self.AssetPath.get(),
+            self.AssetPath.resolve(),
             self.UsdExportOptions.nameEdit.text() )
 
 
@@ -376,7 +409,7 @@ class Dialog (
 
         animationSwitchChanged = False
 
-        with Settings.Export(update=True) as settings:
+        with Settings.Manager(self.theme.app, True) as settings:
 
             animationSwitchBefore = settings["animation"]
             animationSwitchAfter = self.UsdExportOptions.animationSwitch.isChecked()
@@ -404,30 +437,26 @@ class Dialog (
             dataType = data["type"]
 
             if dataType == "library":
-                name = data["data"]["name"]
-                self.setLibrary(name)
+                libname = data.get("name")
+                self.setUiPath(libname)
                 return
 
             elif dataType == "folder":
-                name = data["data"]["name"]
-                self.AssetPath.moveForward(name)
+                name = data.get("name")
+                self.AssetPath.goForward(name)
                 self.checkedName = ""
 
-            elif dataType == "asset":
-                assetdata = data["data"]
-                assetType = assetdata["type"]
+            elif dataType == "usdasset":
+                name = data.get("name")
+                force = True
 
-                if assetType == "usdasset":
-                    name = assetdata["name"]
-                    force = True
-
-                    if self.checkedName == name:
-                        self.checkedName = ""
-                    else:
-                        self.checkedName = name
-
-                else:
+                if self.checkedName == name:
                     self.checkedName = ""
+                else:
+                    self.checkedName = name
+
+            else:
+                self.checkedName = ""
         else:
             self.checkedName = ""
 
@@ -437,7 +466,7 @@ class Dialog (
 
     def loadStatus (self):
 
-        directory = self.AssetPath.get()
+        directory = self.AssetPath.resolve()
         name = self.UsdExportOptions.nameEdit.text()
         path = os.path.join(directory, name)
 
@@ -502,9 +531,9 @@ class Dialog (
             data = item.data(QtCore.Qt.EditRole)
             iconType = data["type"]
 
-            if iconType == "asset":
+            if iconType == "usdasset":
 
-                if data["data"]["name"] == self.checkedName:
+                if data["name"] == self.checkedName:
                     item.setData(1, QtCore.Qt.StatusTipRole)
                 else:
                     item.setData(0, QtCore.Qt.StatusTipRole)
@@ -548,7 +577,7 @@ class Dialog (
         # load asset options
         else:
 
-            directory = self.AssetPath.get()
+            directory = self.AssetPath.resolve()
             name = self.UsdExportOptions.nameEdit.text()
             path = os.path.join(directory, name)
 
@@ -602,16 +631,24 @@ class Dialog (
 
 
 
+    def resizeEvent (self, event):
+        super(Dialog, self).resizeEvent(event)
+
+        with Settings.Manager(self.theme.app, True) as settings:
+            settings["size"] = [ self.width(), self.height() ]
+
+
+
     def modelingOverwriteSetting (self):
-        with Settings.Export(update=True) as settings:
+        with Settings.Manager(self.theme.app, True) as settings:
             settings["modellingOverwrite"] = self.UsdExportOptions.modelingOverwrite.isChecked()
 
     def surfacingOverwriteSetting (self):
-        with Settings.Export(update=True) as settings:
+        with Settings.Manager(self.theme.app, True) as settings:
             settings["surfacingOverwrite"] = self.UsdExportOptions.surfacingOverwrite.isChecked()
 
     def animationOverwriteSetting (self):
-        with Settings.Export(update=True) as settings:
+        with Settings.Manager(self.theme.app, True) as settings:
             settings["animationOverwrite"] = self.UsdExportOptions.animationOverwrite.isChecked()
 
 
@@ -619,7 +656,7 @@ class Dialog (
     def applyUiSettings (self):
         super(Dialog, self).applyUiSettings()
 
-        with Settings.Export(update=False) as settings:
+        with Settings.Manager(self.theme.app, False) as settings:
 
             self.UsdExportOptions.animationOptions.range.start.setValue(settings.get("rangeStart"))
             self.UsdExportOptions.animationOptions.range.end.setValue(settings.get("rangeEnd"))
@@ -742,6 +779,7 @@ class Dialog (
             options.assetName = self.getAssetName()
 
             options.version = int(self.UsdExportOptions.mainOptions.versionCombobox.getName())
+            options.variant = self.UsdExportOptions.mainOptions.variantCombobox.getName()
             options.link = self.UsdExportOptions.mainOptions.linkButton.isChecked()
 
             options.info = self.UsdExportOptions.infoEdit.get()

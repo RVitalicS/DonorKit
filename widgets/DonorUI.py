@@ -186,7 +186,7 @@ def setupUi (self, theme):
     self.AssetPath = BarPath.Bar(theme)
     self.browserLayout.addWidget(self.AssetPath)
 
-    self.AssetBrowser = AssetBrowser.AssetBrowser()
+    self.AssetBrowser = AssetBrowser.AssetBrowser(theme)
     self.browserLayout.addWidget(self.AssetBrowser)
 
     self.BarBottom = BarBottom.Bar(theme)

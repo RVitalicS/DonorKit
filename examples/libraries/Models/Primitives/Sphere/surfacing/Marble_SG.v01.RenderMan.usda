@@ -1,0 +1,85 @@
+#usda 1.0
+(
+    defaultPrim = "Marble_SG"
+)
+
+def Material "Marble_SG"
+{
+    token outputs:ri:surface.connect = </Marble_SG/Marble_LamaAdd.outputs:out>
+
+    def Shader "Marble_LamaAdd"
+    {
+        uniform token info:id = "LamaAdd"
+        color3f inputs:material1.connect = </Marble_SG/Marble_LamaDiffuse.outputs:out>
+        color3f inputs:material2.connect = </Marble_SG/Marble_LamaConductor.outputs:out>
+        float inputs:weight2 = 1
+        token outputs:out
+    }
+
+    def Shader "Marble_LamaDiffuse"
+    {
+        uniform token info:id = "LamaDiffuse"
+        color3f inputs:color.connect = </Marble_SG/Marble_MetallicWorkflow.outputs:resultDiffuseRGB>
+        color3f outputs:out
+    }
+
+    def Shader "Marble_MetallicWorkflow"
+    {
+        uniform token info:id = "PxrMetallicWorkflow"
+        color3f inputs:baseColor.connect = </Marble_SG/Marble_Albedo.outputs:resultRGB>
+        float inputs:specular.connect = </Marble_SG/Marble_SpecularToFloat.outputs:resultF>
+        color3f outputs:resultDiffuseRGB
+        color3f outputs:resultSpecularEdgeRGB
+        color3f outputs:resultSpecularFaceRGB
+    }
+
+    def Shader "Marble_Albedo"
+    {
+        uniform token info:id = "PxrTexture"
+        asset inputs:filename = @${SCANSURFACE}/Albedo.tex@
+        string inputs:manifold.connect = </Marble_SG/Marble_Manifold2D.outputs:result>
+        color3f outputs:resultRGB
+    }
+
+    def Shader "Marble_Manifold2D"
+    {
+        uniform token info:id = "PxrManifold2D"
+        float inputs:scaleS = 3
+        float inputs:scaleT = 2
+        string outputs:result
+    }
+
+    def Shader "Marble_SpecularToFloat"
+    {
+        uniform token info:id = "PxrToFloat"
+        color3f inputs:input.connect = </Marble_SG/Marble_Specular.outputs:resultRGB>
+        int inputs:mode = 3
+        float outputs:resultF
+    }
+
+    def Shader "Marble_Specular"
+    {
+        uniform token info:id = "PxrTexture"
+        asset inputs:filename = @${SCANSURFACE}/Specular.tex@
+        string inputs:manifold.connect = </Marble_SG/Marble_Manifold2D.outputs:result>
+        color3f outputs:resultRGB
+    }
+
+    def Shader "Marble_LamaConductor"
+    {
+        uniform token info:id = "LamaConductor"
+        color3f inputs:edgeColor.connect = </Marble_SG/Marble_MetallicWorkflow.outputs:resultSpecularEdgeRGB>
+        color3f inputs:reflectivity.connect = </Marble_SG/Marble_MetallicWorkflow.outputs:resultSpecularFaceRGB>
+        float inputs:roughness.connect = </Marble_SG/Marble_Roughness.outputs:resultR>
+        color3f outputs:out
+    }
+
+    def Shader "Marble_Roughness"
+    {
+        uniform token info:id = "PxrTexture"
+        asset inputs:filename = @${SCANSURFACE}/Roughness.tex@
+        string inputs:manifold.connect = </Marble_SG/Marble_Manifold2D.outputs:result>
+        float outputs:resultR
+    }
+}
+

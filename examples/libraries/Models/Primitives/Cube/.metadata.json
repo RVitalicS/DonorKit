@@ -1,0 +1,13 @@
+{
+    "generation": 4,
+    "type": "usdasset",
+    "info": "A Standard Cube Primitive",
+    "tags": [],
+    "items": {
+        "Cube.v01.Turntable.usda": {
+            "published": "01.01.2022 00.00",
+            "comment": "Rotation animation"
+        }
+    },
+    "status": "WIP"
+}

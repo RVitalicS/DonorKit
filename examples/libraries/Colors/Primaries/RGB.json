@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "title": "RGB Color Guide",
+  "description": "",
+  "prefix": "RGB ",
+  "colorCount": 6,
+  "colorSpace": "RGB",
+  "records": {
+    "RGB Cyan": {
+      "name": "RGB Cyan",
+      "code": "0",
+      "components": [
+        0.00,
+        0.31,
+        0.71
+      ]
+    },
+    "RGB Blue": {
+      "name": "RGB Blue",
+      "code": "1",
+      "components": [
+        0.03,
+        0.03,
+        0.21
+      ]
+    },
+    "RGB Magenta": {
+      "name": "RGB Magenta",
+      "code": "2",
+      "components": [
+        0.69,
+        0.00,
+        0.19
+      ]
+    },
+    "RGB Red": {
+      "name": "RGB Red",
+      "code": "3",
+      "components": [
+        0.68,
+        0.01,
+        0.02
+      ]
+    },
+    "RGB Yellow": {
+      "name": "RGB Yellow",
+      "code": "4",
+      "components": [
+        0.93,
+        0.75,
+        0.00
+      ]
+    },
+    "RGB Green": {
+      "name": "RGB Green",
+      "code": "5",
+      "components": [
+        0.00,
+        0.28,
+        0.06
+      ]
+    }
+  }
+}

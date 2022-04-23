@@ -15,36 +15,6 @@ UIGlobals = Settings.UIGlobals
 
 
 
-def checked (function):
-    def wrapped (self):
-
-        function(self)
-
-        if self.checked == 1:
-
-            outlinePath = QtGui.QPainterPath()
-            outlinePath.addRoundedRect(
-                QtCore.QRectF(self.iconRect), 
-                self.radius, 
-                self.radius)
-
-            color = QtGui.QColor(self.theme.color.checkedHighlight)
-        
-            pen = QtGui.QPen(
-                    QtGui.QBrush(color),
-                    4,
-                    QtCore.Qt.SolidLine,
-                    QtCore.Qt.RoundCap,
-                    QtCore.Qt.RoundJoin)
-
-            self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-            self.painter.strokePath(outlinePath, pen)
-
-    return wrapped
-
-
-
-
 
 def token (function):
     def wrapped (self):
@@ -163,8 +133,8 @@ def background (function):
             self.pointY                ,
             self.width                 ,
             self.previewHeight + self.space )
-        previewColor = QtGui.QColor(self.theme.color.iconSpace)
-        self.painter.fillRect(clearBackground, previewColor)
+        self.previewColor = QtGui.QColor(self.theme.color.iconSpace)
+        self.painter.fillRect(clearBackground, self.previewColor)
 
     return wrapped
 
@@ -197,41 +167,6 @@ def accent (status=True):
 
         return wrapped
     return decorated
-
-
-
-
-
-def initialize (function):
-    def wrapped (self):
-
-        function(self)
-
-        self.iconSize = 1
-        with Settings.Manager(update=False) as settings:
-            self.iconSize = settings["iconSize"]
-
-        IconSettings = UIGlobals.AssetBrowser.Icon
-
-        labelHeight = IconSettings.Asset.min.label
-        if self.iconSize == 2:
-            labelHeight = IconSettings.Asset.mid.label
-        elif self.iconSize == 3:
-            labelHeight = IconSettings.Asset.max.label
-
-        self.previewHeight = self.height - labelHeight - self.space*2
-
-
-        self.labelArea = QtCore.QRect(
-            self.pointX + self.space*2 ,
-            self.pointY + self.height - labelHeight ,
-            self.width  - self.space*4 ,
-            labelHeight - self.space*2 )
-
-        self.spaceName = self.labelArea.width()
-        self.shiftName = 0
-
-    return wrapped
 
 
 

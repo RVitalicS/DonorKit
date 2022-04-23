@@ -2,8 +2,10 @@
 
 
 from widgets import DonorWidget
+
 from maya.app.general.mayaMixin import (
     MayaQWidgetDockableMixin )
+import maya.cmds as cmds
 
 from . import actions
 
@@ -15,8 +17,8 @@ class Donor (
     DonorWidget.Make(MayaQWidgetDockableMixin) ):
 
 
-    def __init__(self, parent):
-        super(Donor, self).__init__(parent)
+    def __init__(self, parent=None):
+        super(Donor, self).__init__(parent=parent)
 
         self.setWindowTitle("Donor Manager")
         self.setObjectName("DonorManager")
@@ -26,15 +28,18 @@ class Donor (
         actions.loadUsdFile(path)
 
 
+    def loadColor (self, data):
+        actions.loadColor(data)
+
+
 
 
 
 def show ():
 
-    DonorManager = Donor(None)
+    DonorManager = Donor()
     nameUI = DonorManager.objectName()+"WorkspaceControl"
 
-    import maya.cmds as cmds
     if cmds.workspaceControl(nameUI, query=True, exists=True):
         cmds.workspaceControl(nameUI, edit=True, close=True)
         cmds.deleteUI(nameUI)

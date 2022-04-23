@@ -22,18 +22,28 @@ def getMaterialList (stage, name):
 
     materialList = []
 
-    usdFile = stage.GetRootLayer().realPath
-    usdDirectory = os.path.dirname(usdFile)
+    path = stage.GetRootLayer().realPath
+    directory = os.path.dirname(path)
+
+
+    filename = os.path.basename(path)
+    version = re.search(r"\.v\d+-*[A-Za-z]*\.", filename)
+    if not version:
+        return materialList
+
+    version = version.group()
+
 
     searchpath = os.path.join(
-        usdDirectory,
+        directory,
         ostree.SUBDIR_SURFACING )
-    if os.path.exists(searchpath):
-        for item in os.listdir(searchpath):
-            if re.match(r"{}\..+".format(name), item):
-                RelPath = "./{}/{}".format(
-                    ostree.SUBDIR_SURFACING, item)
-                materialList.append(RelPath)
+
+    for item in os.listdir(searchpath):
+
+        if re.match(r"{}{}.+".format(name, version), item):
+            RelPath = "./{}/{}".format(
+                ostree.SUBDIR_SURFACING, item)
+            materialList.append(RelPath)
 
     return materialList
 

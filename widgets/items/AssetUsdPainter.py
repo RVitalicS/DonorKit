@@ -3,12 +3,13 @@
 
 
 from .BasePainterGeneral import (
+    initialize,
+    checked,
     clear,
     label )
 
 from .BasePainterUsd import (
     background,
-    initialize,
     accent,
     preview,
     animation,
@@ -18,8 +19,7 @@ from .BasePainterUsd import (
     published,
     status,
     name,
-    favorite,
-    checked )
+    favorite )
 
 
 from toolkit.ensure.QtCore import *
@@ -90,8 +90,6 @@ class Item (BaseItem.Painter, Base):
         if self.type == "labelasset":
             self.paintLabel()
 
-        elif self.type == "asset":
-            if self.data.get("type") == "usdasset":
-
-                self.favorite = self.data.get("favorite", False)
-                self.paintAssetUsd()
+        elif self.type == "usdasset":
+            self.favorite = self.data.get("favorite", False)
+            self.paintAssetUsd()

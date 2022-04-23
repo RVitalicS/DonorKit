@@ -334,12 +334,8 @@ class ThemeGroup (QtWidgets.QWidget):
             self.button.dark = True
             self.button.repaint()
 
-        if self.theme.application == "export":
-            with Settings.Export(update=True) as settings:
-                settings["theme"] = self.current
-        else:
-            with Settings.Manager(update=True) as settings:
-                settings["theme"] = self.current
+        with Settings.Manager(self.theme.app, True) as settings:
+            settings["theme"] = self.current
 
         if self.current != self.theme.name:
             self.label.setText("RESTART")
@@ -373,7 +369,7 @@ class PreviewGroup (QtWidgets.QWidget):
         self.slider.setRange(1, 3)
         self.slider.setTickInterval(1)
 
-        with Settings.Manager(update=False) as settings:
+        with Settings.Manager(theme.app, False) as settings:
             self.slider.setValue(settings["iconSize"])
 
         self.mainLayout.addWidget(self.label)
@@ -402,10 +398,13 @@ class ComboBox (QtWidgets.QComboBox):
     def showPopup (self):
         super(ComboBox, self).showPopup()
 
+        point = self.mapToGlobal(
+            QtCore.QPoint( self.x(), self.y() ))
+
         popup = self.findChild(QtWidgets.QFrame)
         popup.move(
             popup.x(),
-            popup.y() - popup.height())
+            point.y() - popup.height())
 
 
 
@@ -447,7 +446,7 @@ class Bar (QtWidgets.QWidget):
         self.bookmarkCombobox = ComboBox(theme)
         self.bookmarkCombobox.setItemDelegate(
             PopupDelegate.Delegate(self.bookmarkCombobox.view(), theme) )
-        self.bookmarkCombobox.activated.connect(self.getData)
+        self.bookmarkCombobox.activated.connect(self.emitPathUI)
         self.bookmarkLayout.addWidget(self.bookmarkCombobox)
 
 
@@ -510,9 +509,10 @@ class Bar (QtWidgets.QWidget):
         self.bookmarkCombobox.showPopup()
 
 
-    def getData (self, index):
-        data = self.bookmarkCombobox.itemData(index)
-        self.bookmarkChosen.emit(data)
+
+    def emitPathUI (self, index):
+        pathUI = self.bookmarkCombobox.itemText(index)
+        self.bookmarkChosen.emit(pathUI)
         self.bookmarkCombobox.setVisible(False)
 
 

@@ -2,6 +2,11 @@
 
 
 import os
+
+thisDir = os.path.dirname(__file__)
+rootDir = os.path.dirname(thisDir)
+
+
 from toolkit.system import stream
 
 from toolkit.ensure.QtGui import *
@@ -18,18 +23,14 @@ UIGlobals = Settings.UIGlobals
 class Theme (object):
 
 
-    def __init__ (self, application="manager"):
-        self.application = application
+    def __init__ (self, app="manager"):
+        self.app = app
 
         self.name = "dark"
         filename = "themedark.json"
 
-        if self.application == "export":
-            with Settings.Export(update=False) as settings:
-                self.name = settings.get("theme", "")
-        else:
-            with Settings.Manager(update=False) as settings:
-                self.name = settings.get("theme", "")
+        with Settings.Manager(self.app, False) as settings:
+            self.name = settings.get("theme", "")
 
         if self.name == "light":
             filename = "themelight.json"
@@ -55,12 +56,11 @@ class Theme (object):
             "browserSocket": "$BROWSER_SOCKET",
             "browserHandleSocket": "$HANDLE_SOCKET",
             "browserHandle": "$BROWSER_HANDLE"
-            }
+        }
 
 
         path = os.path.join(
-            os.path.dirname(__file__),
-            "databank", filename)
+            rootDir, "databank", filename)
         self.values = stream.dataread(path)
 
         class Group: pass
@@ -82,9 +82,7 @@ class Theme (object):
     def getStyleSheet (self):
 
         path = os.path.join(
-            os.path.dirname(__file__),
-            "databank",
-            "stylesheet.css")
+            rootDir, "databank", "stylesheet.css")
 
         stylesheet = ""
         with open(path, "r") as file:

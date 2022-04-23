@@ -53,11 +53,11 @@ buttons.append(dict(
 # define libraries to export assets
 # os.environ["ASSETLIBS"]=/server/library
 
-from toolkit.maya import AssetUsd
-AssetUsd.Export()
-
 import importlib
+from toolkit.maya import AssetUsd
+
 importlib.reload(AssetUsd)
+AssetUsd.Export()
 """))
 
 

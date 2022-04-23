@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "title": "LAB Color Guide",
+  "description": "",
+  "prefix": "LAB ",
+  "colorCount": 6,
+  "colorSpace": "LAB",
+  "records": {
+    "LAB Cyan": {
+      "name": "LAB Cyan",
+      "code": "0",
+      "components": [
+        55.00,
+        -37.00,
+        -50.00
+      ]
+    },
+    "LAB Blue": {
+      "name": "LAB Blue",
+      "code": "1",
+      "components": [
+        24.00,
+        22.00,
+        -46.00
+      ]
+    },
+    "LAB Magenta": {
+      "name": "LAB Magenta",
+      "code": "2",
+      "components": [
+        48.00,
+        74.00,
+        -3.00
+      ]
+    },
+    "LAB Red": {
+      "name": "LAB Red",
+      "code": "3",
+      "components": [
+        47.00,
+        68.00,
+        48.00
+      ]
+    },
+    "LAB Yellow": {
+      "name": "LAB Yellow",
+      "code": "4",
+      "components": [
+        89.00,
+        -5.00,
+        93.00
+      ]
+    },
+    "LAB Green": {
+      "name": "LAB Green",
+      "code": "5",
+      "components": [
+        50.00,
+        -65.00,
+        27.00
+      ]
+    }
+  }
+}

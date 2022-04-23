@@ -26,8 +26,11 @@ class AssetBrowser (QtWidgets.QListView):
     iconClicked  = Signal(QtCore.QModelIndex)
 
 
-    def __init__(self):
+    def __init__(self, theme):
         super(AssetBrowser, self).__init__()
+
+        self.theme = theme
+        self.message = None
 
         self.setProperty("background", "browser")
         self.setProperty("border", "none")
@@ -61,7 +64,7 @@ class AssetBrowser (QtWidgets.QListView):
 
 
         iconSize = 1
-        with Settings.Manager(update=False) as settings:
+        with Settings.Manager(self.theme.app, update=False) as settings:
             iconSize = settings["iconSize"]
 
 
@@ -99,6 +102,7 @@ class AssetBrowser (QtWidgets.QListView):
 
 
         model = self.model()
+        if not model: return
 
 
         folderCount = int()
@@ -107,8 +111,17 @@ class AssetBrowser (QtWidgets.QListView):
             item = model.item(index)
             data = item.data(QtCore.Qt.EditRole)
 
-            if   data["type"] == "folder": folderCount += 1
-            elif data["type"] == "asset" : assetCount  += 1
+            if   data["type"] in [
+                    "folder",
+                    "foldercolors" ]:
+                folderCount += 1
+
+            elif data["type"] in [
+                    "usdasset",
+                    "usdfile",
+                    "colorguide",
+                    "color" ]:
+                assetCount  += 1
 
 
         if folderCount <= columnsFolder:
@@ -208,7 +221,7 @@ class AssetBrowser (QtWidgets.QListView):
                 item = model.item(index)
                 data = item.data(QtCore.Qt.EditRole)
 
-                if data["type"] == "folder":
+                if data["type"] in ["folder", "foldercolors"]:
                     
                     if positionX + folderWidth + offsetFolder*2 > widgetWidth + margin:
                         positionX  = margin
@@ -284,7 +297,7 @@ class AssetBrowser (QtWidgets.QListView):
                 item = model.item(index)
                 data = item.data(QtCore.Qt.EditRole)
 
-                if data["type"] == "asset":
+                if data["type"] in ["usdasset", "usdfile", "colorguide", "color"]:
                     if positionX + assetWidth + offsetAsset*2 > widgetWidth + margin:
                         positionX  = margin
                         positionY += assetHeight
@@ -302,7 +315,7 @@ class AssetBrowser (QtWidgets.QListView):
 
 
 
-        with Settings.Manager(update=False) as settings:
+        with Settings.Manager(self.theme.app, update=False) as settings:
             scrollPosition = settings["scrollPosition"]
 
             self.verticalScrollBar().setValue(
@@ -364,10 +377,44 @@ class AssetBrowser (QtWidgets.QListView):
 
 
 
-    # def paintEvent (self, event):
-    #     painter = QtGui.QPainter(self.viewport())
-    #     painter.end()
-    #     super(AssetBrowser, self).paintEvent(event)
+    def setMessage (self, text):
+
+        self.message = text
+        self.repaint()
+
+
+
+    def clearMessage (self):
+
+        self.message = None
+        self.repaint()
+
+
+
+    def paintEvent (self, event):
+
+        if self.message:
+
+            painter = QtGui.QPainter(self.viewport())
+
+            painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
+            painter.setPen(
+                QtGui.QPen(QtGui.QColor(self.theme.color.text)) )
+
+            painter.setFont(UIGlobals.AssetBrowser.fontMessage)
+
+            textOption = QtGui.QTextOption()
+            textOption.setWrapMode(QtGui.QTextOption.NoWrap)
+            textOption.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
+
+            painter.drawText(
+                QtCore.QRectF(self.contentsRect()),
+                self.message,
+                textOption)
+
+            painter.end()
+
+        super(AssetBrowser, self).paintEvent(event)
 
 
 
@@ -392,7 +439,7 @@ class AssetBrowser (QtWidgets.QListView):
 
     def saveScrollPosition (self, value):
 
-        with Settings.Manager(update=True) as settings:
+        with Settings.Manager(self.theme.app, update=True) as settings:
             settings["scrollPosition"] = self.floatScrollPosition(value)
 
 

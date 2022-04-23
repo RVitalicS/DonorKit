@@ -1,0 +1,21 @@
+{
+    "generation": 4,
+    "type": "usdasset",
+    "info": "A Standard Cone Primitive",
+    "tags": [],
+    "items": {
+        "Cone.v01.usda": {
+            "published": "01.01.2022 00.00",
+            "comment": "Initial"
+        },
+        "Cone.v02-Yellow.usda": {
+            "published": "01.01.2022 00.00",
+            "comment": "Yellow Diffuse Variant"
+        },
+        "Cone.v02-Violet.usda": {
+            "published": "01.01.2022 00.00",
+            "comment": "Violet Diffuse Variant"
+        }
+    },
+    "status": "Pending Review"
+}

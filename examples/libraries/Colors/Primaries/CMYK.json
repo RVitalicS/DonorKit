@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "title": "CMYK Color Guide",
+  "description": "",
+  "prefix": "CMYK ",
+  "colorCount": 6,
+  "colorSpace": "CMYK",
+  "records": {
+    "CMYK Cyan": {
+      "name": "CMYK Cyan",
+      "code": "0",
+      "components": [
+        100.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "CMYK Blue": {
+      "name": "CMYK Blue",
+      "code": "1",
+      "components": [
+        100.0,
+        100.0,
+        0.0,
+        0.0
+      ]
+    },
+    "CMYK Magenta": {
+      "name": "CMYK Magenta",
+      "code": "2",
+      "components": [
+        0.0,
+        100.0,
+        0.0,
+        0.0
+      ]
+    },
+    "CMYK Red": {
+      "name": "CMYK Red",
+      "code": "3",
+      "components": [
+        0.0,
+        100.0,
+        100.0,
+        0.0
+      ]
+    },
+    "CMYK Yellow": {
+      "name": "CMYK Yellow",
+      "code": "4",
+      "components": [
+        0.0,
+        0.0,
+        100.0,
+        0.0
+      ]
+    },
+    "CMYK Green": {
+      "name": "CMYK Green",
+      "code": "5",
+      "components": [
+        100.0,
+        0.0,
+        100.0,
+        0.0
+      ]
+    }
+  }
+}

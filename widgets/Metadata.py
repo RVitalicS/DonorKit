@@ -30,9 +30,10 @@ class Metadata (object):
 
         if metatype == "root":
             self.default_data = dict(
+                generation=1,
                 type="root",
-                info="",
-                name=os.path.basename(path) )
+                name=os.path.basename(path),
+                info="" )
 
         elif metatype == "usdasset":
             self.default_data = dict(
@@ -42,6 +43,12 @@ class Metadata (object):
                 tags=[],
                 items=dict(),
                 status="WIP" )
+
+        elif metatype == "foldercolors":
+            self.default_data = dict(
+                generation=1,
+                type="foldercolors",
+                info="" )
 
 
         self.path = os.path.join(
@@ -91,26 +98,27 @@ class Metadata (object):
 
     def restructure (self, data):
 
-        generation = self.getGeneration(data)
-        toNextGen = False
+        if data.get("type") == "usdasset":
+            generation = self.getGeneration(data)
+            toNextGen = False
 
-        if generation == 1:
-            data = self.toSecondGen(data)
-            toNextGen = True
-            generation = 2
+            if generation == 1:
+                data = self.toSecondGen(data)
+                toNextGen = True
+                generation = 2
 
-        if generation == 2:
-            data = self.toThirdGen(data)
-            toNextGen = True
-            generation = 3
+            if generation == 2:
+                data = self.toThirdGen(data)
+                toNextGen = True
+                generation = 3
 
-        if generation == 3:
-            data = self.toFourthGen(data)
-            toNextGen = True
-            generation = 4
+            if generation == 3:
+                data = self.toFourthGen(data)
+                toNextGen = True
+                generation = 4
 
-        if toNextGen:
-            self.save(data)
+            if toNextGen:
+                self.save(data)
 
         return data
 
@@ -118,18 +126,16 @@ class Metadata (object):
 
     def toSecondGen (self, data):
 
-        if data.get("type") == "usdasset":
-            if not data.get("comments", None):
-                data["comments"] = dict()
+        if not data.get("comments", None):
+            data["comments"] = dict()
         return data
 
 
 
     def toThirdGen (self, data):
 
-        if data.get("type") == "usdasset":
-            if not data.get("tags", None):
-                data["tags"] = []
+        if not data.get("tags", None):
+            data["tags"] = []
         return data
 
 
@@ -138,25 +144,23 @@ class Metadata (object):
         
         data["generation"] = 4
 
-        if data.get("type") == "usdasset":
+        items = dict()
+        path = os.path.dirname(self.path)
+        for name in os.listdir(path):
+            if re.search(r"\.usd[ac]*$", name):
+                if not re.search(r"\.Final[-\.]{1}", name):
+                    item = dict()
+                    comment = data.get(
+                        "comments", dict()).get(name, "")
+                    timecode = data.get(
+                        "published", toolkit.core.timing.getTimeCode())
+                    item["comment"] = comment
+                    item["published"] = timecode
+                    items[name] = item
+        data["items"] = items
 
-            items = dict()
-            path = os.path.dirname(self.path)
-            for name in os.listdir(path):
-                if re.search(r"\.usd[ac]*$", name):
-                    if not re.search(r"\.Final[-\.]{1}", name):
-                        item = dict()
-                        comment = data.get(
-                            "comments", dict()).get(name, "")
-                        timecode = data.get(
-                            "published", toolkit.core.timing.getTimeCode())
-                        item["comment"] = comment
-                        item["published"] = timecode
-                        items[name] = item
-            data["items"] = items
-
-            data.pop("published")
-            data.pop("comments")
+        data.pop("published")
+        data.pop("comments")
 
         return data
 

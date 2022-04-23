@@ -28,7 +28,7 @@ class Donor (
 
 
     def __init__(self, parent=None):
-        super(Donor, self).__init__(parent)
+        super(Donor, self).__init__(parent=parent)
 
         item = self.UsdLoadOptions.loadLayout
         item.setEnabled(False)
@@ -44,6 +44,10 @@ class Donor (
 
     def loadUsdFile (self, path):
         actions.loadUsdFile(path)
+
+
+    def loadColor (self, data):
+        actions.loadColor(data)
 
 
 

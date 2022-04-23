@@ -1,0 +1,18 @@
+#usda 1.0
+(
+    defaultPrim = "UsdPreviewSurface_SG"
+)
+
+def Material "UsdPreviewSurface_SG"
+{
+    token outputs:surface.connect = </UsdPreviewSurface_SG/UsdPreviewSurface.outputs:surface>
+
+    def Shader "UsdPreviewSurface"
+    {
+        uniform token info:id = "UsdPreviewSurface"
+        color3f inputs:diffuseColor = (1, 0.778, 0)
+        float inputs:roughness = 0.4
+        token outputs:surface
+    }
+}
+

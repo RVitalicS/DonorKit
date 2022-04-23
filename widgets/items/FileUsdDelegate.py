@@ -30,6 +30,7 @@ class Delegate (BaseItem.Delegate):
         editor.clicked.connect(self.clickAction)
         editor.leaveEditor.connect(self.leaveAction)
         
+        editor.link.connect(self.linkAction)
         editor.tokenClicked.connect(self.tokenAction)
 
         return editor
@@ -40,3 +41,8 @@ class Delegate (BaseItem.Delegate):
 
         self.parent().tokenClickedSignal(index)
 
+
+
+    def linkAction (self, index):
+        
+        self.parent().linkBridge(index)

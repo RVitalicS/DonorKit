@@ -1,0 +1,51 @@
+#usda 1.0
+(
+    defaultPrim = "Sphere"
+)
+
+def Xform "Sphere" (
+    assetInfo = {
+        string name = "Sphere"
+    }
+    kind = "assembly"
+    variants = {
+        string geo = "render"
+    }
+    prepend variantSets = "geo"
+)
+{
+    variantSet "geo" = {
+        "proxy" {
+            over "Sphere"
+            {
+            }
+
+        }
+        "render" {
+            over "Sphere" (
+                kind = "component"
+                prepend payload = @./modelling/Sphere.v01.usdc@
+            )
+            {
+                over "SphereShape" (
+                    prepend apiSchemas = ["MaterialBindingAPI"]
+                )
+                {
+                    rel material:binding = </Sphere/Sphere/Marble_SG>
+                    color3f[] primvars:displayColor = [(0.7514, 0.7471, 0.7328)]
+                }
+
+                def Material "Marble_SG" (
+                    prepend payload = [
+                        @./surfacing/Marble_SG.v01.RenderMan.usda@,
+                        @./surfacing/Marble_SG.v01.usda@
+                    ]
+                )
+                {
+                }
+            }
+
+        }
+    }
+}
+

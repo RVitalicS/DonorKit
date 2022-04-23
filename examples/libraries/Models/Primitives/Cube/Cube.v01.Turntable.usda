@@ -1,0 +1,52 @@
+#usda 1.0
+(
+    defaultPrim = "Cube"
+    endTimeCode = 60
+    framesPerSecond = 30
+    startTimeCode = 1
+)
+
+def Xform "Cube" (
+    assetInfo = {
+        string name = "Cube"
+    }
+    kind = "assembly"
+    variants = {
+        string geo = "render"
+    }
+    prepend variantSets = "geo"
+)
+{
+    variantSet "geo" = {
+        "proxy" {
+            over "Cube"
+            {
+            }
+
+        }
+        "render" {
+            over "Cube" (
+                kind = "component"
+                prepend payload = @./animation/Turntable.v01.usdc@
+            )
+            {
+                over "CubeShape" (
+                    prepend apiSchemas = ["MaterialBindingAPI"]
+                )
+                {
+                    rel material:binding = </Cube/Cube/UsdPreviewSurface_SG>
+                }
+
+                def Material "UsdPreviewSurface_SG" (
+                    prepend payload = [
+                        @./surfacing/UsdPreviewSurface_SG.v01.usda@
+                    ]
+                )
+                {
+                }
+            }
+
+        }
+    }
+}
+
