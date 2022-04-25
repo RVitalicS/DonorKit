@@ -13,6 +13,7 @@ import shutil
 
 import toolkit.system.stream
 from toolkit.system.ostree import SUBDIR_PREVIEWS
+from toolkit.core.timing import isAnimation
 
 from pxr import Sdf, Gf, Usd, UsdGeom, UsdLux
 
@@ -98,21 +99,30 @@ def recordAssetPreviews (usdpath, timedata, width=480, ratio=16/9):
     scenepathXform = "/Camera"
     XformCamera = UsdGeom.Xform.Define(StageCamera, Sdf.Path(scenepathXform))
 
+
+    def setOp (operation, data):
+
+        if isAnimation(data):
+            for time, value in data.items():
+                operation.Set(
+                    time=float(time),
+                    value=Gf.Vec3d(*value) )
+        else:
+            for time, value in data.items():
+                operation.Set(
+                    value=Gf.Vec3d(*value) )
+                break
+
     translatedata = timedata.get("translate")
     if translatedata:
         Translate = XformCamera.AddTranslateOp()
-        for time, value in translatedata.items():
-            Translate.Set(
-                time=float(time),
-                value=Gf.Vec3d(*value) )
+        setOp(Translate, translatedata)
 
     rotatedata = timedata.get("rotate")
     if rotatedata:
         RotateXYZ = XformCamera.AddRotateXYZOp()
-        for time, value in rotatedata.items():
-            RotateXYZ.Set(
-                time=float(time),
-                value=Gf.Vec3d(*value) )
+        setOp(RotateXYZ, rotatedata)
+
 
     scenepathCamera = scenepathXform + "/CameraShape"
     Camera = UsdGeom.Camera.Define(StageCamera, Sdf.Path(scenepathCamera))
@@ -122,7 +132,7 @@ def recordAssetPreviews (usdpath, timedata, width=480, ratio=16/9):
     Camera.CreateHorizontalApertureAttr( timedata.get("vAperture")*ratio )
     Camera.CreateVerticalApertureAttr( timedata.get("vAperture") )
 
-    LayerCamera.defaultPrim = scenepathXform
+    LayerCamera.defaultPrim = scenepathXform.replace("/", "")
     StageCamera.SetStartTimeCode(startTime)
     StageCamera.SetEndTimeCode(endTime)
     StageCamera.SetFramesPerSecond(fps)
@@ -149,7 +159,7 @@ def recordAssetPreviews (usdpath, timedata, width=480, ratio=16/9):
         "../../" + filenameAsset,
         "./" + filenameCamera ]
 
-    LayerLight.defaultPrim = scenepathDomeLight
+    LayerLight.defaultPrim = scenepathDomeLight.replace("/", "")
     StageLight.SetStartTimeCode(startTime)
     StageLight.SetEndTimeCode(endTime)
     StageLight.SetFramesPerSecond(fps)

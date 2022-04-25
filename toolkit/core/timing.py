@@ -96,3 +96,27 @@ def getTimeDifference (timeString):
         return "{} min. ago".format(minutes)
 
     return "a sec. ago"
+
+
+
+
+
+
+def isAnimation (data):
+
+    count = 0
+    last  = None
+
+    for key, value in data.items():
+
+        if value == last:
+            continue
+
+        last = value
+        count += 1
+
+
+    if count > 1:
+        return True
+
+    return False
