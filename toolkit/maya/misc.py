@@ -527,7 +527,7 @@ def getCurrentCameraSettings ():
 
     factor = 1.0
     units = commandQuery("currentUnit", "linear")
-    if units == "m":
+    if units in ["m", "cm", "mm"]:
         factor = 0.01
 
 
@@ -552,7 +552,7 @@ def getCurrentCameraAnimation (startTime=None, endTime=None):
 
     factor = 1.0
     units = commandQuery("currentUnit", "linear")
-    if units == "m":
+    if units in ["m", "cm", "mm"]:
         factor = 0.01
 
 
