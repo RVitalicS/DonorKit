@@ -6,6 +6,9 @@ import os
 import re
 
 
+import toolkit.usd.attribute as attrkit
+
+
 from pxr import UsdGeom, Sdf, Work
 
 Work.SetMaximumConcurrencyLimit()
@@ -163,15 +166,15 @@ def copyTimeSamples (source, target, units=1.0):
 
                 if attrBaseName == "translate":
                     Xformable = UsdGeom.Xformable(OverPrim)
-                    newAttribute = Xformable.AddTranslateOp()
+                    newAttribute = attrkit.getTranslateOp(Xformable)
 
                 elif attrBaseName == "rotateXYZ":
                     Xformable = UsdGeom.Xformable(OverPrim)
-                    newAttribute = Xformable.AddRotateXYZOp()
+                    newAttribute = attrkit.getRotateXYZOp(Xformable)
 
                 elif attrBaseName == "scale":
                     Xformable = UsdGeom.Xformable(OverPrim)
-                    newAttribute = Xformable.AddScaleOp()
+                    newAttribute = attrkit.getScaleOp(Xformable)
 
                 else:
                     newAttribute = OverPrim.CreateAttribute(

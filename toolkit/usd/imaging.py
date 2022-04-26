@@ -15,6 +15,9 @@ import toolkit.system.stream
 from toolkit.system.ostree import SUBDIR_PREVIEWS
 from toolkit.core.timing import isAnimation
 
+import toolkit.usd.attribute as attrkit
+
+
 from pxr import Sdf, Gf, Usd, UsdGeom, UsdLux
 
 
@@ -116,12 +119,12 @@ def recordAssetPreviews (usdpath, timedata, width=480, ratio=16/9):
 
     translatedata = timedata.get("translate")
     if translatedata:
-        Translate = XformCamera.AddTranslateOp()
+        Translate = attrkit.getTranslateOp(XformCamera)
         setOp(Translate, translatedata)
 
     rotatedata = timedata.get("rotate")
     if rotatedata:
-        RotateXYZ = XformCamera.AddRotateXYZOp()
+        RotateXYZ = attrkit.getRotateXYZOp(XformCamera)
         setOp(RotateXYZ, rotatedata)
 
 
