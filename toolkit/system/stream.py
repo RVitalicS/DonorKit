@@ -71,38 +71,26 @@ def readCGATS ():
 
 def terminal (command, echo=False):
 
-    """Run the specified command in a subprocess."""
+    """Run the specified command in a subprocess"""
 
 
     if type(command) == list:
         command = " ".join(command)
 
-    stdout = None
-    stderr = None
-    if echo:
-        stdout = subprocess.PIPE
-        stderr = subprocess.STDOUT
 
-    try:
-        process = subprocess.Popen(
+    if echo:
+        subprocess.run(
             command,
             shell=True,
-            stdout=stdout, 
-            stderr=stderr)
+            stdout=None, 
+            stderr=None)
 
-    except OSError as error:
-        print(error)
-        return
-
-
-    while True and echo:
-
-        processOutput = process.stdout.readline().decode("utf-8", "replace")
-        if processOutput:
-            sys.stdout.write(processOutput)
-
-        elif process.poll() is not None:
-            break
+    else:
+        subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.DEVNULL, 
+            stderr=subprocess.DEVNULL)
 
 
 
