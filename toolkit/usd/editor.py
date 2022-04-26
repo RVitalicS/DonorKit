@@ -66,7 +66,10 @@ def copyAttrubutes (source, target, units=1.0, time=1.0):
 
         attrValue = Attribute.Get(time=time)
 
-        if not isMeter and attrName in ["extent", "points"]:
+        if not isMeter and attrName in [
+                "extent", "points",
+                "xformOp:translate" ]:
+
             for index in range( len(attrValue) ):
                 attrValue[index] *= float(units)
 
