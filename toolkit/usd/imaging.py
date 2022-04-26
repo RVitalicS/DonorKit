@@ -21,7 +21,8 @@ from pxr import Sdf, Gf, Usd, UsdGeom, UsdLux
 
 
 
-def record (
+
+def recordCommand (
         usdFilePath,
         outputImagePath,
         frameSpec=None,
@@ -29,8 +30,7 @@ def record (
         imageWidth=None,
         complexity=None,
         colorCorrectionMode=None,
-        renderer=None,
-        echo=False ):
+        renderer=None ):
 
 
     command = ["usdrecord"]
@@ -67,7 +67,8 @@ def record (
     command.append(outputImagePath)
 
 
-    toolkit.system.stream.terminal(" ".join(command), echo=echo)
+    return command
+
 
 
 
@@ -172,15 +173,14 @@ def recordAssetPreviews (usdpath, timedata, width=480, ratio=16/9):
 
     frameSpec = "{}:{}".format(startTime, endTime)
 
-    record (
+    command = recordCommand (
         pathLight, pathFrames,
         frameSpec=frameSpec,
         camera=scenepathCamera,
         imageWidth=width,
         complexity="high",
         colorCorrectionMode="sRGB",
-        renderer="GL",
-        echo=False )
+        renderer="GL" )
 
-
-    os.remove(pathLight)
+    command += ["&&", "rm", pathLight]
+    toolkit.system.stream.terminal(command)

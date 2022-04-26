@@ -3,8 +3,9 @@
 
 
 import sys
-import subprocess
 import json
+import subprocess
+
 
 from toolkit.ensure.QtCore import *
 
@@ -73,30 +74,36 @@ def terminal (command, echo=False):
     """Run the specified command in a subprocess."""
 
 
+    if type(command) == list:
+        command = " ".join(command)
+
+    stdout = None
+    stderr = None
+    if echo:
+        stdout = subprocess.PIPE
+        stderr = subprocess.STDOUT
+
     try:
         process = subprocess.Popen(
             command,
             shell=True,
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.STDOUT )
+            stdout=stdout, 
+            stderr=stderr)
 
     except OSError as error:
         print(error)
+        return
 
-        returncode = 1
-        return returncode
 
-    while True:
+    while True and echo:
 
         processOutput = process.stdout.readline().decode("utf-8", "replace")
         if processOutput:
-            if echo:
-                sys.stdout.write(processOutput)
+            sys.stdout.write(processOutput)
 
         elif process.poll() is not None:
             break
 
-    return process.returncode
 
 
 
@@ -104,7 +111,8 @@ def terminal (command, echo=False):
 
 def openFolder (path):
 
-    terminal("nautilus " + path)
+    command = ["nautilus", path]
+    terminal(command)
 
 
 
@@ -113,4 +121,5 @@ def openFolder (path):
 
 def openUsd (path):
 
-    terminal("usdview " + path)
+    command = ["usdview", path]
+    terminal(command)
