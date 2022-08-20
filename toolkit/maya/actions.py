@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 
 
+import mayaUsd
+import ufe
+import os
+
+from pxr import UsdGeom
+
+import toolkit.maya.stage
+import toolkit.maya.outliner
+
+from toolkit.core import naming
 from toolkit.core import message
 
 
@@ -10,17 +20,53 @@ from toolkit.core import message
 def loadUsdFile (path):
     
     """
-        Placeholder function
-        Need definition to act on input argument
+        Creates reference to usd asset
+        inside mayaUsdProxyShape
 
         :type  path: str
         :param path: path to usd file
     """
 
+    
+    # get asset name
+    fileName = os.path.basename(path)
+    assetName = naming.getAssetName(fileName)
 
-    # erase this
-    message.defaultDefinition(
-        "loadUsdFile", __file__, mode="maya")
+
+    # get scene stage
+    mayaStagePath = ( "|world"
+        + toolkit.maya.stage.getPathAnyway() )
+    Stage = mayaUsd.ufe.getStage(mayaStagePath)
+
+    stageRoot = ""
+    stagePath = ""
+    for SceneItem in list(ufe.GlobalSelection.get()):
+        
+        ufePath = SceneItem.path()
+        ufeSplit = str(ufePath).split("/")
+
+        stageRoot = ufeSplit[0]
+        if len(ufeSplit) == 2:
+            if mayaStagePath == stageRoot:
+                stagePath = "/" +  ufeSplit[1]
+        break
+
+
+    # create reference
+    if stagePath == "":
+        refStagePath = "/" + assetName
+        RefXform = UsdGeom.Xform.Define(Stage, refStagePath)
+        RefPrim = RefXform.GetPrim()
+
+    else:
+        refStagePath = mayaStagePath + "," + stagePath
+        RefPrim = mayaUsd.ufe.ufePathToPrim(refStagePath)
+
+    RefPrim.GetReferences().AddReference(path)
+
+
+    # update maya outliner "shape display"
+    toolkit.maya.outliner.refresh()
 
 
 
