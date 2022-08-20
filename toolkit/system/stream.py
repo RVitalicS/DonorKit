@@ -99,11 +99,18 @@ def terminal (command, echo=False):
 
 
     if echo:
-        subprocess.run(
+        popen = subprocess.Popen(
             command,
             shell=True,
-            stdout=None, 
-            stderr=None)
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True)
+        popen.wait()
+
+        for line in popen.stdout:
+            sys.stdout.write(line)
+        for line in popen.stderr:
+            sys.stdout.write(line)
 
     else:
         subprocess.Popen(
