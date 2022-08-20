@@ -42,15 +42,19 @@ def Export ():
 
     if MSelectionList.isEmpty():
         text = "Select Any Object"
-        OpenMaya.MGlobal.displayWarning(text)
-        toolkit.maya.misc.viewportMessage(text)
+        toolkit.maya.message.warning(text)
+        toolkit.maya.message.viewport(text)
         return
 
 
-    dialog = UsdExport.Dialog()
-    dialog.exec()
+    if not options:
+        selection = toolkit.maya.outliner.getSelectionName()
+        
+        dialog = UsdExport.Dialog(initname=selection)
+        dialog.exec()
 
-    options = dialog.getOptions()
+        options = dialog.getOptions()
+
     if not options:
         return
 
@@ -158,7 +162,7 @@ def Export ():
         NewStage.GetRootLayer().Export(
             ModelPath, args=dict(format="usdc") )
 
-        OpenMaya.MGlobal.displayInfo(message + ModelFileName)
+        toolkit.maya.message.info(modelMessage + ModelFileName)
 
 
 
@@ -181,7 +185,7 @@ def Export ():
         NewStage.GetRootLayer().Export(
             AnimationPath, args=dict(format="usdc") )
 
-        OpenMaya.MGlobal.displayInfo(message + AnimationFileName)
+        toolkit.maya.message.info(animationMessage + AnimationFileName)
 
 
     if os.path.exists(SourceModelPath):
@@ -263,9 +267,10 @@ def Export ():
                 minTime = options.minTime
                 maxTime = options.maxTime
 
-            animation = toolkit.maya.misc.getCurrentCameraAnimation(
-                minTime, maxTime)
-            timedata = toolkit.maya.misc.getCurrentCameraSettings()
+            camera = toolkit.maya.camera.getCurrent()
+            animation = toolkit.maya.camera.getAnimation(
+                camera, minTime, maxTime)
+            timedata = toolkit.maya.camera.getSettings(camera)
             timedata.update(animation)
 
             toolkit.usd.imaging.recordAssetPreviews(AssetPath, timedata)

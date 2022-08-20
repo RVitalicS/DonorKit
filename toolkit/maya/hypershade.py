@@ -3,7 +3,10 @@
 
 
 import os
-import toolkit.maya.misc
+
+import toolkit.maya.mplug
+import toolkit.maya.find
+import toolkit.maya.attribute
 
 
 import xml.etree.ElementTree as ET
@@ -167,7 +170,7 @@ class Manager (object):
                                 "uvCoord"]:
                             continue
                         
-                        valueType = toolkit.maya.misc.getMPlugAs( MPlug, asType=True )
+                        valueType = toolkit.maya.mplug.getAs( MPlug, asType=True )
 
                         if prman:
                             data = shaderDefaults.get(attrName, None)
@@ -241,9 +244,9 @@ class Manager (object):
                         "clearcoatRoughness",
                         "fileTextureName" ] and not MPlug.isDefaultValue():
 
-                        value = toolkit.maya.misc.getMPlugAs( MPlug, asValue=True )
+                        value = toolkit.maya.mplug.getAs( MPlug, asValue=True )
                         if not value is None:
-                            typeString = toolkit.maya.misc.getMPlugAs( MPlug, asType=True )
+                            typeString = toolkit.maya.mplug.getAs( MPlug, asType=True )
 
                             inputs[attrName] = dict(
                                 value=value,
@@ -331,10 +334,10 @@ class Manager (object):
                 outputManifold  = shaderName + ".outUV"
                 outputTransform = nameTransform + ".outUV"
 
-                shader = toolkit.maya.misc.getShaderByName(shaderName)
-                repeatUV = toolkit.maya.misc.getNodeAttribute(shader, "repeatUV")
-                rotateUV = toolkit.maya.misc.getNodeAttribute(shader, "rotateUV")
-                offset = toolkit.maya.misc.getNodeAttribute(shader, "offset")
+                shader = toolkit.maya.find.shaderByName(shaderName)
+                repeatUV = toolkit.maya.attribute.get(shader, "repeatUV")
+                rotateUV = toolkit.maya.attribute.get(shader, "rotateUV")
+                offset = toolkit.maya.attribute.get(shader, "offset")
 
                 network[nameTransform] = dict(
                     id="UsdTransform2d",
@@ -345,18 +348,18 @@ class Manager (object):
                             "connection": True
                         },
                         "scale": {
-                            "value": toolkit.maya.misc.getMPlugAs(repeatUV, asValue=True),
-                            "type": toolkit.maya.misc.getMPlugAs(repeatUV, asType=True),
+                            "value": toolkit.maya.mplug.getAs(repeatUV, asValue=True),
+                            "type": toolkit.maya.mplug.getAs(repeatUV, asType=True),
                             "connection": False
                         },
                         "rotation": {
-                            "value": toolkit.maya.misc.getMPlugAs(rotateUV, asValue=True),
-                            "type": toolkit.maya.misc.getMPlugAs(rotateUV, asType=True),
+                            "value": toolkit.maya.mplug.getAs(rotateUV, asValue=True),
+                            "type": toolkit.maya.mplug.getAs(rotateUV, asType=True),
                             "connection": False
                         },
                         "translation": {
-                            "value": toolkit.maya.misc.getMPlugAs(offset, asValue=True),
-                            "type": toolkit.maya.misc.getMPlugAs(offset, asType=True),
+                            "value": toolkit.maya.mplug.getAs(offset, asValue=True),
+                            "type": toolkit.maya.mplug.getAs(offset, asType=True),
                             "connection": False
                         }
                     } )
