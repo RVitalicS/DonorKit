@@ -16,6 +16,7 @@ from widgets import (
 
 import toolkit.core.timing
 import toolkit.system.ostree
+
 import toolkit.maya.scene
 import toolkit.maya.misc
 
@@ -64,7 +65,7 @@ def Export ():
     if options.variant:
         version += "-{}".format(options.variant)
     
-    units = 0.01
+    units = 0.01           # UNIT DEPEND
 
 
 

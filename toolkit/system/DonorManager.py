@@ -17,7 +17,6 @@ from toolkit.ensure.QtCore import *
 from toolkit.ensure.QtGui import *
 
 from widgets import DonorWidget
-from toolkit.system import actions
 
 
 
@@ -40,14 +39,6 @@ class Donor (
             QtGui.QIcon(os.path.join(
                 root, "install", "icons", "DonorManager.svg" ) ))
         self.setObjectName("DonorManager")
-
-
-    def loadUsdFile (self, path):
-        actions.loadUsdFile(path)
-
-
-    def loadColor (self, data):
-        actions.loadColor(data)
 
 
 
