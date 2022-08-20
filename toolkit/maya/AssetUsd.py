@@ -189,43 +189,30 @@ def Export ():
 
 
 
-    if options.surfacing and shaders:
+    if options.surfacing and mayaScene.shaders:
         toolkit.system.ostree.buildUsdRoot(
             options.assetPath, surfacing=True)
 
-        for name, data in shaders.items():
-            for key in ["render", "preview"]:
+        ShaderPath = os.path.join(
+            options.assetPath,
+            toolkit.system.ostree.SUBDIR_SURFACING )
 
-                ShaderData = data[key]
+        for ShaderName, data in mayaScene.shaders.items():
 
-                if key == "render":
-                    prman=True
-                    ShaderFileName = "{}.{}.RenderMan.usda".format(
-                        name, version )
+            class DataClass: pass
+            uishadow = DataClass()
 
-                else:
-                    prman=False
-                    ShaderFileName = "{}.{}.usda".format(
-                        name, version )
+            uishadow.preview    = False
+            uishadow.shaderPath = ShaderPath
+            uishadow.shaderName = ShaderName
+            uishadow.version    = options.version
+            uishadow.variant    = options.variant
+            uishadow.link       = False
+            uishadow.info       = ""
+            uishadow.comment    = ""
+            uishadow.status     = options.status
 
-                ShaderPath = os.path.join(
-                    options.assetPath,
-                    toolkit.system.ostree.SUBDIR_SURFACING,
-                    ShaderFileName )
-
-                if os.path.exists(ShaderPath):
-                    message = "Shader Overwritten: "
-                else:
-                    message = "Shader Saved: "
-
-                if ShaderData.get("shaders"):
-                    ShaderData["name"] = name
-                    toolkit.usd.material.make(
-                        ShaderPath,
-                        ShaderData,
-                        prman=prman)
-
-                    OpenMaya.MGlobal.displayInfo(message + ShaderFileName)
+            toolkit.maya.ShaderUsd.Export(options=uishadow, data=data)
 
 
 

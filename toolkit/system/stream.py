@@ -14,6 +14,26 @@ from toolkit.ensure.QtCore import *
 
 
 
+def fileread (path):
+
+    data = ""
+    with open(path, "r") as file:
+        data = file.read()
+
+    return data
+
+
+def filewrite (path, data):
+
+    with open(path, "w") as file:
+        file.write(data)
+
+
+
+
+
+
+
 def dataread (path):
 
     with open(path, mode="r", encoding="utf-8") as file:

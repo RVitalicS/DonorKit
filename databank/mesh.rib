@@ -1,0 +1,9 @@
+
+	ObjectBegin "3dd33866-1731-11ed-8b43-a8a1590bf317" 
+		Attribute "identifier" "string object" ["InstanceMesh"]
+		PointsGeneralPolygons
+			[1] [4] [0 1 3 2]
+			"vertex point P" [%P%]
+			"facevarying normal N" [0 1 0 0 1 0 0 1 0 0 1 0]
+			"facevarying float[2] st" [%ST%]
+	ObjectEnd

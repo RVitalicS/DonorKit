@@ -1,0 +1,18 @@
+
+Display "%OUTPUTPATH%" "openexr" "Ci,a"
+	"string mode" ["Ci,a"]
+	"int asrgba" [1]
+	"string autocrop" ["false"]
+	"string storage" ["scanline"]
+	"string exrpixeltype" ["half"]
+	"string compression" ["zips"]
+	"float compressionlevel" [45]
+	"float forcepar" [0]
+	"int metadatacount" [0]
+	"string camera" ["|Camera"]
+
+Option "user"
+	"string ocioconfigpath" [""]
+	"string ociocolorspacename" [""]
+	"float sceneUnits" [1]
+	"int iesIgnoreWatts" [1]

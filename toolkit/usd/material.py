@@ -8,6 +8,7 @@ import re
 
 from pxr import Usd, UsdGeom, UsdShade, Sdf
 
+import toolkit.usd.editor
 
 
 
@@ -310,4 +311,26 @@ def make (pathusd, data,
     if defaultPrim:
         layer.defaultPrim = defaultPrim
 
+    layer.Save()
+
+
+
+
+
+
+
+def weld (pathusd, name, payloads):
+
+    Stage = Usd.Stage.CreateNew(pathusd)
+    Path = Sdf.Path("/{}".format(name))
+
+    Material = UsdShade.Material.Define(Stage, Path)
+    MaterialPrim = Stage.GetPrimAtPath(Path)
+
+    for path in payloads:
+        path = toolkit.usd.editor.makeRelative(path, pathusd)
+        MaterialPrim.GetPayloads().AddPayload(path)
+
+    layer = Stage.GetRootLayer()
+    layer.defaultPrim = name
     layer.Save()

@@ -6,10 +6,11 @@ import os
 import re
 
 
-import toolkit.usd.attribute as attrkit
+import toolkit.core.naming
+import toolkit.usd.attribute
 
 
-from pxr import UsdGeom, Sdf, Work
+from pxr import UsdGeom, Sdf, Vt, Gf, Work
 
 Work.SetMaximumConcurrencyLimit()
 
@@ -40,6 +41,21 @@ def makeRelative (target, source):
 
 
 
+def getDisplayColorName (name):
+
+    for part in name.split(":"):
+        if "displayColor" in part:
+            name = part
+            break
+
+    return name
+
+
+
+
+
+
+
 def copyAttrubutes (source, target, units=1.0, time=1.0):
 
 
@@ -48,6 +64,8 @@ def copyAttrubutes (source, target, units=1.0, time=1.0):
         UsdGeom.LinearUnits.meters)
 
 
+    colorData = dict()
+
     for Attribute in source.GetAttributes():
 
         if not Attribute.IsAuthored():
@@ -55,12 +73,34 @@ def copyAttrubutes (source, target, units=1.0, time=1.0):
 
 
         attrName  = Attribute.GetBaseName()
+        attrType  = Attribute.GetTypeName()
+
+
+        if attrType == Sdf.ValueTypeNames.Token:
+            if attrName in ["familyType", "familyName"]:
+                continue
+
+
         attrSpace = Attribute.GetNamespace()
         if attrSpace:
             attrName = "{}:{}".format(
                 attrSpace, attrName)
 
-        attrType  = Attribute.GetTypeName()
+
+        if "displayColor" in attrName:
+
+            colorName = getDisplayColorName(attrName)
+            if colorName not in colorData:
+                colorData[colorName] = dict(colors={}, indices={})
+
+            if attrType == Sdf.ValueTypeNames.Color3fArray:
+                colorData[colorName]["colors"] = Attribute.Get(time=time)
+                continue
+
+            elif attrType == Sdf.ValueTypeNames.IntArray:
+                colorData[colorName]["indices"] = Attribute.Get(time=time)
+                continue
+
 
         newAttribute = target.CreateAttribute(
             attrName, attrType,
@@ -81,9 +121,51 @@ def copyAttrubutes (source, target, units=1.0, time=1.0):
 
         attrMetadata = Attribute.GetAllMetadata()
         for key, value in attrMetadata.items():
-            if key not in ["documentation"]:
+            if key not in ["documentation", "allowedTokens"]:
                 newAttribute.SetMetadata(key, value)
 
+
+    # edit displayColor
+    if colorData:
+        colors, indices = [],[]
+        for name, data in colorData.items():
+
+            rule = dict()
+            for indexData, color in enumerate(data["colors"]):
+                if not color in colors:
+                    colors.append(color)
+                indexColor = colors.index(color)
+                rule["{}".format(indexData)] = indexColor
+
+            bindmap = []
+            for colorCode in data["indices"]:
+                newCode = rule["{}".format(colorCode)]
+                bindmap.append(newCode)
+
+            if not indices:
+                indices = bindmap
+            else:
+                for index in range(len(indices)):
+                    valueI = indices[index]
+                    valueB = bindmap[index]
+                    indices[index] = max(valueI, valueB)
+
+        colorsAttr = target.CreateAttribute(
+            "primvars:displayColor",
+            Sdf.ValueTypeNames.Color3fArray,
+            custom=False)
+        colorsAttr.Set(
+            value=Vt.Vec3fArray(colors) )
+
+        if len(colors) > 1:
+            colorsAttr.SetMetadata("interpolation", "uniform")
+            if indices:
+                indicesAttr = target.CreateAttribute(
+                    "primvars:displayColor:indices",
+                    Sdf.ValueTypeNames.IntArray,
+                    custom=False)
+                indicesAttr.Set(
+                    value=Vt.IntArray(indices) )
 
 
 
@@ -122,8 +204,17 @@ def copyStage (source, target,
 
     for ChildPrim in children:
 
+        childname = ChildPrim.GetName()
         childpath = ChildPrim.GetPath().pathString
         cutedpath = re.sub(scope, "", childpath)
+
+        if childname == "Looks":
+            if ChildPrim.GetTypeName() == "Scope":
+                continue
+
+        if ChildPrim.GetTypeName() == "GeomSubset":
+            newname = toolkit.core.naming.nameFilterSG(childname)
+            cutedpath = re.sub("{}$".format(childname), newname, cutedpath)
 
         NewPath = Sdf.Path(cutedpath)
         NewPrim = target.DefinePrim(
@@ -166,15 +257,15 @@ def copyTimeSamples (source, target, units=1.0):
 
                 if attrBaseName == "translate":
                     Xformable = UsdGeom.Xformable(OverPrim)
-                    newAttribute = attrkit.getTranslateOp(Xformable)
+                    newAttribute = toolkit.usd.attribute.getTranslateOp(Xformable)
 
                 elif attrBaseName == "rotateXYZ":
                     Xformable = UsdGeom.Xformable(OverPrim)
-                    newAttribute = attrkit.getRotateXYZOp(Xformable)
+                    newAttribute = toolkit.usd.attribute.getRotateXYZOp(Xformable)
 
                 elif attrBaseName == "scale":
                     Xformable = UsdGeom.Xformable(OverPrim)
-                    newAttribute = attrkit.getScaleOp(Xformable)
+                    newAttribute = toolkit.usd.attribute.getScaleOp(Xformable)
 
                 else:
                     newAttribute = OverPrim.CreateAttribute(
@@ -267,7 +358,7 @@ def addMayaAttributes (stage, tree, path="/"):
 
 
                 elif key == "subdivScheme":
-                    
+
                     if not Prim.HasAttribute("subdivisionScheme"):
                         subdivisionScheme = Prim.CreateAttribute(
                             "subdivisionScheme",

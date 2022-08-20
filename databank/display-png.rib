@@ -1,0 +1,5 @@
+
+Display "%OUTPUTPATH%" "png" "Ci,a"
+	"string mode" ["Ci,a"]
+	"int quantize" [1]
+	"string camera" ["|Camera"]

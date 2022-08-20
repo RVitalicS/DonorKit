@@ -1,0 +1,219 @@
+##RenderMan RIB
+Option "ribparse" "string varsubst" [""]
+Option "ribparse" "string varsubst" ["$"]
+Option "Ri"
+	"float FormatPixelAspectRatio" [1]
+	"int[2] FormatResolution" [480 270]
+	"int Frame" [1]
+	"string PixelFilterName" ["gaussian"]
+	"float[2] PixelFilterWidth" [1 1]
+	"float PixelVariance" [0.02]
+	"float[2] Shutter" [0 0]
+	"string DefaultDicingCamera" ["|Camera"]
+Option "bucket" "string order" ["circle"]
+Option "curve" "float minwidth" [0.5]
+Option "hider"
+	"int adaptall" [0]
+	"string adaptivemetric" ["variance"]
+	"int bluenoise" [1]
+	"float darkfalloff" [0.025]
+	"int decidither" [0]
+	"float[2] exposurebracket" [-1 1]
+	"int geomShadowTermBias" [1]
+	"int incremental" [0]
+	"int maxsamples" [64]
+	"int minsamples" [0]
+	"string pixelfiltermode" ["weighted"]
+Option "lighting" "int selectionlearningscheme" [1]
+Option "limits"
+	"int[2] bucketsize" [16 16]
+	"float deepshadowerror" [0.01]
+	"int geocachememory" [4194304]
+	"int opacitycachememory" [2097152]
+	"float[3] othreshold" [0.995999992 0.995999992 0.995999992]
+	"int texturememory" [4194304]
+	"int threads" [0]
+
+
+Option "searchpath" "string shader" ["${RMANTREE}/lib/shaders/:@"]
+Option "searchpath" "string rifilter" ["${RMANTREE}/lib/plugins/:@"]
+Option "searchpath" "string procedural" ["${RMANTREE}/lib/plugins/:@"]
+
+
+Integrator "PxrPathTracer" "PxrPathTracer"
+	"int maxIndirectBounces" [2]
+	"int maxContinuationLength" [-1]
+	"int maxNonStochasticOpacityEvents" [0]
+	"string sampleMode" ["bxdf"]
+	"int numLightSamples" [4]
+	"int numBxdfSamples" [8]
+	"int numIndirectSamples" [1]
+	"int numDiffuseSamples" [1]
+	"int numSpecularSamples" [1]
+	"int numSubsurfaceSamples" [1]
+	"int numRefractionSamples" [1]
+	"int allowCaustics" [0]
+	"int accumOpacity" [0]
+	"int risPathGuiding" [0]
+	"int rouletteDepth" [4]
+	"float rouletteThreshold" [0.2]
+	"int clampDepth" [2]
+	"float clampLuminance" [10]
+
+
+Option "shade"
+	"float roughnessmollification" [1]
+	"int shadowBumpTerminator" [1]
+Option "trace"
+	"float[3] worldoffset" [0 0 0]
+	"string worldorigin" ["worldoffset"]
+
+Projection "PxrPerspective"
+	"float fov" [26.9914665]
+	"float fStop" [16]
+	"float focalLength" [0]
+	"float focalDistance" [1]
+Transform [ 0.898794055 0.334663242 0.283142716 -0  -1.49011612e-08 0.64589721 -0.763424397 -0  0.438371181 -0.68616128 -0.580528557 -0  -0.0101821649 0.0392780495 1.76660355 1 ]
+Camera "|Camera"
+	"float apertureAngle" [0]
+	"float apertureDensity" [0]
+	"int apertureNSides" [0]
+	"float apertureRoundness" [0]
+	"float dofaspect" [1]
+	"float farClip" [100]
+	"float nearClip" [0.01]
+	"float shutterCloseTime" [1]
+	"float shutterOpenTime" [0]
+	"float[4] Ri:ScreenWindow" [-1.77777779 1.77777779 -1 1]
+
+
+DisplayChannel "color Ci"
+	"string source" ["Ci"]
+	"float relativepixelvariance" [1]
+	"float shadowthreshold" [0.01]
+DisplayChannel "float a"
+	"string source" ["a"]
+	"float shadowthreshold" [0.01]
+
+%DISPLAYRIB%
+
+
+WorldBegin
+
+	%SHADERRIB%
+	%MESHRIB%
+
+	AttributeBegin 
+		Attribute "identifier"
+			"string name" ["|Geometry|Plane"]
+			"int id" [109796958]
+			"int id2" [0]
+		Bxdf "LamaAdd" "%BXDFSHADER%"
+			"string __materialid" ["%MATERIAL%"]
+		Transform [ 1 0 0 0  0 1 0 0  0 0 1 0  0 0 0 1 ]
+		ObjectInstance "3dd33866-1731-11ed-8b43-a8a1590bf317" 
+	AttributeEnd 
+
+	ObjectBegin "3dd34108-1731-11ed-8b43-a8a1590bf317" 
+		Light "PxrDiskLight" "Side"
+			"float exposure" [10]
+			"int enableTemperature" [1]
+			"float temperature" [7000]
+			"float coneAngle" [30]
+	ObjectEnd 
+	AttributeBegin 
+		Attribute "identifier"
+			"string name" ["|Lights|Side"]
+			"int id" [408676325]
+			"int id2" [0]
+		Attribute "visibility"
+			"int camera" [0]
+			"int indirect" [0]
+			"int transmission" [1]
+		Transform [ 0.111379147 0 -0.166116486 0  -0.0819211292 -0.173988323 -0.0549271536 0  0.144511642 -0.0986309528 0.0968933582 0  -2.34485733 0.993693695 -1.79885498 1 ]
+		ObjectInstance "3dd34108-1731-11ed-8b43-a8a1590bf317" 
+	AttributeEnd 
+	
+	ObjectBegin "3dd34720-1731-11ed-8b43-a8a1590bf317" 
+		Light "PxrDomeLight" "Ambient"
+			"float intensity" [0.05]
+			"float exposure" [0]
+			"int enableTemperature" [1]
+			"float temperature" [7000]
+	ObjectEnd 
+	AttributeBegin 
+		Attribute "identifier"
+			"string name" ["|Lights|Ambient"]
+			"int id" [1356826390]
+			"int id2" [0]
+		Attribute "visibility"
+			"int camera" [0]
+			"int indirect" [0]
+			"int transmission" [1]
+		Transform [ 1 0 0 0  0 1 0 0  0 0 1 0  0 0 0 1 ]
+		ObjectInstance "3dd34720-1731-11ed-8b43-a8a1590bf317" 
+	AttributeEnd 
+	
+	ObjectBegin "3dd34a9a-1731-11ed-8b43-a8a1590bf317" 
+		Light "PxrRectLight" "Key"
+			"float exposure" [3.2]
+			"int enableTemperature" [1]
+			"float temperature" [7000]
+			"int areaNormalize" [1]
+	ObjectEnd 
+	AttributeBegin 
+		Attribute "identifier"
+			"string name" ["|Lights|Key"]
+			"int id" [804791963]
+			"int id2" [0]
+		Attribute "visibility"
+			"int camera" [0]
+			"int indirect" [0]
+			"int transmission" [1]
+		Transform [ 0.999998398 -0.00176396415 -0.000177257508 0  -0.00352644503 -1.99998001 0.0082020247 0  0.000184489787 0.00410069317 0.999991608 0  -0.338361778 1.05178726 -1.50275253 1 ]
+		ObjectInstance "3dd34a9a-1731-11ed-8b43-a8a1590bf317" 
+	AttributeEnd 
+	
+	ObjectBegin "3dd34e28-1731-11ed-8b43-a8a1590bf317" 
+		Light "PxrRectLight" "Fill"
+			"float exposure" [1.25]
+			"int enableTemperature" [1]
+			"float temperature" [7000]
+	ObjectEnd 
+	AttributeBegin 
+		Attribute "identifier"
+			"string name" ["|Lights|Fill"]
+			"int id" [-1477535608]
+			"int id2" [0]
+		Attribute "visibility"
+			"int camera" [0]
+			"int indirect" [0]
+			"int transmission" [1]
+		Transform [ -2.00 0 0 0  0 -1.01124931 1.72550705 0  0 -1.72550705 -1.01124931 0  0.78923172 1.95608719 1.17174309 1 ]
+		ObjectInstance "3dd34e28-1731-11ed-8b43-a8a1590bf317" 
+	AttributeEnd 
+	
+	ObjectBegin "3dd359b8-1731-11ed-8b43-a8a1590bf317" 
+		Light "PxrRectLight" "Beam"
+			"float exposure" [4.7]
+			"int enableTemperature" [1]
+			"float temperature" [7000]
+			"float coneAngle" [15]
+			"float coneSoftness" [0.755102038]
+			"int areaNormalize" [1]
+	ObjectEnd 
+	AttributeBegin 
+		Attribute "identifier"
+			"string name" ["|Lights|Beam"]
+			"int id" [-304635017]
+			"int id2" [0]
+		Attribute "visibility"
+			"int camera" [0]
+			"int indirect" [0]
+			"int transmission" [1]
+		Transform [ 0.0482175493 0.00647601724 -0.0115381551 0  0.0553680086 -0.951488724 -0.302660847 0  0.0129384613 -0.0139547205 0.0462370205 0  -0.59843586 2.55249573 -1.72076736 1 ]
+		ObjectInstance "3dd359b8-1731-11ed-8b43-a8a1590bf317" 
+	AttributeEnd
+
+
+WorldEnd 

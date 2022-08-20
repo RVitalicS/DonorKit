@@ -21,6 +21,112 @@ NAME = ".metadata.json"
 
 
 
+class GenerationManager_usdasset (object):
+
+
+    def __init__ (self, path, data, echo=False):
+        self.path = path
+        self.data = data
+        self.echo = echo
+
+
+    def isCurrent (self):
+        
+        version = self.getGeneration()
+        if version != 4:
+            return False
+        else:
+            return True
+
+
+    def getCurrent (self):
+
+        version = self.getGeneration()
+
+        if version == 1:
+            self.toSecondGen()
+            version = 2
+
+        if version == 2:
+            self.toThirdGen()
+            version = 3
+
+        if version == 3:
+            self.toFourthGen()
+            version = 4
+
+        return self.data
+
+
+    def getGeneration (self):
+
+        if self.data.get("generation"):
+            version = self.data.get("generation")
+        elif type(self.data.get("tags", None)) is list:
+            version = 3
+        elif type(self.data.get("comments", None)) is dict:
+            version = 2
+        else:
+            version = 1
+
+        return version
+
+
+    def toSecondGen (self):
+
+        if not self.data.get("comments", None):
+            self.data["comments"] = dict()
+
+        if self.echo:
+            print('INFO <Metadata>: '
+                + 'changed to 2nd generation '
+                + 'for "{}"'.format(self.path))
+
+
+    def toThirdGen (self):
+
+        if not self.data.get("tags", None):
+            self.data["tags"] = []
+
+        if self.echo:
+            print('INFO <Metadata>: '
+                + 'changed to 3rd generation '
+                + 'for "{}"'.format(self.path))
+
+
+    def toFourthGen (self):
+        
+        self.data["generation"] = 4
+
+        items = dict()
+        path = os.path.dirname(self.path)
+        for name in os.listdir(path):
+            if re.search(r"\.usd[ac]*$", name):
+                if not re.search(r"\.Final[-\.]{1}", name):
+                    item = dict()
+                    comment = self.data.get(
+                        "comments", dict()).get(name, "")
+                    timecode = self.data.get(
+                        "published", toolkit.core.timing.getTimeCode())
+                    item["comment"] = comment
+                    item["published"] = timecode
+                    items[name] = item
+        self.data["items"] = items
+
+        self.data.pop("published")
+        self.data.pop("comments")
+
+        if self.echo:
+            print('INFO <Metadata>: '
+                + 'changed to 4th generation '
+                + 'for "{}"'.format(self.path))
+
+
+
+
+
+
+
 class Metadata (object):
 
 
@@ -39,6 +145,15 @@ class Metadata (object):
             self.default_data = dict(
                 generation=4,
                 type="usdasset",
+                info="",
+                tags=[],
+                items=dict(),
+                status="WIP" )
+
+        elif metatype == "usdmaterial":
+            self.default_data = dict(
+                generation=1,
+                type="usdmaterial",
                 info="",
                 tags=[],
                 items=dict(),
@@ -70,7 +185,12 @@ class Metadata (object):
     def load (self):
 
         data = toolkit.system.stream.dataread(self.path)
-        data = self.restructure(data)
+        
+        if data.get("type") == "usdasset":
+            generation = GenerationManager_usdasset(
+                self.path, data, echo=False)
+            if not generation.isCurrent():
+                data = generation.getCurrent()
 
         return data
 
@@ -78,91 +198,6 @@ class Metadata (object):
 
     def save (self, data):
         toolkit.system.stream.datawrite(self.path, data)
-
-
-
-    def getGeneration (self, data):
-
-        if data.get("generation"):
-            generation = data.get("generation")
-        elif type(data.get("tags", None)) is list:
-            generation = 3
-        elif type(data.get("comments", None)) is dict:
-            generation = 2
-        else:
-            generation = 1
-
-        return generation
-
-
-
-    def restructure (self, data):
-
-        if data.get("type") == "usdasset":
-            generation = self.getGeneration(data)
-            toNextGen = False
-
-            if generation == 1:
-                data = self.toSecondGen(data)
-                toNextGen = True
-                generation = 2
-
-            if generation == 2:
-                data = self.toThirdGen(data)
-                toNextGen = True
-                generation = 3
-
-            if generation == 3:
-                data = self.toFourthGen(data)
-                toNextGen = True
-                generation = 4
-
-            if toNextGen:
-                self.save(data)
-
-        return data
-
-
-
-    def toSecondGen (self, data):
-
-        if not data.get("comments", None):
-            data["comments"] = dict()
-        return data
-
-
-
-    def toThirdGen (self, data):
-
-        if not data.get("tags", None):
-            data["tags"] = []
-        return data
-
-
-
-    def toFourthGen (self, data):
-        
-        data["generation"] = 4
-
-        items = dict()
-        path = os.path.dirname(self.path)
-        for name in os.listdir(path):
-            if re.search(r"\.usd[ac]*$", name):
-                if not re.search(r"\.Final[-\.]{1}", name):
-                    item = dict()
-                    comment = data.get(
-                        "comments", dict()).get(name, "")
-                    timecode = data.get(
-                        "published", toolkit.core.timing.getTimeCode())
-                    item["comment"] = comment
-                    item["published"] = timecode
-                    items[name] = item
-        data["items"] = items
-
-        data.pop("published")
-        data.pop("comments")
-
-        return data
 
 
 

@@ -23,6 +23,19 @@ def nameFilter (text):
 
 
 
+def nameFilterSG (name):
+
+    name = re.sub(
+        r"_*SG$",
+        "", str(name) )
+
+    return name
+
+
+
+
+
+
 def isFinalVersion (path, name):
 
     for item in os.listdir(path):
@@ -111,10 +124,7 @@ def getAssetName (name):
     if assetTag:
         assetName = assetTag.group()
 
-        if assetName not in RESERVED_TAGS:
-
-            assetName = re.sub(r"\.", "", assetName)
-            return assetName
+        return re.sub(r"\.", "", assetName)
 
     return ""
 
@@ -311,6 +321,18 @@ def chooseAssetItem (path):
 
 
 
+def makeFinal (name):
+
+    name = re.sub(r"\.v\d+\.", ".Final.", name)
+    name = re.sub(r"\.v\d+-" , ".Final-", name)
+
+    return name
+
+
+
+
+
+
 def createAssetName (
         name, version,
         variant=None,
@@ -337,18 +359,3 @@ def createAssetName (
         assetName = makeFinal(assetName)
 
     return assetName
-
-
-
-
-
-
-
-
-
-def makeFinal (name):
-
-    name = re.sub(r"\.v\d+\.", ".Final.", name)
-    name = re.sub(r"\.v\d+-" , ".Final-", name)
-
-    return name

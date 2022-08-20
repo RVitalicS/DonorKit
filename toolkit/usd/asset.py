@@ -6,9 +6,8 @@ import re
 import os
 
 
-from ..system import ostree
-from ..maya import scene
-from . import editor
+from toolkit.system.ostree import SUBDIR_SURFACING
+import toolkit.usd.editor
 
 
 from pxr import Usd, UsdGeom, UsdShade, Gf, Sdf
@@ -22,28 +21,30 @@ def getMaterialList (stage, name):
 
     materialList = []
 
-    path = stage.GetRootLayer().realPath
-    directory = os.path.dirname(path)
+    stagePath = stage.GetRootLayer().realPath
+    directory = os.path.dirname(stagePath)
 
 
-    filename = os.path.basename(path)
-    version = re.search(r"\.v\d+-*[A-Za-z]*\.", filename)
+    stageName = os.path.basename(stagePath)
+    version = re.search(r"\.v\d+-*[A-Za-z]*\.", stageName)
     if not version:
         return materialList
 
     version = version.group()
+    version = re.sub(r"\.", "", version)
 
 
-    searchpath = os.path.join(
+    searchPath = os.path.join(
         directory,
-        ostree.SUBDIR_SURFACING )
+        SUBDIR_SURFACING, name )
 
-    for item in os.listdir(searchpath):
+    for shaderName in os.listdir(searchPath):
+        if re.match(r"{}\.usd[ac]*$".format(version), shaderName):
 
-        if re.match(r"{}{}.+".format(name, version), item):
-            RelPath = "./{}/{}".format(
-                ostree.SUBDIR_SURFACING, item)
-            materialList.append(RelPath)
+            shaderPath = os.path.join(searchPath, shaderName)
+            shaderPath = toolkit.usd.editor.makeRelative(shaderPath, stagePath)
+
+            materialList.append(shaderPath)
 
     return materialList
 
@@ -78,44 +79,38 @@ def bind (
             OverPrim = target.OverridePrim(OverPrimPath)
 
 
+            materials = item["materials"]
+            if materials:
 
-            Material = item["material"]
-            if Material:
-                MaterialName = str(Material.name())
-                MaterialList = getMaterialList(target, MaterialName)
-                if MaterialList:
+                ParentPath = Sdf.Path( os.path.dirname(overpath) )
+                ParentPrim = target.GetPrimAtPath(ParentPath)
+                Usd.ModelAPI(ParentPrim).SetKind("component")
 
-                    ParentPath = Sdf.Path( os.path.dirname(overpath) )
+                ScopePath = Sdf.Path(root).AppendChild("Looks")
+                if not target.GetPrimAtPath(ScopePath).IsValid():
+                    UsdGeom.Scope.Define(target, ScopePath)
 
-                    ParentPrim = target.GetPrimAtPath(ParentPath)
-                    Usd.ModelAPI(ParentPrim).SetKind("component")
+                isSubset = len(materials) > 1
+                for name in materials:
 
+                    MaterialPath = ScopePath.AppendChild(name)
+                    if target.GetPrimAtPath(MaterialPath).IsValid():
+                        Material = UsdShade.Material.Get(target, MaterialPath)
+                    else:
+                        Material = UsdShade.Material.Define(target, MaterialPath)
+                        MaterialPrim = target.GetPrimAtPath(MaterialPath)
+                        for relpath in getMaterialList(target, name):
+                            MaterialPrim.GetPayloads().AddPayload(relpath)
 
-                    MaterialPrim = target.GetPrimAtPath(OverPrimPath)
-                    MaterialPrim.ApplyAPI(UsdShade.MaterialBindingAPI)
-
-
-                    DefaultMaterialPath = ParentPath.AppendChild(MaterialName)
-                    DefaultMaterial = UsdShade.Material.Define(target, DefaultMaterialPath)
-
-                    for RelPath in MaterialList:
-
-                        OverMaterial = target.OverridePrim(DefaultMaterialPath)
-                        OverMaterial.GetPayloads().AddPayload(RelPath)
-
-
-                    UsdShade.MaterialBindingAPI(OverPrim).Bind(DefaultMaterial)
-
-                    attributes = item["attributes"]
-                    for key, value in attributes.items():
-
-                        if key == "displayColor":
-                            Schema  = UsdGeom.PrimvarsAPI(OverPrim)
-                            Primvar = Schema.CreatePrimvar(
-                                "primvars:displayColor",
-                                Sdf.ValueTypeNames.Color3fArray )
-                            Primvar.Set([Gf.Vec3f(value)])
-                            break
+                    if isSubset:
+                        GeomSubsetPath = OverPrimPath.AppendChild(name)
+                        GeomSubsetPrim = target.OverridePrim(GeomSubsetPath)
+                        GeomSubsetPrim.ApplyAPI(UsdShade.MaterialBindingAPI)
+                        UsdShade.MaterialBindingAPI(GeomSubsetPrim).Bind(Material)
+                    else:
+                        ShapePrim = target.GetPrimAtPath(OverPrimPath)
+                        ShapePrim.ApplyAPI(UsdShade.MaterialBindingAPI)
+                        UsdShade.MaterialBindingAPI(OverPrim).Bind(Material)
 
 
             bind(
@@ -134,13 +129,13 @@ def make (
         sourcePath,
         assetPath,
         tree,
+        root,
         name = None ):
 
 
     sourceStage = Usd.Stage.Open(sourcePath)
     assetStage = Usd.Stage.CreateNew(assetPath)
 
-    root = scene.Manager().getroot(tree)
     rootName = os.path.basename(root)
 
     if not name:
@@ -168,7 +163,7 @@ def make (
             overroot = assetStage.OverridePrim(TreeRootPath)
 
             if variant == "render":
-                payloadPath = editor.makeRelative(sourcePath, assetPath)
+                payloadPath = toolkit.usd.editor.makeRelative(sourcePath, assetPath)
                 overroot.GetPayloads().AddPayload(payloadPath)
 
                 bind( sourceStage, assetStage,
