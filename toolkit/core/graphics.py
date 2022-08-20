@@ -29,6 +29,25 @@ def recolor (image, color, opacity=1.0):
 
 
 
+def alphaMultiply (image, opacity=1.0):
+
+    for x in range(image.width()):
+        for y in range(image.height()):
+
+            color = image.pixelColor(x,y)
+
+            alpha = int(color.alpha() * opacity)
+            color.setAlpha(alpha)
+            
+            image.setPixelColor(x, y, color)
+
+    return image
+
+
+
+
+
+
 def multiply (image, color):
 
     colorMultiply = QtGui.QColor(color)

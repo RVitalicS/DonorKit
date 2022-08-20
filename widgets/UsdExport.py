@@ -64,7 +64,7 @@ class Dialog (
 
 
 
-    def __init__(self, parent=None):
+    def __init__(self, initname=None, parent=None):
         super(Dialog, self).__init__(parent)
         BaseWidget.Browser.__init__(self)
 
@@ -77,6 +77,9 @@ class Dialog (
         self.applyUiSettings()
 
         self.AssetBrowser.setFocus(QtCore.Qt.MouseFocusReason)
+
+        if initname:
+            self.setName(initname)
 
 
 
@@ -128,6 +131,8 @@ class Dialog (
 
         self.UsdExportOptions.exportButton.pressed.connect(self.exportQuery)
         self.UsdExportOptions.exportButton.released.connect(self.exportAction)
+        
+        self.UsdExportOptions.mayaButton.stateChanged.connect(self.mayaSettings)
 
 
 
@@ -651,6 +656,10 @@ class Dialog (
         with Settings.Manager(self.theme.app, True) as settings:
             settings["animationOverwrite"] = self.UsdExportOptions.animationOverwrite.isChecked()
 
+    def mayaSettings (self):
+        with Settings.Manager(self.theme.app, True) as settings:
+            settings["maya"] = self.UsdExportOptions.mayaButton.checked
+
 
 
     def applyUiSettings (self):
@@ -712,6 +721,11 @@ class Dialog (
                 self.UsdExportOptions.mainOptions.linkButton.setChecked(True)
             else:
                 self.UsdExportOptions.mainOptions.linkButton.setChecked(False)
+
+            if settings.get("maya"):
+                self.UsdExportOptions.mayaButton.checked = True
+            else:
+                self.UsdExportOptions.mayaButton.checked = False
 
         self.overwriteState()
 
@@ -781,6 +795,8 @@ class Dialog (
             options.version = int(self.UsdExportOptions.mainOptions.versionCombobox.getName())
             options.variant = self.UsdExportOptions.mainOptions.variantCombobox.getName()
             options.link = self.UsdExportOptions.mainOptions.linkButton.isChecked()
+
+            options.maya = self.UsdExportOptions.mayaButton.checked
 
             options.info = self.UsdExportOptions.infoEdit.get()
             options.comment = self.UsdExportOptions.commentEdit.get()

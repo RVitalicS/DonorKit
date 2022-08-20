@@ -225,7 +225,7 @@ class Status (QtWidgets.QWidget):
 
         bottomMargin = (
             MARGIN
-            - (HEIGHT_THICK - labelHeight - textHeight - textOffset)
+            - (HEIGHT_THICK - labelHeight - textHeight)
             - buttonHeight )
 
         self.setFixedHeight(
@@ -247,7 +247,7 @@ class Status (QtWidgets.QWidget):
 
         self.statusLayout = QtWidgets.QVBoxLayout()
         self.statusLayout.setContentsMargins(
-            MARGIN-lineWidth, 0, MARGIN, 0)
+            MARGIN-lineWidth, 0, 0, 0)
         self.statusLayout.setSpacing(textOffset)
         self.groupLayout.addLayout(self.statusLayout)
 
@@ -304,7 +304,8 @@ class Status (QtWidgets.QWidget):
 
 
         self.buttonLayout = QtWidgets.QHBoxLayout()
-        self.buttonLayout.setContentsMargins(0, 0, 0, 0)
+        self.buttonLayout.setContentsMargins(
+            MARGIN + UIGlobals.Options.Maya.width, 0, 0, 0)
         self.buttonLayout.setSpacing(0)
         self.mainLayout.addLayout(self.buttonLayout)
 
@@ -500,6 +501,53 @@ class Status (QtWidgets.QWidget):
 
 
 
+class MayaButton (QtWidgets.QPushButton):
+
+    stateChanged = Signal()
+
+    def __init__ (self, theme):
+        super(MayaButton, self).__init__()
+
+        self.theme = theme
+        self.setFixedSize(QtCore.QSize(
+            UIGlobals.Options.Maya.width,
+            UIGlobals.Options.Maya.height))
+
+        self.icon = QtGui.QImage(":/icons/maya.png")
+
+        self.checked = False
+
+
+    def mousePressEvent (self, event):
+        super(MayaButton, self).mousePressEvent(event)
+
+        self.checked = not self.checked
+        self.repaint()
+
+        self.stateChanged.emit()
+
+
+    def paintEvent (self, event):
+
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+
+        if self.checked:
+            image = self.icon
+        else:
+            image = toolkit.core.graphics.recolor(
+                self.icon.copy(),
+                self.theme.color.optionDisable,
+                opacity=0.75)
+
+        painter.drawImage(
+            self.contentsRect(), image)
+
+
+
+
+
+
 class ExportButton (QtWidgets.QPushButton):
 
 
@@ -594,6 +642,11 @@ class ExportButton (QtWidgets.QPushButton):
 
         disabled = self.property("state") != "enabled"
 
+        exportState = ( self.buttonPressed
+            or self.delayValue >= 0 )
+        errorState = ( self.buttonPressed and disabled
+            or self.delayValue >= 0 )
+
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
 
@@ -608,7 +661,7 @@ class ExportButton (QtWidgets.QPushButton):
 
         painter.setClipPath(clipPath)
 
-        if self.buttonPressed or self.delayValue >= 0:
+        if exportState:
             textcolor = QtGui.QColor(self.theme.color.white)
             if disabled or self.delayValue >= 0:
                 backgroundcolor = QtGui.QColor(self.theme.color.exportLocked)
@@ -636,7 +689,7 @@ class ExportButton (QtWidgets.QPushButton):
             painter.fillPath(outlinePath, QtGui.QBrush(color))
 
 
-        if self.buttonPressed and disabled or self.delayValue >= 0:
+        if errorState:
 
             brush = QtGui.QBrush(
                 backgroundcolor.darker(108),
@@ -694,6 +747,7 @@ class ExportButton (QtWidgets.QPushButton):
             QtCore.QRectF(buttonRect),
             self.text(),
             textOption)
+
 
         painter.end()
 

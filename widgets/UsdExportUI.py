@@ -994,8 +994,23 @@ class UsdExportOptions (QtWidgets.QWidget):
         self.mainLayout.addItem(optionSpacer)
 
 
+        self.statusLayout = QtWidgets.QHBoxLayout()
+        self.statusLayout.setContentsMargins(0, 0, MARGIN, 0)
+        self.statusLayout.setSpacing(0)
+        self.mainLayout.addLayout(self.statusLayout)
+
         self.status = BaseOption.Status(theme)
-        self.mainLayout.addWidget(self.status)
+        self.statusLayout.addWidget(self.status)
+
+        self.mayaLayout = QtWidgets.QVBoxLayout()
+        self.mayaLayout.setContentsMargins(0, 0, 0, 
+            UIGlobals.Options.Maya.offset)
+        self.mayaLayout.setSpacing(0)
+        self.mayaLayout.setAlignment(QtCore.Qt.AlignBottom)
+        self.statusLayout.addLayout(self.mayaLayout)
+
+        self.mayaButton = BaseOption.MayaButton(theme)
+        self.mayaLayout.addWidget(self.mayaButton)
 
 
         self.exportLayout = QtWidgets.QHBoxLayout()
@@ -1027,8 +1042,10 @@ class UsdExportOptions (QtWidgets.QWidget):
         self.mainOptions.setFixedWidth(value)
         self.commentEdit.setFixedWidth(value)
         self.commentEdit.skinnySize()
-        self.status.setFixedWidth(value+MARGIN*2)
         self.exportButton.setFixedWidth(value)
+
+        self.status.setFixedWidth(
+            value + MARGIN - self.mayaButton.width() )
 
 
 

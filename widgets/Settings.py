@@ -57,7 +57,8 @@ class ManagerData (object):
                 animationOverwrite=False,
                 rangeStart=1,
                 rangeEnd=1,
-                link=True ))
+                link=True,
+                maya=False ))
 
         self.path = os.path.join(
             rootDir, "databank", filename )
@@ -223,11 +224,15 @@ UIGlobals.Options.fontComment   = toolkit.core.ui.makeFont(size=9)
 UIGlobals.Options.fontOverwrite = toolkit.core.ui.makeFont(size=7)
 UIGlobals.Options.fontLink      = toolkit.core.ui.makeFont(size=9)
 
+UIGlobals.Options.Maya = DataClass()
+UIGlobals.Options.Maya.width  = 13
+UIGlobals.Options.Maya.height = 12
+UIGlobals.Options.Maya.offset = 12
+
 UIGlobals.Options.Export = DataClass()
 UIGlobals.Options.Export.patternThickness = 11
 UIGlobals.Options.Export.delayTime = 35
 UIGlobals.Options.Export.font = toolkit.core.ui.makeFont(size=10)
-
 
 UIGlobals.Options.Status = DataClass()
 UIGlobals.Options.Status.lineWidth    = 4

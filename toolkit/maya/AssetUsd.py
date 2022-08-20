@@ -276,4 +276,25 @@ def Export ():
             toolkit.usd.imaging.recordAssetPreviews(AssetPath, timedata)
 
 
-        OpenMaya.MGlobal.displayInfo(message + options.assetName)
+        # Export Selected as Maya File
+        if options.maya:
+            toolkit.system.ostree.buildUsdRoot(
+                options.assetPath, sources=True)
+
+            MayaFileName = re.sub(r"usd[ac]{0,1}$", "mb", options.assetName)
+            MayaPath = os.path.join(
+                options.assetPath,
+                toolkit.system.ostree.SUBDIR_SOURCES,
+                MayaFileName )
+
+            if os.path.exists(MayaPath):
+                mayaMessage = "Source Overwritten: "
+            else:
+                mayaMessage = "Source Saved: "
+
+            toolkit.maya.export.Maya(MayaPath)
+
+            toolkit.maya.message.info(mayaMessage + MayaFileName)
+
+
+        toolkit.maya.message.info(assetMessage + options.assetName)
