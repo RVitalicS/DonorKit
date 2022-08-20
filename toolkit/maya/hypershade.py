@@ -22,7 +22,7 @@ import maya.OpenMaya as OpenMaya
 class Manager (object):
 
 
-    def __init__ (self, data):
+    def __init__ (self, data=dict()):
         
         self.RMAN_DEFAULTS = data
 
@@ -45,11 +45,13 @@ class Manager (object):
 
 
 
-    def parseArgs (self, root, data={}):
+    def parseArgs (self, root, data=None):
+
+        if data == None:
+            data = dict()
 
         for child in root:
             if child.tag == "param":
-
 
                 paramname = child.attrib["name"]
                 paramtype = child.attrib["type"]
@@ -72,15 +74,11 @@ class Manager (object):
 
             data = self.parseArgs(child, data=data)
         
-
         return data
 
 
 
-    def getShaderDefaults (self, shader):
-
-        shaderType = shader.typeName()
-
+    def getShaderDefaults (self, shaderType):
 
         if shaderType not in self.RMAN_DEFAULTS:
 
@@ -120,10 +118,8 @@ class Manager (object):
 
                 self.RMAN_DEFAULTS[shaderType] = shaderData
 
-
         else:
-            shaderData = self.RMAN_DEFAULTS[shaderType]
-
+            shaderData = self.RMAN_DEFAULTS.get(shaderType, dict())
 
         return shaderData
 
@@ -149,7 +145,8 @@ class Manager (object):
             
             collector[shaderName] = shaderData
 
-            shaderDefaults = self.getShaderDefaults(shader)
+            if prman:
+                shaderDefaults = self.getShaderDefaults(shaderType)
 
             for index in range(shader.attributeCount()):
 
@@ -197,14 +194,14 @@ class Manager (object):
 
                     elif prman:
                         data = shaderDefaults.get(attrName, None)
-                        value = toolkit.maya.misc.getMPlugAs( MPlug, asValue=True )
+                        value = toolkit.maya.mplug.getAs( MPlug, asValue=True )
 
                         if data != None and value != None:
 
                             valueDefault = data["default"]
                             valueType    = data["type"]
 
-                            isDefault = True
+                            collectAttibue = False
 
                             if isinstance(value, tuple) and isinstance(valueDefault, tuple):
                                 if len(value) == len(valueDefault):
@@ -216,16 +213,22 @@ class Manager (object):
                                             exponent = len(str(defaultComponent).split(".")[1])
                                             valueComponent = round(value[index], exponent)
                                             if valueComponent != defaultComponent:
-                                                isDefault = False
+                                                collectAttibue = True
                                                 break
                                         elif value[index] != valueDefault[index]:
-                                                isDefault = False
+                                                collectAttibue = True
                                                 break
 
                             elif value != valueDefault:
-                                    isDefault = False
+                                    collectAttibue = True
 
-                            if not isDefault:
+                            if shaderType == "PxrDisplace":
+                                if attrName == "dispAmount":
+                                    if not collectAttibue:
+                                        value = 0.01          # UNIT DEPEND
+                                        collectAttibue = True
+
+                            if collectAttibue:
                                 inputs[attrName] = dict(
                                 value=value,
                                 type=valueType,
@@ -260,8 +263,6 @@ class Manager (object):
 
     def getPrmanNetwork (self, shaderGroup):
 
-        shGroupName = shaderGroup.name()
-
         material = dict(
             surface=None,
             displacement=None,
@@ -291,8 +292,6 @@ class Manager (object):
 
 
     def getPreviewNetwork (self, shaderGroup):
-
-        shGroupName = shaderGroup.name()
         
         material = dict(
             surface=None,

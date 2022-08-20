@@ -18,7 +18,11 @@ import toolkit.core.timing
 import toolkit.system.ostree
 
 import toolkit.maya.scene
-import toolkit.maya.misc
+import toolkit.maya.camera
+import toolkit.maya.export
+import toolkit.maya.outliner
+import toolkit.maya.message
+import toolkit.maya.ShaderUsd
 
 importlib.reload(toolkit.maya.scene)
 
@@ -34,8 +38,37 @@ import maya.OpenMayaAnim as OpenMayaAnim
 
 
 
+def Export (options=None):
 
-def Export ():
+
+    """
+        options.modelling = True
+        options.modellingOverride = True
+
+        options.surfacing = True
+        options.surfacingOverride = True
+
+        options.animation = True
+        options.animationOverride = True
+
+        options.animationName = ""
+
+        options.minTime = 0
+        options.maxTime = 0
+
+        options.assetPath = ""
+        options.assetName = ""
+
+        options.version = 1
+        options.variant = ""
+        options.link = True
+
+        options.maya = True
+
+        options.info = ""
+        options.comment = ""
+        options.status = "WIP"
+    """
 
 
     MSelectionList = OpenMaya.MSelectionList()
@@ -69,17 +102,13 @@ def Export ():
 
 
 
-    mayaScene = toolkit.maya.scene.Manager()
-    sceneData = mayaScene.get(getshaders=options.surfacing)
+    mayaScene = toolkit.maya.scene.Manager(
+        getshaders=options.surfacing)
 
-    mayatree = sceneData["tree"]
-    shaders  = sceneData["shaders"]
-    root     = sceneData["root"]
-
-    if not mayatree:
+    if not mayaScene.tree:
         text = "Wrong Selection"
-        OpenMaya.MGlobal.displayWarning(text)
-        toolkit.maya.misc.viewportMessage(text)
+        toolkit.maya.message.warning(text)
+        toolkit.maya.message.viewport(text)
         return
 
 
@@ -96,7 +125,7 @@ def Export ():
         "source.geo.usd" )
 
     ModelFileName = "{}.{}.usdc".format(
-        os.path.basename(root), version )
+        os.path.basename(mayaScene.root), version )
 
     ModelPath = os.path.join(
         options.assetPath,
@@ -138,28 +167,30 @@ def Export ():
     if export:
         toolkit.system.ostree.buildUsdRoot(
             options.assetPath, modelling=True)
-        toolkit.maya.misc.UsdExport(
+        toolkit.maya.export.USD(
             SourceModelPath,
+            defaultMeshScheme = mayaScene.defaultMeshScheme,
             animation= 1 if options.animation else 0,
             startTime=options.minTime,
-            endTime=options.maxTime )
+            endTime=options.maxTime,
+            shading=options.surfacing )
 
 
 
     if extractModel:
         if os.path.exists(ModelPath):
-            message = "Model Overwritten: "
+            modelMessage = "Model Overwritten: "
         else:
-            message = "Model Saved: "
+            modelMessage = "Model Saved: "
 
         OldStage = Usd.Stage.Open(SourceModelPath)
         NewStage = Usd.Stage.CreateNew(ModelPath)
         toolkit.usd.editor.copyStage(
             OldStage,
             NewStage,
-            root=root, units=units)
+            root=mayaScene.root, units=units)
 
-        toolkit.usd.editor.addMayaAttributes(NewStage, mayatree)
+        toolkit.usd.editor.addMayaAttributes(NewStage, mayaScene.tree)
         NewStage.GetRootLayer().Export(
             ModelPath, args=dict(format="usdc") )
 
@@ -172,16 +203,16 @@ def Export ():
             options.assetPath, animation=True)
 
         if os.path.exists(AnimationPath):
-            message = "Animation Overwritten: "
+            animationMessage = "Animation Overwritten: "
         else:
-            message = "Animation Saved: "
+            animationMessage = "Animation Saved: "
 
         OldStage = Usd.Stage.Open(SourceModelPath)
         NewStage = Usd.Stage.CreateNew(AnimationPath)
         toolkit.usd.editor.copyAnimation(
             OldStage,
             NewStage,
-            root=root, reference=ModelPath, units=units )
+            root=mayaScene.root, reference=ModelPath, units=units )
 
         NewStage.GetRootLayer().Export(
             AnimationPath, args=dict(format="usdc") )
@@ -229,14 +260,15 @@ def Export ():
             options.assetName )
 
         if os.path.exists(AssetPath):
-            message = "Asset Overwritten: "
+            assetMessage = "Asset Overwritten: "
         else:
-            message = "Asset Saved: "
+            assetMessage = "Asset Saved: "
 
         toolkit.usd.asset.make (
             ReferencePath,
             AssetPath,
-            mayatree )
+            mayaScene.tree,
+            mayaScene.root )
 
 
         # Create/Update Symbolic Link

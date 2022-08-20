@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 
-
 import re
 import os
 
 
 from . import hypershade
+import toolkit.core.naming
 
 import importlib
 importlib.reload(hypershade)
@@ -18,14 +18,39 @@ import maya.OpenMaya as OpenMaya
 
 
 
+def getUnits ():
+
+    result = OpenMaya.MCommandResult()
+
+    command = "currentUnit -query -linear"
+    OpenMaya.MGlobal.executeCommand(command, result)
+
+    value = [""]
+    result.getResult(value)
+
+    return value[0]
+
+
+
+
+
 
 
 class Manager (object):
 
 
-    def __init__ (self):
+    def __init__ (self, getshaders=True):
         
         self.RMAN_DEFAULTS = dict()
+
+        self.tree    = list()
+        self.shaders = dict()
+        self.root    = str()
+
+        self.defaultMeshScheme = "none"
+        self.getshaders = getshaders
+
+        self.get()
 
 
 
@@ -133,7 +158,9 @@ class Manager (object):
 
 
 
-    def scan (self, tree=None, collector=[], selected=False):
+    def scan (self, tree=None,
+            collector=[],
+            selected=False):
 
 
         if tree is None:
@@ -148,7 +175,7 @@ class Manager (object):
             treeType = str(treeObject.apiTypeStr())
 
             attributes={}
-            material = None
+            materials = []
 
             
             # main filter
@@ -189,46 +216,40 @@ class Manager (object):
                     MFnMesh = OpenMaya.MFnMesh(treeDag)
 
 
-                    # get display color
-                    if MFnMesh.hasColorChannels(
-                        MFnMesh.currentColorSetName() ):
-
-                        MColorArray = OpenMaya.MColorArray()
-                        MFnMesh.getColors(
-                            MColorArray,
-                            MFnMesh.currentColorSetName(),
-                            OpenMaya.MColor(0,0,0,1))
-
-                        color = list( MColorArray[0] )[:3]
-                        for index in range(len(color)):
-                            value = color[index]
-                            color[index] = round(value, 4)
-
-                        attr = {"displayColor": color}
-                        attributes.update(attr)
-
-
                     # get displacement bound
-                    shaders = OpenMaya.MObjectArray()
-                    MFnMesh.getConnectedShaders(0,
-                        shaders, OpenMaya.MIntArray() )
+                    if self.getshaders:
+                        shaders = OpenMaya.MObjectArray()
+                        MFnMesh.getConnectedShaders(0,
+                            shaders, OpenMaya.MIntArray() )
 
-                    if shaders.length() > 0:
+                        hasDisplacement = False
+                        if shaders.length() > 0:
+                            for i in range(shaders.length()):
+                                material = OpenMaya.MFnDependencyNode(shaders[i])
+                                if str(material.name()) != "initialShadingGroup":
+                                    materials.append(material)
 
-                        material = OpenMaya.MFnDependencyNode(shaders[0])
+                                shaderPlug = material.findPlug("rman__displacement")
+                                if shaderPlug.isConnected():
+                                    hasDisplacement = True
 
-                        shaderPlug = material.findPlug("rman__displacement")
-                        if shaderPlug.isConnected():
-
+                        if hasDisplacement:
                             boundValue =  OpenMaya.MFnDependencyNode(
                                 treeObject ).findPlug(
                                     "rman_displacementBound").asFloat()
                             attr = {"rman_displacementBound": boundValue}
                             attributes.update(attr)
 
-                        materialName = str(material.name())
-                        if materialName == "initialShadingGroup":
-                            material = None
+
+                    # check crease sets
+                    if self.defaultMeshScheme == "none":
+                        try:
+                            MUintArray = OpenMaya.MUintArray()
+                            MDoubleArray = OpenMaya.MDoubleArray()
+                            MFnMesh.getCreaseEdges(MUintArray, MDoubleArray)
+                            self.defaultMeshScheme = "catmullClark"
+                        except:
+                            pass
 
 
                     # get subdivision scheme
@@ -261,7 +282,7 @@ class Manager (object):
                 "type": re.sub(r"^k", "", treeType),
                 "selected": selectedFlag,
                 "attributes": attributes,
-                "material": material,
+                "materials": materials,
                 "children": []
             }
 
@@ -306,20 +327,31 @@ class Manager (object):
 
         for item in tree:
 
-            Material = item["material"]
-            if Material:
+            materials = item["materials"]
+            materialNames = []
+            for Material in materials:
 
-                mayashader = hypershade.Manager(self.RMAN_DEFAULTS)
+                materialName = toolkit.core.naming.nameFilterSG(Material.name())
+                if materialName not in collector:
 
-                render  = mayashader.getPrmanNetwork(Material)
-                preview = mayashader.getPreviewNetwork(Material)
+                    HypershadeManager = hypershade.Manager(self.RMAN_DEFAULTS)
 
-                self.RMAN_DEFAULTS = mayashader.RMAN_DEFAULTS
+                    render  = HypershadeManager.getPrmanNetwork(Material)
+                    preview = HypershadeManager.getPreviewNetwork(Material)
 
-                materialName = str(Material.name())
-                collector[materialName] = dict(
-                    render=render,
-                    preview=preview )
+                    self.RMAN_DEFAULTS = HypershadeManager.RMAN_DEFAULTS
+
+                    # FIGURE OUT
+                    # - periodic
+                    # - lama
+                    # - mix
+                    collector[materialName] = dict(
+                        render=render,
+                        preview=preview )
+
+                materialNames.append(materialName)
+
+            item["materials"] = materialNames
 
             self.collectshaders(
                 item["children"],
@@ -329,8 +361,9 @@ class Manager (object):
 
 
 
-    def getroot (self, tree, scope=[], path=None):
+    def getroot (self, tree, scope=[]):
 
+        path = str()
         for item in tree:
 
             _scope = [i for i in scope]
@@ -369,35 +402,33 @@ class Manager (object):
 
 
 
-    def get (self, getshaders=True):
+    def get (self):
 
         data = self.scan()
         data = self.clean(data)
 
-        if getshaders:
-            shaders=self.collectshaders(data)
+        if self.getshaders:
+            self.shaders=self.collectshaders(data)
         else:
-            shaders = {}
+            self.shaders = {}
 
-        root=self.getroot(data)
-        data = self.cut(data)
-
-        return dict(
-            tree=data,
-            shaders=shaders,
-            root=root )
+        self.root = self.getroot(data)
+        self.tree = self.cut(data)
 
 
 
-    def show (self, treeItem, iteration=0):
+    def show (self, root=None, iteration=0):
 
-        for item in treeItem:
+        if root == None:
+            root = self.tree
+
+        for item in root:
 
             name = item["name"]
             typename = item["type"]
             selected = item["selected"]
             attributes = item["attributes"]
-            material = item["material"]
+            materials = item["materials"]
             children = item["children"]
 
             ident = ""
@@ -415,9 +446,9 @@ class Manager (object):
 
             print("{}selected: {}".format(ident, selected) )
 
-            if material:
-                materialName = str(material.name())
-                print("{}material: {}".format(ident, materialName) )
+            if materials:
+                print("{}materials: {}".format(
+                    ident, ", ".join(materials) ))
 
 
-            self.show(children, iteration=iteration+1)
+            self.show(root=children, iteration=iteration+1)
