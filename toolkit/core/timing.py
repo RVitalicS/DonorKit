@@ -31,9 +31,6 @@ def getTimeDifference (timeString):
     timeList = timePart.split(".")
 
     timeSplit = dateList + timeList
-    timeSplit = [int(i) for i in timeSplit]
-
-
     dayPublished   = timeSplit[0]
     monthPublished = timeSplit[1]
     yearPublished  = timeSplit[2]
@@ -55,11 +52,11 @@ def getTimeDifference (timeString):
         minute=int(minuteCurrent))
 
     timePublished = datetime.datetime(
-        yearPublished,
-        monthPublished,
-        dayPublished,
-        hour=hourPublished,
-        minute=minutePublished)
+        int(yearPublished),
+        int(monthPublished),
+        int(dayPublished),
+        hour=int(hourPublished),
+        minute=int(minutePublished))
 
 
     timeDelta = timeCurrent-timePublished
