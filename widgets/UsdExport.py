@@ -402,7 +402,8 @@ class Dialog (
             final = self.UsdExportOptions.mainOptions.linkButton.isChecked()
 
         return toolkit.core.naming.createAssetName(
-            name, version,
+            name=name,
+            version=version,
             variant=variant,
             animation=animation,
             final=final,

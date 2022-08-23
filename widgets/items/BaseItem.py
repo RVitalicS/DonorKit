@@ -59,7 +59,8 @@ class Painter (object):
         self.data = self.index.data(QtCore.Qt.EditRole)
         self.type = self.data.get("type")
         if self.type not in [
-                "usdasset", "usdfile",
+                "usdasset", "usdmaterial",
+                "usdfile",
                 "colorguide", "color"]:
             self.radius = 0
 

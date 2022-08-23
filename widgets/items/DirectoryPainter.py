@@ -11,7 +11,10 @@ from . import AssetUsdPainter
 
 
 
-class Item (BaseItem.Painter, FolderPainter.Base, AssetUsdPainter.Base):
+class Item (
+        BaseItem.Painter, 
+        FolderPainter.Base,
+        AssetUsdPainter.Base ):
 
 
     def __init__ (self, theme):
@@ -25,7 +28,8 @@ class Item (BaseItem.Painter, FolderPainter.Base, AssetUsdPainter.Base):
 
         if self.type in [
                 "labelfolder" ,
-                "labelasset"  ]:
+                "labelasset",
+                "labelmaterial"  ]:
             self.paintLabel()
 
         elif self.type in [
@@ -36,7 +40,6 @@ class Item (BaseItem.Painter, FolderPainter.Base, AssetUsdPainter.Base):
         elif self.type == "plusfolder":
             self.paintPlus()
 
-        elif self.type == "usdasset":
-                
+        elif self.type in ["usdasset", "usdmaterial"]:
             self.favorite = self.data.get("favorite", False)
             self.paintAssetUsd()

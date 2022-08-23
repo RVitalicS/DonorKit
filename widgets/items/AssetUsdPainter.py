@@ -87,9 +87,9 @@ class Item (BaseItem.Painter, Base):
     def paint (self, painter, option, index):
         super(Item, self).paint(painter, option, index)
 
-        if self.type == "labelasset":
+        if self.type in ["labelasset", "labelmaterial"]:
             self.paintLabel()
 
-        elif self.type == "usdasset":
+        elif self.type in ["usdasset", "usdmaterial"]:
             self.favorite = self.data.get("favorite", False)
             self.paintAssetUsd()

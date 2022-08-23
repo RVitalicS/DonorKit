@@ -26,6 +26,25 @@ def loadUsdFile (path):
 
 
 
+def loadMaterial (path):
+    
+    """
+        Placeholder function
+        Need definition to act on input argument
+
+        :type  path: str
+        :param path: path to usd file
+    """
+
+
+    # erase this
+    message.defaultDefinition(
+        "loadMaterial", __file__, mode="katana")
+
+
+
+
+
 def loadColor (data):
     
     """

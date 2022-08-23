@@ -395,6 +395,20 @@ class Bar (QtWidgets.QWidget):
         return False
 
 
+    def isUsdMaterial (self, path=None ):
+
+        if path == None:
+            path = self.resolve()
+
+        if os.path.isdir(path):
+            dataType = toolkit.core.metadata.getType(path)
+
+            if dataType == "usdmaterial":
+                return True
+
+        return False
+
+
 
     def isFolderColors (self, path=None ):
 

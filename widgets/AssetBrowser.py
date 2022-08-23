@@ -117,12 +117,10 @@ class AssetBrowser (QtWidgets.QListView):
                 folderCount += 1
 
             elif data["type"] in [
-                    "usdasset",
+                    "usdasset", "usdmaterial",
                     "usdfile",
-                    "colorguide",
-                    "color" ]:
+                    "colorguide", "color" ]:
                 assetCount  += 1
-
 
         if folderCount <= columnsFolder:
             offsetFolder = 0
@@ -297,7 +295,62 @@ class AssetBrowser (QtWidgets.QListView):
                 item = model.item(index)
                 data = item.data(QtCore.Qt.EditRole)
 
-                if data["type"] in ["usdasset", "usdfile", "colorguide", "color"]:
+                if data["type"] in [
+                        "usdasset", "usdfile",
+                        "colorguide", "color"]:
+                    if positionX + assetWidth + offsetAsset*2 > widgetWidth + margin:
+                        positionX  = margin
+                        positionY += assetHeight
+
+                    item.setSizeHint(
+                        QtCore.QSize(
+                            assetWidth,
+                            assetHeight ))
+
+                    self.setPositionForIndex(
+                        QtCore.QPoint(positionX, positionY), 
+                        model.index(index, 0) )
+
+                    positionX += assetWidth + offsetAsset
+
+
+
+        # material label
+        hasMaterial = False
+        for index in range(model.rowCount()):
+
+            item = model.item(index)
+            data = item.data(QtCore.Qt.EditRole)
+
+            if data["type"] == "labelmaterial":
+                hasMaterial = True
+
+                item.setSizeHint(
+                    QtCore.QSize(
+                        folderWidth,
+                        folderHeight ))
+
+                if hasAsset:
+                    positionX  = margin
+                    positionY += assetHeight
+
+                self.setPositionForIndex(
+                    QtCore.QPoint(positionX, positionY), 
+                    model.index(index, 0) )
+
+                positionX  = margin
+                positionY += folderHeight
+                break
+
+
+        # material loop
+        if hasMaterial:
+            for index in range(model.rowCount()):
+
+                item = model.item(index)
+                data = item.data(QtCore.Qt.EditRole)
+
+                if data["type"] == "usdmaterial":
                     if positionX + assetWidth + offsetAsset*2 > widgetWidth + margin:
                         positionX  = margin
                         positionY += assetHeight

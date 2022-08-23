@@ -114,7 +114,7 @@ class Favorite (object):
 
         dataType = data.get("type")
 
-        if dataType == "usdasset":
+        if dataType in ["usdasset", "usdmaterial"]:
             name = data.get("name")
             pathUI = os.path.join(
                 self.AssetPath.getUI(), name)
@@ -260,7 +260,8 @@ class Browser (object):
             filterFavorites=False,
             showTypes=[
                 "foldercolors",
-                "usdasset" ] ):
+                "usdasset",
+                "usdmaterial" ] ):
 
         if not path:
             return []
@@ -280,13 +281,13 @@ class Browser (object):
             folderPath = os.path.join(path, name)
             dataType = toolkit.core.metadata.getType(folderPath)
 
-            if dataType == "usdasset":
+            if dataType in ["usdasset", "usdmaterial"]:
                 if dataType not in showTypes:
                     continue
 
                 data = {}
                 with Metadata.MetadataManager(
-                        folderPath, "usdasset") as metadata:
+                        folderPath, dataType) as metadata:
                     data = metadata
 
                 chosenItem = toolkit.core.naming.chooseAssetItem(folderPath)
@@ -325,11 +326,11 @@ class Browser (object):
 
                 data = {}
                 with Metadata.MetadataManager(
-                        folderPath, "foldercolors") as metadata:
+                        folderPath, dataType) as metadata:
                     data = metadata
 
                 library.append(dict(
-                    type="foldercolors",
+                    type=dataType,
                     name=name,
                     items=toolkit.system.ostree.getGroupCount(folderPath) ))
 
@@ -377,13 +378,14 @@ class Browser (object):
                 filterFavorites=filterFavorites )
 
 
-        hasLibrary = False
-        hasFolder  = False
-        hasAsset   = False
+        hasLibrary  = False
+        hasFolder   = False
+        hasAsset    = False
+        hasMaterial = False
         for item in browserItems:
             if hasLibrary:
                 break
-            elif hasAsset and hasFolder:
+            elif hasFolder and hasAsset and hasMaterial:
                 break
 
             elif item["type"] == "library" and not hasLibrary:
@@ -395,15 +397,25 @@ class Browser (object):
             elif item["type"] == "usdasset" and not hasAsset:
                 hasAsset = True
 
+            elif item["type"] == "usdmaterial" and not hasMaterial:
+                hasMaterial = True
+
         if hasLibrary:
             browserItems.append(dict( type="labellibrary", text="Libraries" ))
 
-        if hasFolder or not hasLibrary and not hasAsset and not filterFavorites:
+        if ( hasFolder or
+                not hasLibrary and
+                not hasAsset and
+                not hasMaterial and
+                not filterFavorites ):
             browserItems.append(dict( type="labelfolder", text="Folders" ))
             browserItems.append(dict( type="plusfolder" ))
 
         if hasAsset:
             browserItems.append(dict( type="labelasset", text="Assets" ))
+
+        if hasMaterial:
+            browserItems.append(dict( type="labelmaterial", text="Materials" ))
 
 
         iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
@@ -433,7 +445,7 @@ class Browser (object):
             self.AssetBrowser.setItemDelegate(
                 LibraryDelegate.Delegate(self.AssetBrowser, self.theme) )
 
-        elif not hasAsset:
+        elif not hasAsset and not hasMaterial:
             self.AssetBrowser.setItemDelegate(
                 FolderDelegate.Delegate(self.AssetBrowser, self.theme) )
 
@@ -452,16 +464,18 @@ class Browser (object):
 
     def sortItems (self, library):
 
-        labelL    = []
-        labelF    = []
-        labelA    = []
-        plus      = []
-        libraries = []
-        folders   = []
-        usdasset  = []
-        usdfile   = []
-        guides    = []
-        colors    = []
+        labelL       = []
+        labelF       = []
+        labelA       = []
+        labelM       = []
+        plus         = []
+        libraries    = []
+        folders      = []
+        usdasset     = []
+        usdfile      = []
+        usdmaterial  = []
+        guides       = []
+        colors       = []
 
         for data in library:
             dataType = data.get("type")
@@ -472,6 +486,8 @@ class Browser (object):
                 labelF += [data]
             elif dataType == "labelasset":
                 labelA += [data]
+            elif dataType == "labelmaterial":
+                labelM += [data]
             elif dataType == "plusfolder":
                 plus += [data]
             elif dataType == "library":
@@ -480,6 +496,8 @@ class Browser (object):
                 folders += [data]
             elif dataType == "usdasset":
                 usdasset += [data]
+            elif dataType == "usdmaterial":
+                usdmaterial += [data]
             elif dataType == "usdfile":
                 usdfile += [data]
             elif dataType == "colorguide":
@@ -491,6 +509,7 @@ class Browser (object):
                 libraries,
                 folders,
                 usdasset,
+                usdmaterial,
                 guides]:
             data.sort(
                 key=lambda item : item.get("name")
@@ -546,11 +565,13 @@ class Browser (object):
             labelL
             + labelF
             + labelA
+            + labelM
             + plus
             + libraries
             + folders
             + usdasset
             + usdfile
+            + usdmaterial
             + guides
             + colors
         )
@@ -564,7 +585,7 @@ class Browser (object):
         data = index.data(QtCore.Qt.EditRole)
         dataType = data.get("type")
 
-        if dataType in ["folder", "usdasset"]:
+        if dataType in ["folder", "usdasset", "usdmaterial"]:
             path = os.path.join(
                 self.AssetPath.resolve(),
                 data.get("name") )

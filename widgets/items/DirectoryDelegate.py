@@ -14,7 +14,9 @@ from . import AssetUsdDelegate
 
 
 
-class Delegate (FolderDelegate.Delegate, AssetUsdDelegate.Delegate):
+class Delegate (
+        FolderDelegate.Delegate,
+        AssetUsdDelegate.Delegate ):
 
 
     def __init__ (self, parent, theme):

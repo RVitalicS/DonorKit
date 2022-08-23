@@ -39,7 +39,7 @@ def nameFilterSG (name):
 def isFinalVersion (path, name):
 
     for item in os.listdir(path):
-        if re.search(r"\.Final[-\.]{1}", item):
+        if re.search(r"\.*Final[-\.]{1}", item):
 
             itempath = os.path.join(path, item)
             realpath = os.path.realpath(itempath)
@@ -79,11 +79,11 @@ def getVariantName (name):
 
 def getVersion (name):
 
-    versionTag = re.search(r"\.v\d+-*[A-Za-z]*\.", name)
+    versionTag = re.search(r"\.*v\d+-*[A-Za-z]*\.", name)
     if versionTag:
         versionTag = versionTag.group()
 
-        versionCut = re.search(r"\.v\d+-*", versionTag)
+        versionCut = re.search(r"\.*v\d+-*", versionTag)
         if versionCut:
             versionString = versionCut.group()
             versionString = re.sub(r"\.", "", versionString)
@@ -263,6 +263,24 @@ def getUsdPreviews (root, name):
 
 
 
+def ignoreRule (filename):
+
+    if not re.search(r"\.usd[ac]*$", filename):
+        return True
+    elif re.search(r"\.*Final\.", filename):
+        return True
+    elif re.search(r"\.*Hydra\.", filename):
+        return True
+    elif re.search(r"\.*RenderMan\.", filename):
+        return True
+    else:
+        return False
+
+
+
+
+
+
 def chooseAssetItem (path):
 
     """
@@ -277,41 +295,40 @@ def chooseAssetItem (path):
     # iterate over versioned "usd" files only
     for assetItem in os.listdir(path):
 
-        if re.search(r"\.Final\.", assetItem):
+        if ignoreRule(assetItem):
             continue
-        if re.search(r"\.usd[ac]*$", assetItem):
 
-            if not chosenItem:
-                chosenItem  = assetItem
-
-
-            # get data to compare current iteration item
-            # with previously chosen one
-            chosenHasPreviews = getUsdPreviews(path, chosenItem)
-            chosenIsFinal  = isFinalVersion(path, chosenItem)
-            chosenVersion  = getVersion(chosenItem)
-
-            assetHasPreviews = getUsdPreviews(path, assetItem)
-            assetIsFinal  = isFinalVersion(path, assetItem)
-            assetVersion  = getVersion(assetItem)
-
-            noPreviews = not chosenHasPreviews and not assetHasPreviews
-            bothHasPreviews = chosenHasPreviews and assetHasPreviews
+        if not chosenItem:
+            chosenItem = assetItem
 
 
-            # first choose that one with previews
-            if not chosenHasPreviews and assetHasPreviews:
+        # get data to compare current iteration item
+        # with previously chosen one
+        chosenHasPreviews = getUsdPreviews(path, chosenItem)
+        chosenIsFinal  = isFinalVersion(path, chosenItem)
+        chosenVersion  = getVersion(chosenItem)
+
+        assetHasPreviews = getUsdPreviews(path, assetItem)
+        assetIsFinal  = isFinalVersion(path, assetItem)
+        assetVersion  = getVersion(assetItem)
+
+        noPreviews = not chosenHasPreviews and not assetHasPreviews
+        bothHasPreviews = chosenHasPreviews and assetHasPreviews
+
+
+        # first choose that one with previews
+        if not chosenHasPreviews and assetHasPreviews:
+            chosenItem = assetItem
+        
+        # then that one that is final version
+        elif noPreviews or bothHasPreviews:
+            if assetIsFinal:
                 chosenItem = assetItem
-            
-            # then that one that is final version
-            elif noPreviews or bothHasPreviews:
-                if assetIsFinal:
-                    chosenItem = assetItem
 
-                # then depending on higher version
-                elif assetVersion > chosenVersion:
-                    if not chosenIsFinal:
-                        chosenItem = assetItem
+            # then depending on higher version
+            elif assetVersion > chosenVersion:
+                if not chosenIsFinal:
+                    chosenItem = assetItem
 
 
     return chosenItem
@@ -323,8 +340,8 @@ def chooseAssetItem (path):
 
 def makeFinal (name):
 
-    name = re.sub(r"\.v\d+\.", ".Final.", name)
-    name = re.sub(r"\.v\d+-" , ".Final-", name)
+    name = re.sub(r"v\d+\.", "Final.", name)
+    name = re.sub(r"v\d+-" , "Final-", name)
 
     return name
 
@@ -334,14 +351,15 @@ def makeFinal (name):
 
 
 def createAssetName (
-        name, version,
+        name=None,
+        version=1,
         variant=None,
         animation=None,
         final=False,
         extension="usda" ):
     
-
-    assetName = [name]
+    
+    assetName = [name] if name else []
 
     version = "v{:02d}".format(version)
     if variant:

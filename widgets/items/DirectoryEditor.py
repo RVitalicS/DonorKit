@@ -16,7 +16,9 @@ from . import AssetUsdEditor
 
 
 
-class Editor (FolderEditor.Editor, AssetUsdEditor.Editor):
+class Editor (
+        FolderEditor.Editor,
+        AssetUsdEditor.Editor ):
 
 
     def __init__ (self, parent, index, theme):

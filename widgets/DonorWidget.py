@@ -159,13 +159,15 @@ def Make (base):
 
         def linkManager (self, data):
 
+            kind      = data.get("kind")
             name      = data.get("name")
             version   = data.get("version")
             variant   = data.get("variant")
             animation = data.get("animation")
 
             filename = toolkit.core.naming.createAssetName (
-                name, version,
+                name=name if kind == "assembly" else None,
+                version=version,
                 variant=variant,
                 animation=animation )
 
@@ -191,13 +193,15 @@ def Make (base):
                 if data.get("type") not in ["usdfile"]:
                     continue
 
+                kind      = data.get("kind")
                 name      = data.get("name")
                 version   = data.get("version")
                 variant   = data.get("variant")
                 animation = data.get("animation")
 
                 filename = toolkit.core.naming.createAssetName(
-                    name, version,
+                    name=name if kind == "assembly" else None,
+                    version=version,
                     variant=variant,
                     animation=animation,
                     final=False )
@@ -224,7 +228,8 @@ def Make (base):
                 self.AssetPath.hide()
                 self.BarBottom.hide()
             
-            elif self.AssetPath.isUsdAsset(path):
+            elif ( self.AssetPath.isUsdAsset(path) or
+                    self.AssetPath.isUsdMaterial(path) ):
                 self.ResizeButton.show()
                 self.UsdLoadOptions.show()
 
@@ -258,17 +263,12 @@ def Make (base):
                     self.setUiPath(libname)
 
 
-                elif dataType == "folder":
-                    name = data.get("name")
-
-                    self.checkedName = ""
-                    self.AssetPath.goForward(name)
-
-
-                elif dataType == "usdasset":
-
-                    self.checkedName = ""
+                elif dataType in [
+                        "folder", "foldercolors",
+                        "usdasset", "usdmaterial" ]:
                     
+                    self.checkedName = ""
+
                     name = data.get("name")
                     self.AssetPath.goForward(name)
 
@@ -282,12 +282,6 @@ def Make (base):
                         self.checkedName = name
 
                     self.usdfileChecked()
-
-
-                elif dataType == "foldercolors":
-
-                    name = data.get("name")
-                    self.AssetPath.goForward(name)
 
 
                 elif dataType == "colorguide":
@@ -309,7 +303,8 @@ def Make (base):
             
             flag = self.BarBottom.favorite.button.isChecked()
 
-            if self.AssetPath.isUsdAsset(path):
+            if ( self.AssetPath.isUsdAsset(path) or 
+                    self.AssetPath.isUsdMaterial(path) ):
                 self.drawUsdItems(path)
 
             elif self.AssetPath.isFolderColors(path):
@@ -325,55 +320,65 @@ def Make (base):
 
         def getUsdItems (self, path):
 
+            data = {}
+            dataType = toolkit.core.metadata.getType(path)
+            with Metadata.MetadataManager(
+                    path, dataType) as metadata:
+                data = metadata
+
+            if dataType == "usdasset":
+                kind = "assembly"
+            elif dataType == "usdmaterial":
+                kind = "material"
+            else:
+                return []
+
             library = [dict(
                 type="labelasset", text="USD Files" )]
             name = os.path.basename(path)
 
-            data = {}
-            with Metadata.MetadataManager(
-                    path, "usdasset") as metadata:
-                data = metadata
-
             for filename in os.listdir(path):
 
-                if re.search(r"\.usd[ac]*$", filename):
-                    if not re.search(r"\.Final", filename):
+                if toolkit.core.naming.ignoreRule(filename):
+                    continue
 
-                        dataTime = data["items"][filename]["published"]
-                        publishedTime = toolkit.core.timing.getTimeDifference(dataTime)
+                dataTime = data["items"][filename]["published"]
+                publishedTime = toolkit.core.timing.getTimeDifference(dataTime)
 
-                        version   = toolkit.core.naming.getVersion(filename)
-                        variant   = toolkit.core.naming.getVariantName(filename)
-                        animation = toolkit.core.naming.getAnimationName(filename)
+                version   = toolkit.core.naming.getVersion(filename)
+                variant   = toolkit.core.naming.getVariantName(filename)
+                animation = toolkit.core.naming.getAnimationName(filename)
 
-                        finalname = toolkit.core.naming.createAssetName(
-                            name, version,
-                            variant=variant,
-                            animation=animation,
-                            final=True )
+                finalname = toolkit.core.naming.createAssetName(
+                    name=name if kind == "assembly" else None,
+                    version=version,
+                    variant=variant,
+                    animation=animation,
+                    final=True )
 
-                        token = False
-                        finalpath = os.path.join(path, finalname)
-                        if os.path.exists(finalpath):
-                            realpath = os.path.realpath(finalpath)
-                            realname = os.path.basename(realpath)
-                            if realname == filename:
-                                token = True
+                token = False
+                finalpath = os.path.join(path, finalname)
+                if os.path.exists(finalpath):
+                    realpath = os.path.realpath(finalpath)
+                    realname = os.path.basename(realpath)
+                    if realname == filename:
+                        token = True
 
-                        filesize = toolkit.usd.reporter.getResolvedSize(
-                            os.path.join(path, filename) )
+                filesize = toolkit.usd.reporter.getResolvedSize(
+                    os.path.join(path, filename) )
 
-                        library.append(dict(
-                            type="usdfile",
-                            filename=filename,
-                            name=name,
-                            previews=toolkit.core.naming.getUsdPreviews(path, filename),
-                            size=filesize,
-                            version=version,
-                            variant=variant,
-                            animation=animation,
-                            published=publishedTime,
-                            token=token ))
+                library.append(dict(
+                    type="usdfile",
+                    kind=kind,
+                    filename=filename,
+                    name=name,
+                    previews=toolkit.core.naming.getUsdPreviews(path, filename),
+                    size=filesize,
+                    version=version,
+                    variant=variant,
+                    animation=animation,
+                    published=publishedTime,
+                    token=token ))
 
             return library
 
@@ -698,8 +703,10 @@ def Make (base):
                 self.UsdLoadOptions.commentEdit.setDefault()
                 text = ""
 
+
+            metatype = self.metadata.get("type")
             with Metadata.MetadataManager(
-                    self.metapath, "usdasset") as data:
+                    self.metapath, metatype) as data:
                 data["items"][self.checkedName]["comment"] = text
                 self.metadata = data
 
@@ -732,16 +739,18 @@ def Make (base):
                 self.UsdLoadOptions.infoEdit.setDefault()
                 text = ""
 
+            metatype = self.metadata.get("type")
             with Metadata.MetadataManager(
-                    self.metapath, "usdasset") as data:
+                    self.metapath, metatype) as data:
                 data["info"] = text
 
 
 
         def changeStatus (self, status):
 
+            metatype = self.metadata.get("type")
             with Metadata.MetadataManager(
-                    self.metapath, "usdasset") as data:
+                    self.metapath, metatype) as data:
                 data["status"] = status
 
 
@@ -795,6 +804,7 @@ def Make (base):
 
             directory = self.AssetPath.resolve()
             filepath  = ""
+            kind = None
 
             model = self.AssetBrowser.model()
             for index in range(model.rowCount()):
@@ -806,26 +816,36 @@ def Make (base):
                     data = item.data(QtCore.Qt.EditRole)
                     state = self.UsdLoadOptions.link.isChecked()
 
+                    kind      = data.get("kind")
                     name      = data.get("name")
                     version   = data.get("version")
                     variant   = data.get("variant")
                     animation = data.get("animation")
 
                     filename = toolkit.core.naming.createAssetName(
-                        name, version,
+                        name=name if kind == "assembly" else None,
+                        version=version,
                         variant=variant,
                         animation=animation,
                         final=state )
-
                     filepath = os.path.join(directory, filename)
                     break
 
             if os.path.exists(filepath):
-                self.loadUsdFile(filepath)
+                if kind == "assembly":
+                    self.loadUsdFile(filepath)
+                elif kind == "material":
+                    self.loadMaterial(filepath)
 
 
 
         def loadUsdFile (self, path):
+
+            pass
+
+
+
+        def loadMaterial (self, path):
 
             pass
 
