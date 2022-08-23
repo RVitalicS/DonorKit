@@ -686,38 +686,9 @@ class MainOptions (QtWidgets.QWidget):
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
 
-        self.variantLayout = QtWidgets.QHBoxLayout()
-        self.variantLayout.setContentsMargins(0, 20, 0, 0)
-        self.variantLayout.setSpacing(10)
-        self.variantLayout.setObjectName("variantLayout")
-        self.mainLayout.addLayout(self.variantLayout)
-
-        self.variantLabel = QtWidgets.QLabel("Variant")
-        self.variantLabel.setFixedSize(
-            QtCore.QSize(UIGlobals.Options.labelWidth, 24))
-        toolkit.core.ui.setFont(
-            self.variantLabel,
-            UIGlobals.Options.fontLabel)
-        self.variantLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.variantLabel.setObjectName("variantLabel")
-        self.variantLabel.setProperty("textcolor", "on")
-        self.variantLayout.addWidget(self.variantLabel)
-
-        self.variantDropdown = DropdownButton(theme)
-        self.variantDropdown.pressed.connect(self.showVariant)
-        self.variantLayout.addWidget(self.variantDropdown)
-
-        self.variantCombobox = FlatComboBox(theme)
-        self.variantLayout.addWidget(self.variantCombobox)
-
-        variantSpacer = QtWidgets.QSpacerItem(
-            0, 0,
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Minimum)
-        self.variantLayout.addItem(variantSpacer)
 
         self.versionLayout = QtWidgets.QHBoxLayout()
-        self.versionLayout.setContentsMargins(0, 0, 0, 0)
+        self.versionLayout.setContentsMargins(0, 20, 0, 0)
         self.versionLayout.setSpacing(10)
         self.versionLayout.setObjectName("versionLayout")
 
@@ -749,7 +720,39 @@ class MainOptions (QtWidgets.QWidget):
         self.versionLayout.addWidget(self.linkButton)
 
         self.mainLayout.addLayout(self.versionLayout)
+
+
+        self.variantLayout = QtWidgets.QHBoxLayout()
+        self.variantLayout.setContentsMargins(0, 0, 0, 0)
+        self.variantLayout.setSpacing(10)
+        self.variantLayout.setObjectName("variantLayout")
+        self.mainLayout.addLayout(self.variantLayout)
+
+        self.variantLabel = QtWidgets.QLabel("Variant")
+        self.variantLabel.setFixedSize(
+            QtCore.QSize(UIGlobals.Options.labelWidth, 24))
+        toolkit.core.ui.setFont(
+            self.variantLabel,
+            UIGlobals.Options.fontLabel)
+        self.variantLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.variantLabel.setObjectName("variantLabel")
+        self.variantLabel.setProperty("textcolor", "on")
+        self.variantLayout.addWidget(self.variantLabel)
+
+        self.variantDropdown = DropdownButton(theme)
+        self.variantDropdown.pressed.connect(self.showVariant)
+        self.variantLayout.addWidget(self.variantDropdown)
+
+        self.variantCombobox = FlatComboBox(theme)
+        self.variantLayout.addWidget(self.variantCombobox)
+
+        variantSpacer = QtWidgets.QSpacerItem(
+            0, 0,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum)
+        self.variantLayout.addItem(variantSpacer)
         
+
         self.setLayout(self.mainLayout)
 
 
