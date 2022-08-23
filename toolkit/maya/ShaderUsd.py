@@ -4,6 +4,7 @@
 
 import re
 import os
+import shutil
 
 from pxr import Usd
 from widgets import Metadata
@@ -161,8 +162,9 @@ def Export (options=None, data=None):
 
         previewsPath = os.path.join( ShaderRoot,
             toolkit.system.ostree.SUBDIR_PREVIEWS, version)
-        if not os.path.exists(previewsPath):
-            os.mkdir(previewsPath)
+        if os.path.exists(previewsPath):
+            shutil.rmtree(previewsPath)
+        os.mkdir(previewsPath)
 
         toolkit.maya.renderman.createShaderPreview(
             previewsPath, periodic=True)
