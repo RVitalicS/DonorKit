@@ -321,14 +321,13 @@ def Make (base):
         def getUsdItems (self, path):
 
             data = {}
-            dataType = toolkit.core.metadata.getType(path)
             with Metadata.MetadataManager(
-                    path, dataType) as metadata:
+                    path, update=False) as metadata:
                 data = metadata
 
-            if dataType == "usdasset":
+            if data.get("type") == "usdasset":
                 kind = "assembly"
-            elif dataType == "usdmaterial":
+            elif data.get("type") == "usdmaterial":
                 kind = "material"
             else:
                 return []
@@ -704,9 +703,7 @@ def Make (base):
                 text = ""
 
 
-            metatype = self.metadata.get("type")
-            with Metadata.MetadataManager(
-                    self.metapath, metatype) as data:
+            with Metadata.MetadataManager(self.metapath) as data:
                 data["items"][self.checkedName]["comment"] = text
                 self.metadata = data
 
@@ -739,18 +736,14 @@ def Make (base):
                 self.UsdLoadOptions.infoEdit.setDefault()
                 text = ""
 
-            metatype = self.metadata.get("type")
-            with Metadata.MetadataManager(
-                    self.metapath, metatype) as data:
+            with Metadata.MetadataManager(self.metapath) as data:
                 data["info"] = text
 
 
 
         def changeStatus (self, status):
 
-            metatype = self.metadata.get("type")
-            with Metadata.MetadataManager(
-                    self.metapath, metatype) as data:
+            with Metadata.MetadataManager(self.metapath) as data:
                 data["status"] = status
 
 

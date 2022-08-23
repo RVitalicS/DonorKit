@@ -141,7 +141,8 @@ def Export (options=None, data=None):
 
     # create/update .metadata.json
     with Metadata.MetadataManager(
-            ShaderRoot, "usdmaterial") as data:
+            ShaderRoot,
+            metatype="usdmaterial") as data:
 
         data["info"] = options.info
         data["status"] = options.status

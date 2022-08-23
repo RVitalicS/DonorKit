@@ -12,6 +12,8 @@ import toolkit.core.calculate
 import toolkit.core.graphics
 import toolkit.core.ui
 
+from toolkit.core.metadata import METAFILE
+
 
 from toolkit.system import stream
 
@@ -20,7 +22,6 @@ from toolkit.ensure.QtCore import *
 from toolkit.ensure.QtGui import *
 from toolkit.ensure.Signal import *
 
-from . import Metadata
 from . import Settings
 UIGlobals = Settings.UIGlobals
 
@@ -314,7 +315,7 @@ class Bar (QtWidgets.QWidget):
                 continue
 
             dirname = os.path.dirname(path)
-            metadata = os.path.join(dirname, Metadata.NAME)
+            metadata = os.path.join(dirname, METAFILE)
             if not os.path.exists(metadata):
                 continue
 
@@ -326,7 +327,7 @@ class Bar (QtWidgets.QWidget):
 
                     if not re.search(r"\.json*$", filename):
                         continue
-                    elif filename == Metadata.NAME:
+                    elif filename == METAFILE:
                         continue
 
                     filepath = os.path.join(dirname, filename)
@@ -539,7 +540,7 @@ class Bar (QtWidgets.QWidget):
         path = os.getenv("ASSETLIBS", "")
 
         for rootPath in path.split(":"):
-            assetPath = os.path.join(rootPath, Metadata.NAME)
+            assetPath = os.path.join(rootPath, METAFILE)
 
             if os.path.exists(assetPath):
                 data = toolkit.system.stream.dataread(assetPath)

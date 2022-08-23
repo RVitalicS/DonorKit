@@ -280,7 +280,8 @@ def Export (options=None):
 
         # Create/Update .metadata.json
         with Metadata.MetadataManager(
-                options.assetPath, "usdasset") as data:
+                options.assetPath,
+                metatype="usdasset") as data:
 
             data["info"] = options.info
             data["status"] = options.status

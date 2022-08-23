@@ -5,7 +5,7 @@ import os
 import re
 
 import toolkit.core.naming
-from widgets.Metadata import NAME as metafile
+from toolkit.core.metadata import METAFILE
 
 
 # define names of directories
@@ -115,7 +115,7 @@ def getGroupCount (path):
 
     for item in os.listdir(path):
 
-        if item == metafile:
+        if item == METAFILE:
             continue
 
         if not re.search(r"\.json$", item):

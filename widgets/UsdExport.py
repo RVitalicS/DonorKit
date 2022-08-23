@@ -21,7 +21,6 @@ from toolkit.ensure.QtGui import *
 from . import BaseWidget
 from . import UsdExportUI
 
-from . import Metadata
 from . import Settings
 UIGlobals = Settings.UIGlobals
 

@@ -12,6 +12,8 @@ import toolkit.core.metadata
 import toolkit.core.naming
 import toolkit.core.timing
 
+from toolkit.core.metadata import METAFILE
+
 from toolkit.ensure.QtWidgets import *
 from toolkit.ensure.QtCore import *
 from toolkit.ensure.QtGui import *
@@ -251,7 +253,7 @@ class Browser (object):
 
 
     def __init__(self):
-        self.metafile = Metadata.NAME
+        self.metafile = METAFILE
         self.assetsNames = list()
 
 
@@ -287,7 +289,7 @@ class Browser (object):
 
                 data = {}
                 with Metadata.MetadataManager(
-                        folderPath, dataType) as metadata:
+                        folderPath, update=False) as metadata:
                     data = metadata
 
                 chosenItem = toolkit.core.naming.chooseAssetItem(folderPath)
@@ -326,7 +328,7 @@ class Browser (object):
 
                 data = {}
                 with Metadata.MetadataManager(
-                        folderPath, dataType) as metadata:
+                        folderPath, update=False) as metadata:
                     data = metadata
 
                 library.append(dict(

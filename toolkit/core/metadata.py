@@ -4,8 +4,14 @@
 
 import os
 
-from widgets import Metadata
 import toolkit.system.stream as stream
+
+
+
+
+
+
+METAFILE = ".metadata.json"
 
 
 
@@ -15,7 +21,7 @@ import toolkit.system.stream as stream
 
 def getType (path):
 
-    metadataPath = os.path.join(path, Metadata.NAME)
+    metadataPath = os.path.join(path, METAFILE)
 
     if os.path.exists(metadataPath):
         if stream.validJSON(metadataPath):
@@ -32,7 +38,7 @@ def getType (path):
 def getInfo (path):
 
     info = ""
-    metadataPath = os.path.join(path, Metadata.NAME)
+    metadataPath = os.path.join(path, METAFILE)
 
     if os.path.exists(metadataPath):
         if stream.validJSON(metadataPath):
@@ -50,7 +56,7 @@ def getComment (path, filename):
 
     comment = ""
 
-    metadataPath = os.path.join(path, Metadata.NAME)
+    metadataPath = os.path.join(path, METAFILE)
     if os.path.exists(metadataPath):
         if stream.validJSON(metadataPath):
             data = stream.dataread(metadataPath)

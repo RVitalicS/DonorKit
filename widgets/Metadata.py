@@ -8,12 +8,8 @@ import re
 import toolkit.system.stream
 import toolkit.core.timing
 
-
-
-
-
-
-NAME = ".metadata.json"
+import toolkit.core.metadata
+METAFILE = toolkit.core.metadata.METAFILE
 
 
 
@@ -130,9 +126,12 @@ class GenerationManager_usdasset (object):
 class Metadata (object):
 
 
-    def __init__ (self, path, metatype):
+    def __init__ (self, path, metatype=None):
 
         self.default_data=dict()
+
+        if not metatype:
+            metatype = toolkit.core.metadata.getType(path)
 
         if metatype == "root":
             self.default_data = dict(
@@ -165,9 +164,11 @@ class Metadata (object):
                 type="foldercolors",
                 info="" )
 
+        else: return
+
 
         self.path = os.path.join(
-            path, NAME)
+            path, METAFILE)
 
         if not os.path.exists(self.path):
             self.default_settings(self.path)
@@ -191,6 +192,7 @@ class Metadata (object):
                 self.path, data, echo=False)
             if not generation.isCurrent():
                 data = generation.getCurrent()
+                self.save(data)
 
         return data
 
@@ -208,18 +210,23 @@ class Metadata (object):
 class MetadataManager (object):
 
 
-    def __init__ (self, path, metatype):
+    def __init__ (self, path, metatype=None, update=True):
 
         self.path = path
         self.metatype = metatype
 
+        self.update = update
+
 
     def __enter__(self):
 
-        self.data = Metadata(self.path, self.metatype).load()
+        self.data = Metadata( self.path,
+            metatype=self.metatype ).load()
         return self.data
 
 
     def __exit__(self, exc_type, exc_val, exc_tb):
 
-        Metadata(self.path, self.metatype).save(self.data)
+        if self.update:
+            Metadata( self.path,
+                metatype=self.metatype ).save(self.data)
