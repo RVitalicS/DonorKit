@@ -160,7 +160,7 @@ def divisionguide (function):
 
         function(self)
 
-        infoHeight = UIGlobals.AssetBrowser.Icon.Asset.infoHeight
+        infoHeight = UIGlobals.Browser.Icon.Asset.infoHeight
 
         if self.iconSize == 1:
             infoWidth = int(self.labelArea.width()/2)

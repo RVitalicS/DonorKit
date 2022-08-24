@@ -16,7 +16,7 @@ UIGlobals = Settings.UIGlobals
 
 
 
-class AssetBrowser (QtWidgets.QListView):
+class Browser (QtWidgets.QListView):
 
     createFolderQuery = Signal(QtCore.QModelIndex)
     createFolder      = Signal(QtCore.QModelIndex, str)
@@ -27,7 +27,7 @@ class AssetBrowser (QtWidgets.QListView):
 
 
     def __init__(self, theme):
-        super(AssetBrowser, self).__init__()
+        super(Browser, self).__init__()
 
         self.theme = theme
         self.message = None
@@ -59,8 +59,8 @@ class AssetBrowser (QtWidgets.QListView):
     def setGrid (self):
         
 
-        margin = UIGlobals.AssetBrowser.margin
-        scrollWidth = UIGlobals.AssetBrowser.scrollWidth
+        margin = UIGlobals.Browser.margin
+        scrollWidth = UIGlobals.Browser.scrollWidth
 
 
         iconSize = 1
@@ -68,7 +68,7 @@ class AssetBrowser (QtWidgets.QListView):
             iconSize = settings["iconSize"]
 
 
-        IconSettings = UIGlobals.AssetBrowser.Icon
+        IconSettings = UIGlobals.Browser.Icon
 
         folderWidth  = IconSettings.Folder.width
         folderHeight = IconSettings.Folder.height
@@ -133,7 +133,7 @@ class AssetBrowser (QtWidgets.QListView):
         # library label
         hasLibrary = False
         positionX = margin
-        positionY  = UIGlobals.AssetBrowser.margin
+        positionY  = UIGlobals.Browser.margin
         positionY += UIGlobals.Path.height
         for index in range(model.rowCount()):
 
@@ -379,14 +379,14 @@ class AssetBrowser (QtWidgets.QListView):
 
     def enterEvent (self, event):
 
-        super(AssetBrowser, self).enterEvent(event)
+        super(Browser, self).enterEvent(event)
         self.setFocus(QtCore.Qt.MouseFocusReason)
 
 
 
     def leaveEvent (self, event):
 
-        super(AssetBrowser, self).leaveEvent(event)
+        super(Browser, self).leaveEvent(event)
         self.controlMode = False
         self.repaint()
 
@@ -394,7 +394,7 @@ class AssetBrowser (QtWidgets.QListView):
 
     def mouseReleaseEvent (self, event):
 
-        super(AssetBrowser, self).mouseReleaseEvent(event)
+        super(Browser, self).mouseReleaseEvent(event)
         self.iconClickedSignal(QtCore.QModelIndex())
 
 
@@ -417,14 +417,14 @@ class AssetBrowser (QtWidgets.QListView):
 
     def resizeEvent (self, event):
 
-        super(AssetBrowser, self).resizeEvent(event)
+        super(Browser, self).resizeEvent(event)
         self.setGrid()
 
 
 
     def wheelEvent (self, event):
         
-        super(AssetBrowser, self).wheelEvent(event)
+        super(Browser, self).wheelEvent(event)
         value = self.verticalScrollBar().value()
         self.saveScrollPosition(value)
 
@@ -454,7 +454,7 @@ class AssetBrowser (QtWidgets.QListView):
             painter.setPen(
                 QtGui.QPen(QtGui.QColor(self.theme.color.text)) )
 
-            painter.setFont(UIGlobals.AssetBrowser.fontMessage)
+            painter.setFont(UIGlobals.Browser.fontMessage)
 
             textOption = QtGui.QTextOption()
             textOption.setWrapMode(QtGui.QTextOption.NoWrap)
@@ -467,7 +467,7 @@ class AssetBrowser (QtWidgets.QListView):
 
             painter.end()
 
-        super(AssetBrowser, self).paintEvent(event)
+        super(Browser, self).paintEvent(event)
 
 
 

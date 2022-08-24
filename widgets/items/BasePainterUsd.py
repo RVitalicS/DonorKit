@@ -352,7 +352,7 @@ def division (function):
 
         function(self)
 
-        statusHeight = UIGlobals.AssetBrowser.Icon.Asset.infoHeight
+        statusHeight = UIGlobals.Browser.Icon.Asset.infoHeight
 
         if self.iconSize == 1:
             halfInfoWidth = int(self.labelArea.width()/2)
@@ -397,7 +397,7 @@ def published (function):
 
         function(self)
 
-        offsetPublished = UIGlobals.AssetBrowser.Icon.Asset.infoLabel
+        offsetPublished = UIGlobals.Browser.Icon.Asset.infoLabel
         dateArea = QtCore.QRect(
             self.leftInfoArea.x()                        ,
             self.leftInfoArea.y()      + offsetPublished ,
@@ -455,7 +455,7 @@ def status (function):
 
         # button rect
         offsetButton = (
-            UIGlobals.AssetBrowser.Icon.Asset.infoLabel
+            UIGlobals.Browser.Icon.Asset.infoLabel
             + 2)
         buttonArea = QtCore.QRect(
             self.rightInfoArea.x()                     ,
@@ -521,7 +521,7 @@ def size (function):
 
         # button rect
         offsetSize = (
-            UIGlobals.AssetBrowser.Icon.Asset.infoLabel
+            UIGlobals.Browser.Icon.Asset.infoLabel
             + 0)
         sizeArea = QtCore.QRect(
             self.rightInfoArea.x()                     ,

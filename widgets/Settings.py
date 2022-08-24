@@ -34,7 +34,7 @@ class ManagerData (object):
 
     def __init__ (self, app):
 
-        filename = ".ManagerSettings.json"
+        filename = ".Settings_Manager.json"
         self.defaults = dict(
             scrollPosition=0.0,
             size=[820, 590],
@@ -45,9 +45,9 @@ class ManagerData (object):
             favoriteFilter=False,
             theme="dark" )
 
-        if app == "export":
+        if app == "AssetExport":
 
-            filename = ".UsdExportSettings.json"
+            filename = ".Settings_AssetExport.json"
             self.defaults.update( dict(
                 modelling=True,
                 surfacing=True,
@@ -58,6 +58,15 @@ class ManagerData (object):
                 rangeStart=1,
                 rangeEnd=1,
                 link=True,
+                maya=False ))
+
+        elif app == "MaterialExport":
+
+            filename = ".Settings_MaterialExport.json"
+            self.defaults.update( dict(
+                link=True,
+                prman=False,
+                hydra=False,
                 maya=False ))
 
         self.path = os.path.join(
@@ -91,7 +100,7 @@ class ManagerData (object):
 class Manager (object):
 
 
-    def __init__ (self, app="manager", update=True):
+    def __init__ (self, app="Manager", update=True):
 
         self.update = update
         self.app = app
@@ -135,45 +144,45 @@ UIGlobals.Bar.favoriteOffset = 2
 UIGlobals.Bar.bookmarkOffset = 0
 
 
-UIGlobals.AssetBrowser = DataClass()
-UIGlobals.AssetBrowser.margin = 16
-UIGlobals.AssetBrowser.path   = 32
-UIGlobals.AssetBrowser.scrollWidth = 14
+UIGlobals.Browser = DataClass()
+UIGlobals.Browser.margin = 16
+UIGlobals.Browser.path   = 32
+UIGlobals.Browser.scrollWidth = 14
 
 
-UIGlobals.AssetBrowser.fontMessage = toolkit.core.ui.makeFont(size=10)
+UIGlobals.Browser.fontMessage = toolkit.core.ui.makeFont(size=10)
 
 
-UIGlobals.AssetBrowser.Icon = DataClass()
+UIGlobals.Browser.Icon = DataClass()
 
-UIGlobals.AssetBrowser.Icon.Folder = DataClass()
-UIGlobals.AssetBrowser.Icon.Folder.width  = 130
-UIGlobals.AssetBrowser.Icon.Folder.height = 50
+UIGlobals.Browser.Icon.Folder = DataClass()
+UIGlobals.Browser.Icon.Folder.width  = 130
+UIGlobals.Browser.Icon.Folder.height = 50
 
 
-UIGlobals.AssetBrowser.Icon.Asset = DataClass()
+UIGlobals.Browser.Icon.Asset = DataClass()
 
-UIGlobals.AssetBrowser.Icon.Asset.min = DataClass()
-UIGlobals.AssetBrowser.Icon.Asset.min.width = 130
-UIGlobals.AssetBrowser.Icon.Asset.min.height = 152
-UIGlobals.AssetBrowser.Icon.Asset.min.label = 74
+UIGlobals.Browser.Icon.Asset.min = DataClass()
+UIGlobals.Browser.Icon.Asset.min.width = 130
+UIGlobals.Browser.Icon.Asset.min.height = 152
+UIGlobals.Browser.Icon.Asset.min.label = 74
 
-UIGlobals.AssetBrowser.Icon.Asset.mid = DataClass()
-UIGlobals.AssetBrowser.Icon.Asset.mid.width = 260
-UIGlobals.AssetBrowser.Icon.Asset.mid.height = 187
-UIGlobals.AssetBrowser.Icon.Asset.mid.label = 36
+UIGlobals.Browser.Icon.Asset.mid = DataClass()
+UIGlobals.Browser.Icon.Asset.mid.width = 260
+UIGlobals.Browser.Icon.Asset.mid.height = 187
+UIGlobals.Browser.Icon.Asset.mid.label = 36
 
-UIGlobals.AssetBrowser.Icon.Asset.max = DataClass()
-UIGlobals.AssetBrowser.Icon.Asset.max.width = 390
-UIGlobals.AssetBrowser.Icon.Asset.max.height = 260
-UIGlobals.AssetBrowser.Icon.Asset.max.label = 36
+UIGlobals.Browser.Icon.Asset.max = DataClass()
+UIGlobals.Browser.Icon.Asset.max.width = 390
+UIGlobals.Browser.Icon.Asset.max.height = 260
+UIGlobals.Browser.Icon.Asset.max.label = 36
 
-UIGlobals.AssetBrowser.Icon.Asset.infoHeight = 26
-UIGlobals.AssetBrowser.Icon.Asset.infoLabel  = 10
+UIGlobals.Browser.Icon.Asset.infoHeight = 26
+UIGlobals.Browser.Icon.Asset.infoLabel  = 10
 
-UIGlobals.AssetBrowser.Icon.Preview = DataClass()
-UIGlobals.AssetBrowser.Icon.Preview.width  = 480
-UIGlobals.AssetBrowser.Icon.Preview.height = 270
+UIGlobals.Browser.Icon.Preview = DataClass()
+UIGlobals.Browser.Icon.Preview.width  = 480
+UIGlobals.Browser.Icon.Preview.height = 270
 
 
 UIGlobals.IconDelegate = DataClass()

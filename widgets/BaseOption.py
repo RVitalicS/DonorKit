@@ -4,15 +4,19 @@
 
 import math
 
+from . import resources
+
 import toolkit.core.calculate
 import toolkit.core.graphics
+import toolkit.core.naming
 import toolkit.core.ui
-
 
 from toolkit.ensure.QtWidgets import *
 from toolkit.ensure.QtCore import *
 from toolkit.ensure.QtGui import *
 from toolkit.ensure.Signal import *
+
+from .items import PopupDelegate
 
 from . import Settings
 UIGlobals = Settings.UIGlobals
@@ -532,6 +536,14 @@ class MayaButton (QtWidgets.QPushButton):
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
 
+        buttonRect = self.contentsRect()
+        position = QtCore.QPoint(
+            buttonRect.x() ,
+            buttonRect.y() )
+
+        color = QtGui.QColor(self.theme.color.optionBackground)
+        painter.fillRect(buttonRect, color)
+
         if self.checked:
             image = self.icon
         else:
@@ -540,8 +552,8 @@ class MayaButton (QtWidgets.QPushButton):
                 self.theme.color.optionDisable,
                 opacity=0.75)
 
-        painter.drawImage(
-            self.contentsRect(), image)
+        painter.drawImage(position, image)
+        painter.end()
 
 
 
@@ -559,6 +571,7 @@ class ExportButton (QtWidgets.QPushButton):
         self.setFixedHeight(HEIGHT_THICK)
         
         self.buttonPressed = False
+        self.setProperty("state", "disabled")
 
         self.timerAnimation = QtCore.QTimer(self)
         self.timerAnimation.timeout.connect(self.animation)
@@ -817,11 +830,11 @@ class ResizeButton (QtWidgets.QPushButton):
 
 
 
-class SymbolicLink (QtWidgets.QPushButton):
+class LinkToken (QtWidgets.QPushButton):
 
 
     def __init__ (self, theme):
-        super(SymbolicLink, self).__init__()
+        super(LinkToken, self).__init__()
 
         self.theme = theme
         self.fontText = UIGlobals.Options.fontLink
@@ -888,3 +901,450 @@ class SymbolicLink (QtWidgets.QPushButton):
 
 
         painter.end()
+
+
+
+
+
+
+class LinkButton (QtWidgets.QPushButton):
+
+
+    def __init__ (self, theme):
+        super(LinkButton, self).__init__()
+
+        self.theme = theme
+
+        self.setCheckable(True)
+        self.setText("")
+
+        self.image = QtGui.QImage(":/icons/linkchain.png")
+
+        self.setFixedSize(QtCore.QSize(
+            self.image.width() ,
+            UIGlobals.Options.buttonHeight ))
+
+        self.buttonPressed = False
+
+
+    def paintEvent (self, event):
+
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+        buttonRect = self.contentsRect()
+        position = QtCore.QPoint(
+            buttonRect.x() ,
+            ( buttonRect.y() +
+            int((UIGlobals.Options.buttonHeight
+            - self.image.height())/2) )
+        )
+
+        color = QtGui.QColor(self.theme.color.optionBackground)
+        painter.fillRect(buttonRect, color)
+
+        if self.isChecked():
+            if self.property("overwrite") == "true":
+                image = toolkit.core.graphics.recolor(
+                    self.image, self.theme.color.violet )
+            else:
+                image = toolkit.core.graphics.recolor(
+                    self.image, self.theme.color.optionButton )
+        else:
+            image = toolkit.core.graphics.recolor(
+                self.image, self.theme.color.browserSocket )
+
+        painter.drawImage(position, image)
+        painter.end()
+
+
+    def mousePressEvent (self, event):
+        super(LinkButton, self).mousePressEvent(event)
+        self.buttonPressed = True
+        self.repaint()
+
+    def mouseReleaseEvent (self, event):
+        super(LinkButton, self).mouseReleaseEvent(event)
+        self.buttonPressed = False
+        self.repaint()
+
+    def enterEvent (self, event):
+        super(LinkButton, self).enterEvent(event)
+
+    def leaveEvent (self, event):
+        super(LinkButton, self).leaveEvent(event)
+        self.buttonPressed = False
+
+
+
+
+
+
+class NameEdit (QtWidgets.QLineEdit):
+
+
+    def __init__ (self):
+        super(NameEdit, self).__init__()
+
+        self.setFixedHeight(HEIGHT_THICK)
+
+        self.defaultName = "Name"
+        self.setText(self.defaultName)
+
+        self.errorVisible = False
+        self.errorName    = "{ name }"
+
+
+    def showError (self, flag):
+
+        self.errorVisible = flag
+
+        if flag == True:
+            self.setText(self.errorName)
+
+
+    def setName (self, text):
+
+        if text == self.errorName:
+            pass
+
+        elif text != self.defaultName:
+            text = toolkit.core.naming.nameFilter(text)
+            self.setText(text)
+
+        return text
+
+
+    def mousePressEvent (self, event):
+        super(NameEdit, self).mousePressEvent(event)
+
+        if self.text() == self.defaultName:
+            self.setText("")
+        elif self.text() == self.errorName:
+            self.setText("")
+
+
+    def leaveEvent (self, event):
+        super(NameEdit, self).leaveEvent(event)
+
+        if not self.text() and not self.errorVisible:
+            self.setText(self.defaultName)
+        elif not self.text() and self.errorVisible:
+            self.setText(self.errorName)
+
+
+
+
+
+
+class Line (QtWidgets.QWidget):
+
+
+    def __init__ (self, theme):
+        super(Line, self).__init__()
+
+        self.setFixedHeight(1)
+        self.setAutoFillBackground(True)
+
+        palette = QtGui.QPalette()
+        palette.setColor(
+            QtGui.QPalette.Background,
+            QtGui.QColor(
+                theme.color.optionLine) )
+        self.setPalette(palette)
+
+
+
+
+
+
+class FlatComboBox (QtWidgets.QComboBox):
+
+    selectionChanged = Signal(str)
+
+
+    def __init__ (self, theme):
+        super(FlatComboBox, self).__init__()
+
+        self.errorVisible = False
+        self.errorName    = "{ name }"
+
+        self.underPointer = False
+
+        self.fontValue = UIGlobals.Options.fontLabel
+        toolkit.core.ui.setFont(
+            self, self.fontValue)
+
+
+        self.setEditable(True)
+        self.setFrame(False)
+        self.setMaxVisibleItems(10)
+        self.setMaxCount(100)
+
+        self.setContentsMargins(0,0,0,0)
+        self.lineEdit().setContentsMargins(0,0,0,0)
+        self.lineEdit().setTextMargins(-2,0,-2,0)
+
+        self.lineEdit().cursorPositionChanged.connect(self.inputEnter)
+
+        self.setItemDelegate(
+            PopupDelegate.Delegate(
+                self.view(), theme) )
+
+        self.editTextChanged.connect(self.textFilter)
+
+        self.stealth = False
+        self.currentTextChanged.connect(self.selectionAction)
+
+
+    def selectionAction (self, text):
+
+        if not self.stealth:
+            self.selectionChanged.emit(text)
+
+
+    def showError (self, flag):
+
+        self.errorVisible = flag
+
+        if flag == True and not self.currentText():
+            self.setEditText(self.errorName)
+
+
+    def showPopup (self):
+        super(FlatComboBox, self).showPopup()
+
+        point = QtCore.QPoint(
+            self.contentsRect().x() ,
+            self.contentsRect().y() )
+        point = self.mapToGlobal(point)
+
+        popup = self.findChild(QtWidgets.QFrame)
+        popup.move(popup.x(), point.y())
+
+
+    def getName (self):
+
+        name = self.currentText()
+        if name == self.errorName:
+            return ""
+        else:
+            return name
+
+
+    def notSet (self):
+
+        if self.currentText() == "":
+            return True
+        if self.currentText() == self.errorName:
+            return True
+        return False
+
+
+    def changeEvent (self, event):
+        super(FlatComboBox, self).changeEvent(event)
+
+        if self.lineEdit():
+            widthLalbel = 0
+            widthButton = 20
+
+            if self.lineEdit().text():
+                widthLalbel = toolkit.core.calculate.stringWidth(
+                    self.lineEdit().text().replace(" ", "_"),
+                    self.fontValue )
+
+            self.setMinimumWidth(widthLalbel+widthButton)
+
+        if not self.underPointer and self.errorVisible:
+            if not self.currentText():
+                self.setEditText(self.errorName)
+
+
+    def textFilter (self, text):
+
+        if text != self.errorName:
+            text = toolkit.core.naming.nameFilter(text)
+            self.setEditText(text)
+
+
+    def leaveEvent (self, event):
+        super(FlatComboBox, self).leaveEvent(event)
+
+        self.lineEdit().setCursorPosition(0)
+        self.underPointer = False
+
+        if not self.currentText() and self.errorVisible:
+            self.setEditText(self.errorName)
+        self.clearFocus()
+
+
+    def enterEvent (self, event):
+        super(FlatComboBox, self).enterEvent(event)
+
+        self.underPointer = True
+
+
+    def inputEnter (self, oldPos, newPos):
+
+        if self.underPointer:
+            if self.currentText() == self.errorName:
+                self.setEditText("")
+
+
+
+
+
+
+class DropdownButton (QtWidgets.QPushButton):
+
+
+    def __init__ (self, theme):
+        super(DropdownButton, self).__init__()
+
+        self.theme = theme
+
+        self.setCheckable(False)
+        self.setText("")
+
+        self.image = QtGui.QImage(":/icons/dropdown.png")
+
+        self.value = UIGlobals.Options.buttonHeight
+        self.setFixedSize(QtCore.QSize(self.value, self.value))
+
+        self.buttonPressed = False
+
+
+    def paintEvent (self, event):
+
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+        buttonRect = self.contentsRect()
+        position = QtCore.QPoint(
+            buttonRect.x() + int((self.value-self.image.width() )/2) ,
+            buttonRect.y() + int((self.value-self.image.height())/2) )
+
+        color = QtGui.QColor(self.theme.color.optionBackground)
+        painter.fillRect(buttonRect, color)
+
+        if self.buttonPressed:
+            image = toolkit.core.graphics.recolor(
+                self.image, self.theme.color.white )
+        else:
+            image = toolkit.core.graphics.recolor(
+                self.image, self.theme.color.optionButton )
+
+        painter.drawImage(position, image)
+        painter.end()
+
+
+
+    def mousePressEvent (self, event):
+        super(DropdownButton, self).mousePressEvent(event)
+        self.buttonPressed = True
+        self.repaint()
+
+    def mouseReleaseEvent (self, event):
+        super(DropdownButton, self).mouseReleaseEvent(event)
+        self.buttonPressed = False
+        self.repaint()
+
+    def enterEvent (self, event):
+        super(DropdownButton, self).enterEvent(event)
+
+    def leaveEvent (self, event):
+        super(DropdownButton, self).leaveEvent(event)
+        self.buttonPressed = False
+
+
+
+
+
+
+class VersionBlock (QtWidgets.QWidget):
+
+    def __init__ (self, theme):
+        super(VersionBlock, self).__init__()
+
+        self.mainLayout = QtWidgets.QVBoxLayout()
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.setSpacing(0)
+
+
+        self.versionLayout = QtWidgets.QHBoxLayout()
+        self.versionLayout.setContentsMargins(0, 20, 0, 0)
+        self.versionLayout.setSpacing(10)
+        self.versionLayout.setObjectName("versionLayout")
+
+        self.versionLabel = QtWidgets.QLabel("Version")
+        self.versionLabel.setFixedSize(
+            QtCore.QSize(UIGlobals.Options.labelWidth, 24))
+        toolkit.core.ui.setFont(
+            self.versionLabel,
+            UIGlobals.Options.fontLabel)
+        self.versionLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.versionLabel.setObjectName("versionLabel")
+        self.versionLabel.setProperty("textcolor", "on")
+        self.versionLayout.addWidget(self.versionLabel)
+
+        self.versionDropdown = DropdownButton(theme)
+        self.versionDropdown.pressed.connect(self.showVersions)
+        self.versionLayout.addWidget(self.versionDropdown)
+
+        self.versionCombobox = FlatComboBox(theme)
+        self.versionLayout.addWidget(self.versionCombobox)
+
+        versionSpacer = QtWidgets.QSpacerItem(
+            0, 0,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum)
+        self.versionLayout.addItem(versionSpacer)
+
+        self.linkButton = LinkButton(theme)
+        self.versionLayout.addWidget(self.linkButton)
+
+        self.mainLayout.addLayout(self.versionLayout)
+
+
+        self.variantLayout = QtWidgets.QHBoxLayout()
+        self.variantLayout.setContentsMargins(0, 0, 0, 0)
+        self.variantLayout.setSpacing(10)
+        self.variantLayout.setObjectName("variantLayout")
+        self.mainLayout.addLayout(self.variantLayout)
+
+        self.variantLabel = QtWidgets.QLabel("Variant")
+        self.variantLabel.setFixedSize(
+            QtCore.QSize(UIGlobals.Options.labelWidth, 24))
+        toolkit.core.ui.setFont(
+            self.variantLabel,
+            UIGlobals.Options.fontLabel)
+        self.variantLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.variantLabel.setObjectName("variantLabel")
+        self.variantLabel.setProperty("textcolor", "on")
+        self.variantLayout.addWidget(self.variantLabel)
+
+        self.variantDropdown = DropdownButton(theme)
+        self.variantDropdown.pressed.connect(self.showVariant)
+        self.variantLayout.addWidget(self.variantDropdown)
+
+        self.variantCombobox = FlatComboBox(theme)
+        self.variantLayout.addWidget(self.variantCombobox)
+
+        variantSpacer = QtWidgets.QSpacerItem(
+            0, 0,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum)
+        self.variantLayout.addItem(variantSpacer)
+        
+
+        self.setLayout(self.mainLayout)
+
+
+    def showVariant (self):
+
+        self.variantCombobox.showPopup()
+
+
+    def showVersions (self):
+
+        self.versionCombobox.showPopup()

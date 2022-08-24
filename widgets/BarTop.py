@@ -26,7 +26,7 @@ from . import Settings
 UIGlobals = Settings.UIGlobals
 
 SPACE  = UIGlobals.IconDelegate.space
-MARGIN = UIGlobals.AssetBrowser.margin
+MARGIN = UIGlobals.Browser.margin
 
 
 

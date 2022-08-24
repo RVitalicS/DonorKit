@@ -55,9 +55,9 @@ def isFinalVersion (path, name):
 
 def getVariantName (name):
 
-    variantTag = re.search(r"\.v\d+-*[A-Za-z]*\.", name)
+    variantTag = re.search(r"\.*v\d+-*[A-Za-z]*\.", name)
     if not variantTag:
-        variantTag = re.search(r"\.Final-*[A-Za-z]*\.", name)
+        variantTag = re.search(r"\.*Final-*[A-Za-z]*\.", name)
 
     if variantTag:
         variantTag = variantTag.group()

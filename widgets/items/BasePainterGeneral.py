@@ -71,7 +71,7 @@ def initialize (function):
         with Settings.Manager(self.theme.app, update=False) as settings:
             self.iconSize = settings["iconSize"]
 
-        IconSettings = UIGlobals.AssetBrowser.Icon
+        IconSettings = UIGlobals.Browser.Icon
 
         labelHeight = IconSettings.Asset.min.label
         if self.iconSize == 2:

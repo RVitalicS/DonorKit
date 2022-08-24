@@ -10,7 +10,7 @@ import importlib
 from pxr import Usd
 
 from widgets import (
-    UsdExport,
+    AssetExport,
     Metadata)
 
 
@@ -22,7 +22,7 @@ import toolkit.maya.camera
 import toolkit.maya.export
 import toolkit.maya.outliner
 import toolkit.maya.message
-import toolkit.maya.ShaderUsd
+import toolkit.maya.MaterialUsd
 
 importlib.reload(toolkit.maya.scene)
 
@@ -84,7 +84,7 @@ def Export (options=None):
     if not options:
         selection = toolkit.maya.outliner.getSelectionName()
         
-        dialog = UsdExport.Dialog(initname=selection)
+        dialog = AssetExport.Dialog(initname=selection)
         dialog.exec()
 
         options = dialog.getOptions()
@@ -144,7 +144,7 @@ def Export (options=None):
 
     export = False
     extractModel = False
-    extractAnimatioin = False
+    extractAnimation = False
 
     if options.modelling:
         if not os.path.exists(ModelPath):
@@ -157,10 +157,10 @@ def Export (options=None):
     if options.animation:
         if not os.path.exists(AnimationPath):
             export = True
-            extractAnimatioin = True
+            extractAnimation = True
         elif options.animationOverride:
             export = True
-            extractAnimatioin = True
+            extractAnimation = True
 
 
 
@@ -198,7 +198,7 @@ def Export (options=None):
 
 
 
-    if extractAnimatioin:
+    if extractAnimation:
         toolkit.system.ostree.buildUsdRoot(
             options.assetPath, animation=True)
 
@@ -229,26 +229,28 @@ def Export (options=None):
         toolkit.system.ostree.buildUsdRoot(
             options.assetPath, surfacing=True)
 
-        ShaderPath = os.path.join(
+        MaterialPath = os.path.join(
             options.assetPath,
             toolkit.system.ostree.SUBDIR_SURFACING )
 
-        for ShaderName, data in mayaScene.shaders.items():
+        for MaterialName, data in mayaScene.shaders.items():
 
             class DataClass: pass
             uishadow = DataClass()
 
-            uishadow.preview    = False
-            uishadow.shaderPath = ShaderPath
-            uishadow.shaderName = ShaderName
-            uishadow.version    = options.version
-            uishadow.variant    = options.variant
-            uishadow.link       = False
-            uishadow.info       = ""
-            uishadow.comment    = ""
-            uishadow.status     = options.status
+            uishadow.materialPath = MaterialPath
+            uishadow.materialName = MaterialName
+            uishadow.version      = options.version
+            uishadow.variant      = options.variant
+            uishadow.link         = False
+            uishadow.maya         = False
+            uishadow.info         = ""
+            uishadow.comment      = ""
+            uishadow.status       = options.status
+            uishadow.prman        = False
+            uishadow.hydra        = False
 
-            toolkit.maya.ShaderUsd.Export(options=uishadow, data=data)
+            toolkit.maya.MaterialUsd.Export(options=uishadow, data=data)
 
 
 

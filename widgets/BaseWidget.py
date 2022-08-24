@@ -14,7 +14,6 @@ import toolkit.core.timing
 
 from toolkit.core.metadata import METAFILE
 
-from toolkit.ensure.QtWidgets import *
 from toolkit.ensure.QtCore import *
 from toolkit.ensure.QtGui import *
 
@@ -40,7 +39,7 @@ class Bookmark (object):
 
     def bookmarkIndex (self):
 
-        pathUI = self.AssetPath.getUI()
+        pathUI = self.BrowserPath.getUI()
         count = self.BarBottom.bookmarkCombobox.count()
 
         for index in range(count):
@@ -64,7 +63,7 @@ class Bookmark (object):
             self.BarBottom.bookmarkCombobox.removeItem(index)
 
         else:
-            pathUI = self.AssetPath.getUI()
+            pathUI = self.BrowserPath.getUI()
             with Settings.Manager(self.theme.app, True) as settings:
                 settings["bookmarks"].append(pathUI)
 
@@ -75,9 +74,9 @@ class Bookmark (object):
 
     def jumpBookmark (self, pathUI):
 
-        if pathUI == self.AssetPath.getUI():
+        if pathUI == self.BrowserPath.getUI():
             return
-        self.AssetPath.setUI(pathUI)
+        self.BrowserPath.setUI(pathUI)
 
         self.BarBottom.bookmarkCombobox.setCurrentIndex(-1)
 
@@ -110,7 +109,7 @@ class Favorite (object):
 
     def favoriteClicked (self, index):
 
-        model = self.AssetBrowser.model()
+        model = self.Browser.model()
         iconItem = model.item(index.row())
         data = index.data(QtCore.Qt.EditRole)
 
@@ -119,18 +118,18 @@ class Favorite (object):
         if dataType in ["usdasset", "usdmaterial"]:
             name = data.get("name")
             pathUI = os.path.join(
-                self.AssetPath.getUI(), name)
+                self.BrowserPath.getUI(), name)
 
         elif dataType == "colorguide":
             title = data.get("title")
             name = data.get("name")
             pathUI = os.path.join(
-                self.AssetPath.getUI(), title + name )
+                self.BrowserPath.getUI(), title + name )
 
         elif dataType == "color":
             code = data.get("code")
             pathUI = ":".join([
-                self.AssetPath.getUI(), code ])
+                self.BrowserPath.getUI(), code ])
 
         else: return
 
@@ -163,11 +162,11 @@ class Favorite (object):
                 if favoriteFilter:
                     favorites = []
                     for pathUI in settings.get("favorites"):
-                        if self.AssetPath.exists(pathUI):
+                        if self.BrowserPath.exists(pathUI):
                             favorites.append(pathUI)
                     settings["favorites"] = favorites
 
-        path = self.AssetPath.resolve()
+        path = self.BrowserPath.resolve()
         self.drawDecision(path)
 
 
@@ -186,8 +185,8 @@ class Slider (object):
         with Settings.Manager(self.theme.app, True) as settings:
             settings["iconSize"] = value
 
-        self.AssetBrowser.setGrid()
-        self.AssetBrowser.adjustSize()
+        self.Browser.setGrid()
+        self.Browser.adjustSize()
 
 
 
@@ -202,28 +201,28 @@ class Folder (object):
 
     def createFolderQuery (self, index):
 
-        model = self.AssetBrowser.model()
+        model = self.Browser.model()
         iconItem = model.item(index.row())
 
         dataItem = dict( type="folderquery", name="", items=0 )
         iconItem.setData(dataItem, QtCore.Qt.EditRole)
 
-        self.AssetBrowser.setCurrentIndex(index)
-        self.AssetBrowser.edit(index)
+        self.Browser.setCurrentIndex(index)
+        self.Browser.edit(index)
 
 
 
     def createFolder (self, index, name):
 
-        model = self.AssetBrowser.model()
+        model = self.Browser.model()
         updateItem = model.item(index.row())
 
         newPath = os.path.join(
-            self.AssetPath.resolve(), name)
+            self.BrowserPath.resolve(), name)
         if not name or os.path.exists(newPath):
             updateItem.setData(
                 dict( type="plusfolder" ), QtCore.Qt.EditRole)
-            self.AssetBrowser.repaint()
+            self.Browser.repaint()
 
         else:
             updateItem.setData(
@@ -239,7 +238,7 @@ class Folder (object):
 
             model.appendRow(plusItem)
 
-            self.AssetBrowser.setGrid()
+            self.Browser.setGrid()
             os.mkdir(newPath)
 
 
@@ -301,7 +300,7 @@ class Browser (object):
                 publishedTime = toolkit.core.timing.getTimeDifference(dataTime)
 
                 favorite = False
-                pathUI = os.path.join(self.AssetPath.getUI(), name)
+                pathUI = os.path.join(self.BrowserPath.getUI(), name)
                 if pathUI in favorites:
                     favorite = True
 
@@ -354,7 +353,7 @@ class Browser (object):
         libraries = []
         self.assetsNames = []
 
-        for name, path in self.AssetPath.libraries.items():
+        for name, path in self.BrowserPath.libraries.items():
             libraries.append(dict( type="library", name=name ))
 
         return libraries
@@ -420,7 +419,7 @@ class Browser (object):
             browserItems.append(dict( type="labelmaterial", text="Materials" ))
 
 
-        iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
+        iconModel = QtGui.QStandardItemModel(self.Browser)
 
         for item in self.sortItems(browserItems):
 
@@ -441,26 +440,26 @@ class Browser (object):
             iconModel.appendRow(iconItem)
 
 
-        self.AssetBrowser.setModel(iconModel)
+        self.Browser.setModel(iconModel)
 
         if hasLibrary:
-            self.AssetBrowser.setItemDelegate(
-                LibraryDelegate.Delegate(self.AssetBrowser, self.theme) )
+            self.Browser.setItemDelegate(
+                LibraryDelegate.Delegate(self.Browser, self.theme) )
 
         elif not hasAsset and not hasMaterial:
-            self.AssetBrowser.setItemDelegate(
-                FolderDelegate.Delegate(self.AssetBrowser, self.theme) )
+            self.Browser.setItemDelegate(
+                FolderDelegate.Delegate(self.Browser, self.theme) )
 
         elif not hasFolder:
-            self.AssetBrowser.setItemDelegate(
-                AssetUsdDelegate.Delegate(self.AssetBrowser, self.theme) )
+            self.Browser.setItemDelegate(
+                AssetUsdDelegate.Delegate(self.Browser, self.theme) )
 
         else:
-            self.AssetBrowser.setItemDelegate(
-                DirectoryDelegate.Delegate(self.AssetBrowser, self.theme) )
+            self.Browser.setItemDelegate(
+                DirectoryDelegate.Delegate(self.Browser, self.theme) )
 
 
-        self.AssetBrowser.setGrid()
+        self.Browser.setGrid()
 
 
 
@@ -589,14 +588,14 @@ class Browser (object):
 
         if dataType in ["folder", "usdasset", "usdmaterial"]:
             path = os.path.join(
-                self.AssetPath.resolve(),
+                self.BrowserPath.resolve(),
                 data.get("name") )
             if os.path.exists(path):
                 toolkit.system.stream.openFolder(path)
         
         elif dataType == "usdfile":
             path = os.path.join(
-                self.AssetPath.resolve(),
+                self.BrowserPath.resolve(),
                 data.get("filename") )
             if os.path.exists(path):
                 toolkit.system.stream.openUsd(path)
@@ -624,7 +623,7 @@ class State (object):
             self.BarBottom.bookmarkCombobox.clear()
             bookmarks = settings.get("bookmarks")
             for pathUI in bookmarks:
-                if not self.AssetPath.exists(pathUI):
+                if not self.BrowserPath.exists(pathUI):
                     blacklist.append(pathUI)
 
                 self.BarBottom.bookmarkCombobox.addItem(pathUI)
@@ -651,7 +650,7 @@ class State (object):
             with Settings.Manager(self.theme.app, False) as settings:
                 pathUI = settings.get("location")
 
-        if not self.AssetPath.exists(pathUI):
+        if not self.BrowserPath.exists(pathUI):
             pathUI = ""
         
-        self.AssetPath.setUI(pathUI)
+        self.BrowserPath.setUI(pathUI)

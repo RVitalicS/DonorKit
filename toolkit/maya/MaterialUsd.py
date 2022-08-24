@@ -26,15 +26,17 @@ import maya.OpenMaya as OpenMaya
 def Export (options=None, data=None):
 
     """
-        options.preview    = True
-        options.shaderPath = "/"
-        options.shaderName = ""
-        options.version    = 1
-        options.variant    = None/"Red"
-        options.link       = True
-        options.info       = ""
-        options.comment    = ""
-        options.status     = "WIP"
+        options.materialPath = "/"
+        options.materialName = ""
+        options.version      = 1
+        options.variant      = None/"Red"
+        options.link         = True
+        options.maya         = False
+        options.info         = ""
+        options.comment      = ""
+        options.status       = "WIP"
+        options.prman        = False
+        options.hydra        = False
     """
 
 
@@ -87,15 +89,15 @@ def Export (options=None, data=None):
     if options.variant:
         version += "-{}".format(options.variant)
 
-    ShaderRoot =  os.path.join(options.shaderPath, options.shaderName)
-    ShaderName = "{}.usda".format(version)
-    ShaderPath =  os.path.join(ShaderRoot, ShaderName)
+    MaterialRoot = os.path.join(options.materialPath, options.materialName)
+    MaterialName = "{}.usda".format(version)
+    MaterialPath = os.path.join(MaterialRoot, MaterialName)
 
 
     # create shader asset directory
-    if not os.path.exists(ShaderRoot):
-        os.mkdir(ShaderRoot)
-    os.chdir(ShaderRoot)
+    if not os.path.exists(MaterialRoot):
+        os.mkdir(MaterialRoot)
+    os.chdir(MaterialRoot)
 
 
     # make usd files
@@ -113,41 +115,41 @@ def Export (options=None, data=None):
                 prman=False
                 fileName = "{}.Hydra.usda".format(version)
 
-            pathusd = os.path.join(ShaderRoot, fileName)
+            pathusd = os.path.join(MaterialRoot, fileName)
             payloads.append(pathusd)
 
             if os.path.exists(pathusd):
                 message = "Shader Overwritten: "
 
-            scheme["name"] = options.shaderName
+            scheme["name"] = options.materialName
             toolkit.usd.material.make(
                 pathusd, scheme, prman=prman )
 
 
     # weld shaders
     toolkit.usd.material.weld(
-        ShaderPath, options.shaderName, payloads)
+        MaterialPath, options.materialName, payloads)
 
 
     # create/update symbolic link
     if options.link:
-        FinalName = re.sub(r"^v\d+", "Final", ShaderName)
-        FinalPath = os.path.join(ShaderRoot, FinalName)
+        FinalName = re.sub(r"^v\d+", "Final", MaterialName)
+        FinalPath = os.path.join(MaterialRoot, FinalName)
 
         if os.path.exists(FinalPath):
             os.remove(FinalPath)
 
-        os.symlink(ShaderName, FinalName)
+        os.symlink(MaterialName, FinalName)
 
 
     # create/update .metadata.json
     with Metadata.MetadataManager(
-            ShaderRoot,
+            MaterialRoot,
             metatype="usdmaterial") as data:
 
         data["info"] = options.info
         data["status"] = options.status
-        data["items"][ShaderName] = dict(
+        data["items"][MaterialName] = dict(
             published = toolkit.core.timing.getTimeCode(),
             comment   = options.comment,
             periodic  = True,      # FIGURE IT OUT
@@ -156,11 +158,11 @@ def Export (options=None, data=None):
 
 
     # generate preview image
-    if os.path.exists(ShaderPath) and options.preview:
+    if os.path.exists(MaterialPath) and options.prman:
         toolkit.system.ostree.buildUsdRoot(
-            ShaderRoot, previews=True)
+            MaterialRoot, previews=True)
 
-        previewsPath = os.path.join( ShaderRoot,
+        previewsPath = os.path.join( MaterialRoot,
             toolkit.system.ostree.SUBDIR_PREVIEWS, version)
         if os.path.exists(previewsPath):
             shutil.rmtree(previewsPath)
@@ -171,4 +173,4 @@ def Export (options=None, data=None):
 
 
     # result message
-    toolkit.maya.message.info(message + options.shaderName)
+    toolkit.maya.message.info(message + options.materialName)

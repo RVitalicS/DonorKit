@@ -66,3 +66,20 @@ def getComment (path, filename):
             comment = itemdata.get("comment", "")
 
     return comment
+
+
+
+
+
+
+def getStatus (path):
+
+    status = ""
+    metadataPath = os.path.join(path, METAFILE)
+
+    if os.path.exists(metadataPath):
+        if stream.validJSON(metadataPath):
+            data = stream.dataread(metadataPath)
+            status = data.get("status", "")
+
+    return status

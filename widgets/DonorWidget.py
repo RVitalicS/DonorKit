@@ -51,19 +51,19 @@ def Make (base):
         pack.append(widget)
 
 
-    class DonorBase (*pack):
+    class BaseMain (*pack):
 
 
         def __init__(self, parent=None):
-            super(DonorBase, self).__init__(parent=parent)
+            super(BaseMain, self).__init__(parent=parent)
 
-            self.theme = theme.Theme("manager")
+            self.theme = theme.Theme("Manager")
             self.setStyleSheet( self.theme.getStyleSheet() )
 
 
 
     class Donor (
-            DonorBase,
+            BaseMain,
             BaseWidget.Browser,
             BaseWidget.Bookmark,
             BaseWidget.Favorite,
@@ -86,22 +86,22 @@ def Make (base):
             self.setUiPath()
             self.applyUiSettings()
 
-            self.AssetBrowser.setFocus(QtCore.Qt.MouseFocusReason)
+            self.Browser.setFocus(QtCore.Qt.MouseFocusReason)
 
 
 
         def connectUi (self):
 
-            self.AssetBrowser.iconClicked.connect(self.iconClicked)
-            self.AssetBrowser.tokenClicked.connect(self.tokenClicked)
-            self.AssetBrowser.favoriteClicked.connect(self.favoriteClicked)
-            self.AssetBrowser.link.connect(self.linkAction)
-            self.AssetBrowser.createFolderQuery.connect(self.createFolderQuery)
-            self.AssetBrowser.createFolder.connect(self.createFolder)
+            self.Browser.iconClicked.connect(self.iconClicked)
+            self.Browser.tokenClicked.connect(self.tokenClicked)
+            self.Browser.favoriteClicked.connect(self.favoriteClicked)
+            self.Browser.link.connect(self.linkAction)
+            self.Browser.createFolderQuery.connect(self.createFolderQuery)
+            self.Browser.createFolder.connect(self.createFolder)
 
-            self.AssetPath.pathChanged.connect(self.drawDecision)
-            self.AssetPath.pathChanged.connect(self.uiVisibility)
-            self.AssetPath.bookmarkClicked.connect(self.switchBookmark)
+            self.BrowserPath.pathChanged.connect(self.drawDecision)
+            self.BrowserPath.pathChanged.connect(self.uiVisibility)
+            self.BrowserPath.bookmarkClicked.connect(self.switchBookmark)
 
             self.BarBottom.preview.slider.valueChanged.connect(self.sliderAction)
             self.BarBottom.favorite.button.released.connect(self.favoriteFilter)
@@ -122,7 +122,7 @@ def Make (base):
 
         def tokenClicked (self, index):
 
-            model = self.AssetBrowser.model()
+            model = self.Browser.model()
             item = model.item(index.row())
             data = index.data(QtCore.Qt.EditRole)
 
@@ -141,7 +141,7 @@ def Make (base):
 
         def tokenButton (self):
 
-            model = self.AssetBrowser.model()
+            model = self.Browser.model()
             for index in range(model.rowCount()):
 
                 item = model.item(index)
@@ -171,7 +171,7 @@ def Make (base):
                 variant=variant,
                 animation=animation )
 
-            directory = self.AssetPath.resolve()
+            directory = self.BrowserPath.resolve()
             toolkit.system.ostree.linkUpdate(
                 directory, filename,
                 create = data.get("token") )
@@ -182,9 +182,9 @@ def Make (base):
 
         def tokensUpdate (self):
 
-            directory = self.AssetPath.resolve()
+            directory = self.BrowserPath.resolve()
 
-            model = self.AssetBrowser.model()
+            model = self.Browser.model()
             for index in range(model.rowCount()):
 
                 item = model.item(index)
@@ -224,12 +224,12 @@ def Make (base):
 
         def uiVisibility (self, path):
             
-            if self.AssetPath.isRoot(path):
-                self.AssetPath.hide()
+            if self.BrowserPath.isRoot(path):
+                self.BrowserPath.hide()
                 self.BarBottom.hide()
             
-            elif ( self.AssetPath.isUsdAsset(path) or
-                    self.AssetPath.isUsdMaterial(path) ):
+            elif ( self.BrowserPath.isUsdAsset(path) or
+                    self.BrowserPath.isUsdMaterial(path) ):
                 self.ResizeButton.show()
                 self.UsdLoadOptions.show()
 
@@ -237,7 +237,7 @@ def Make (base):
                 self.usdfileChecked()
 
             else:
-                self.AssetPath.show()
+                self.BrowserPath.show()
                 self.BarBottom.show()
 
                 self.ResizeButton.hide()
@@ -270,7 +270,7 @@ def Make (base):
                     self.checkedName = ""
 
                     name = data.get("name")
-                    self.AssetPath.goForward(name)
+                    self.BrowserPath.goForward(name)
 
 
                 elif dataType == "usdfile":
@@ -289,7 +289,7 @@ def Make (base):
                     title = data.get("title")
                     name = data.get("name")
 
-                    self.AssetPath.goForward(title + name)
+                    self.BrowserPath.goForward(title + name)
 
 
                 elif dataType == "color":
@@ -303,14 +303,14 @@ def Make (base):
             
             flag = self.BarBottom.favorite.button.isChecked()
 
-            if ( self.AssetPath.isUsdAsset(path) or 
-                    self.AssetPath.isUsdMaterial(path) ):
+            if ( self.BrowserPath.isUsdAsset(path) or 
+                    self.BrowserPath.isUsdMaterial(path) ):
                 self.drawUsdItems(path)
 
-            elif self.AssetPath.isFolderColors(path):
+            elif self.BrowserPath.isFolderColors(path):
                 self.drawColorGuideItems(path, filterFavorites=flag)
 
-            elif self.AssetPath.isColors(path):
+            elif self.BrowserPath.isColors(path):
                 self.drawColorItems(path, filterFavorites=flag)
 
             else:
@@ -385,10 +385,10 @@ def Make (base):
 
         def drawUsdItems (self, path):
 
-            iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
+            iconModel = QtGui.QStandardItemModel(self.Browser)
 
-            self.AssetBrowser.setModel(iconModel)
-            self.AssetBrowser.setMessage("Loading")
+            self.Browser.setModel(iconModel)
+            self.Browser.setMessage("Loading")
 
             browserItems = self.getUsdItems(path)
             for item in self.sortItems(browserItems):
@@ -407,16 +407,16 @@ def Make (base):
                 iconModel.appendRow(iconItem)
 
 
-            self.AssetBrowser.setModel(iconModel)
-            self.AssetBrowser.setItemDelegate(
-                FileUsdDelegate.Delegate(self.AssetBrowser, self.theme) )
+            self.Browser.setModel(iconModel)
+            self.Browser.setItemDelegate(
+                FileUsdDelegate.Delegate(self.Browser, self.theme) )
 
 
             self.loadUsdInfo(path)
             self.loadUsdComment()
 
-            self.AssetBrowser.setGrid()
-            self.AssetBrowser.clearMessage()
+            self.Browser.setGrid()
+            self.Browser.clearMessage()
 
 
 
@@ -450,7 +450,7 @@ def Make (base):
 
                     favorite = False
                     pathUI = os.path.join(
-                        self.AssetPath.getUI(), title + name )
+                        self.BrowserPath.getUI(), title + name )
 
                     if pathUI in favorites:
                         favorite = True
@@ -475,7 +475,7 @@ def Make (base):
                 filterFavorites=False ):
 
 
-            iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
+            iconModel = QtGui.QStandardItemModel(self.Browser)
 
             browserItems = self.getColorGuideItems(path, filterFavorites=filterFavorites)
             for item in self.sortItems(browserItems):
@@ -491,11 +491,11 @@ def Make (base):
                 iconModel.appendRow(iconItem)
 
 
-            self.AssetBrowser.setModel(iconModel)
-            self.AssetBrowser.setItemDelegate(
-                ColorGuideDelegate.Delegate(self.AssetBrowser, self.theme) )
+            self.Browser.setModel(iconModel)
+            self.Browser.setItemDelegate(
+                ColorGuideDelegate.Delegate(self.Browser, self.theme) )
 
-            self.AssetBrowser.setGrid()
+            self.Browser.setGrid()
 
 
 
@@ -526,7 +526,7 @@ def Make (base):
 
                 favorite = False
                 pathUI = ":".join([
-                    self.AssetPath.getUI(),
+                    self.BrowserPath.getUI(),
                     item.get("code") ])
 
                 if pathUI in favorites:
@@ -580,10 +580,10 @@ def Make (base):
                 filterFavorites=False ):
 
 
-            iconModel = QtGui.QStandardItemModel(self.AssetBrowser)
+            iconModel = QtGui.QStandardItemModel(self.Browser)
 
-            self.AssetBrowser.setModel(iconModel)
-            self.AssetBrowser.setMessage("Loading")
+            self.Browser.setModel(iconModel)
+            self.Browser.setMessage("Loading")
 
             browserItems = self.getColorItems(filepath, filterFavorites=filterFavorites)
             for item in self.sortItems(browserItems):
@@ -599,12 +599,12 @@ def Make (base):
                 iconModel.appendRow(iconItem)
 
 
-            self.AssetBrowser.setModel(iconModel)
-            self.AssetBrowser.setItemDelegate(
-                ColorDelegate.Delegate(self.AssetBrowser, self.theme) )
+            self.Browser.setModel(iconModel)
+            self.Browser.setItemDelegate(
+                ColorDelegate.Delegate(self.Browser, self.theme) )
 
-            self.AssetBrowser.setGrid()
-            self.AssetBrowser.clearMessage()
+            self.Browser.setGrid()
+            self.Browser.clearMessage()
 
 
 
@@ -616,7 +616,7 @@ def Make (base):
             self.UsdLoadOptions.commentEdit.setEnabled(False)
             self.UsdLoadOptions.link.setEnabled(False)
 
-            model = self.AssetBrowser.model()
+            model = self.Browser.model()
             for raw in range(model.rowCount()):
 
                 item = model.item(raw)
@@ -761,7 +761,7 @@ def Make (base):
 
             space = (
                 self.width()
-                - self.AssetBrowser.minimumWidth()
+                - self.Browser.minimumWidth()
                 - optionWidth
                 - margin*2 )
 
@@ -795,11 +795,11 @@ def Make (base):
             if self.UsdLoadOptions.loadButton.property("state") != "enabled":
                 return
 
-            directory = self.AssetPath.resolve()
+            directory = self.BrowserPath.resolve()
             filepath  = ""
             kind = None
 
-            model = self.AssetBrowser.model()
+            model = self.Browser.model()
             for index in range(model.rowCount()):
 
                 item = model.item(index)

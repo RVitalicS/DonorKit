@@ -23,7 +23,7 @@ UIGlobals = Settings.UIGlobals
 class Theme (object):
 
 
-    def __init__ (self, app="manager"):
+    def __init__ (self, app="Manager"):
         self.app = app
 
         self.name = "dark"

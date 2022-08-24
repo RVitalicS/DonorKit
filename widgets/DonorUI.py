@@ -7,8 +7,8 @@ from toolkit.ensure.QtGui import *
 
 import toolkit.core.ui
 
-from . import AssetBrowser
-from . import BarPath
+from . import Browser
+from . import BarTop
 from . import BarBottom
 from . import BaseOption
 
@@ -122,7 +122,7 @@ class UsdLoadOptions (QtWidgets.QWidget):
         self.linkLayout.setObjectName("linkLayout")
         self.mainLayout.addLayout(self.linkLayout)
 
-        self.link = BaseOption.SymbolicLink(theme)
+        self.link = BaseOption.LinkToken(theme)
         self.linkLayout.addWidget(self.link)
 
         linkSpacer = QtWidgets.QSpacerItem(
@@ -183,11 +183,11 @@ def setupUi (self, theme):
     self.browserLayout.setSpacing(0)
     self.mainLayout.addLayout(self.browserLayout)
 
-    self.AssetPath = BarPath.Bar(theme)
-    self.browserLayout.addWidget(self.AssetPath)
+    self.BrowserPath = BarTop.Bar(theme)
+    self.browserLayout.addWidget(self.BrowserPath)
 
-    self.AssetBrowser = AssetBrowser.AssetBrowser(theme)
-    self.browserLayout.addWidget(self.AssetBrowser)
+    self.Browser = Browser.Browser(theme)
+    self.browserLayout.addWidget(self.Browser)
 
     self.BarBottom = BarBottom.Bar(theme)
     self.browserLayout.addWidget(self.BarBottom)
