@@ -8,6 +8,7 @@ import maya.cmds as mayaCommand
 
 import toolkit.system.stream
 import toolkit.maya.export
+import toolkit.maya.hypershade
 
 
 ocioConfig = os.getenv("OCIO", "")
@@ -27,13 +28,7 @@ def createShaderRIB (directory, filldisplay=True):
 
 
     # get selected shading group
-    MATERIAL = None
-    selection = mayaCommand.ls( selection=True )
-    if selection:
-        node = selection[0]
-        if mayaCommand.nodeType(node) == "shadingEngine":
-            MATERIAL = node
-
+    MATERIAL = toolkit.maya.hypershade.getSelectionName()
     if not MATERIAL: return
 
 
@@ -75,7 +70,7 @@ def createShaderRIB (directory, filldisplay=True):
     mayaCommand.select(meshname, replace=True)
     path_ExportRib = os.path.join(directory, "export.rib")
     toolkit.maya.export.RIB(path_ExportRib)
-    mayaCommand.select(selection, replace=True, noExpand=True)
+    mayaCommand.select([MATERIAL], replace=True, noExpand=True)
     mayaCommand.delete(meshname)
 
 

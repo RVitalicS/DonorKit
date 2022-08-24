@@ -3,12 +3,12 @@
 
 import re
 import os
+import importlib
 
 
-from . import hypershade
 import toolkit.core.naming
 
-import importlib
+from . import hypershade
 importlib.reload(hypershade)
 
 

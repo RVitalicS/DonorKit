@@ -105,23 +105,6 @@ class UI (object):
             settings["size"] = [ self.width(), self.height() ]
 
 
-
-    def exportAction (self):
-
-        if self.ExportOptions.exportButton.property("state") == "enabled":
-            self.exported = True
-            self.close()
-
-
-
-
-
-
-
-
-class Settings (object):
-
-
     def linkSettings (self):
         with Settings.Manager(self.theme.app, True) as settings:
             settings["link"] = self.ExportOptions.versionOptions.linkButton.isChecked()
@@ -130,6 +113,14 @@ class Settings (object):
     def mayaSettings (self):
         with Settings.Manager(self.theme.app, True) as settings:
             settings["maya"] = self.ExportOptions.mayaButton.checked
+
+
+
+    def exportAction (self):
+
+        if self.ExportOptions.exportButton.property("state") == "enabled":
+            self.exported = True
+            self.close()
 
 
 

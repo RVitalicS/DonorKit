@@ -13,7 +13,21 @@ import xml.etree.ElementTree as ET
 import oslquery
 
 
+import maya.cmds as mayaCommand
 import maya.OpenMaya as OpenMaya
+
+
+
+
+
+def getSelectionName ():
+
+    selection = mayaCommand.ls( selection=True )
+    if not selection: return
+
+    material = selection[0]
+    if mayaCommand.nodeType(material) == "shadingEngine":
+        return material
 
 
 

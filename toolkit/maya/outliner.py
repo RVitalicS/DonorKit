@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import maya.cmds as mayaCommand
 import maya.OpenMaya as OpenMaya
 
 
@@ -28,12 +29,9 @@ def refresh ():
 
 def getSelectionName ():
 
-    MSelectionList = OpenMaya.MSelectionList()
-    OpenMaya.MGlobal.getActiveSelectionList(MSelectionList)
+    selection = mayaCommand.ls(selection=True)
+    if not selection: return
 
-    if MSelectionList.isEmpty(): return
-
-    MDagPath = OpenMaya.MDagPath()
-    MSelectionList.getDagPath(0, MDagPath)
-
-    return MDagPath.partialPathName()
+    node = selection[0]
+    if mayaCommand.nodeType(node) in ["transform", "mesh"]:
+        return node

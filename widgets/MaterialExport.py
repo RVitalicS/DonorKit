@@ -58,8 +58,7 @@ class Dialog (
         BaseWidget.State,
         BaseExport.UI,
         BaseExport.Navigation,
-        BaseExport.NameLogic,
-        BaseExport.Settings ):
+        BaseExport.NameLogic ):
 
 
 

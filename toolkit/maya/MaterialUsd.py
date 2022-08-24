@@ -5,19 +5,25 @@
 import re
 import os
 import shutil
+import importlib
 
-from pxr import Usd
-from widgets import Metadata
+from widgets import (
+    MaterialExport,
+    Metadata)
 
 import toolkit.core.naming
 import toolkit.core.timing
 import toolkit.system.ostree
+
+import toolkit.maya.outliner
 import toolkit.maya.message
-import toolkit.maya.hypershade
 import toolkit.maya.renderman
+
+import toolkit.maya.hypershade
+importlib.reload(toolkit.maya.hypershade)
+
 import toolkit.usd.material
 
-import maya.cmds as mayaCommand
 import maya.OpenMaya as OpenMaya
 
 
@@ -26,8 +32,8 @@ import maya.OpenMaya as OpenMaya
 def Export (options=None, data=None):
 
     """
-        options.materialPath = "/"
-        options.materialName = ""
+        options.materialPath = "/server/library"
+        options.materialName = "Plastic"
         options.version      = 1
         options.variant      = None/"Red"
         options.link         = True
@@ -40,27 +46,21 @@ def Export (options=None, data=None):
     """
 
 
+    # selection filter
+    selection = toolkit.maya.hypershade.getSelectionName()
+    if not selection and not data:
+        text = "Select Any Material"
+        toolkit.maya.message.warning(text)
+        toolkit.maya.message.viewport(text)
+        return
+
+
+    # create export data
     if not data:
 
-        # selection filters
-        selection = mayaCommand.ls(selection=True)
-        if not selection:
-            text = "Select Any Object"
-            toolkit.maya.message.warning(text)
-            toolkit.maya.message.viewport(text)
-            return
-
-        nodeName = selection[0]
-        if mayaCommand.nodeType(nodeName) != "shadingEngine":
-            text = "Wrong Selection"
-            toolkit.maya.message.warning(text)
-            toolkit.maya.message.viewport(text)
-            return
-
-        # get selected material
         MSelectionList = OpenMaya.MSelectionList()
         OpenMaya.MGlobal.getSelectionListByName(
-            nodeName, MSelectionList)
+            selection, MSelectionList)
 
         MPlug = OpenMaya.MPlug()
         MSelectionList.getPlug(0, MPlug)
@@ -68,7 +68,6 @@ def Export (options=None, data=None):
         MObject = MPlug.node()
         Material = OpenMaya.MFnDependencyNode(MObject)
     
-        # export data
         HypershadeManager = toolkit.maya.hypershade.Manager()
         data = dict(
             render = HypershadeManager.getPrmanNetwork(Material),
@@ -77,11 +76,12 @@ def Export (options=None, data=None):
         # name = toolkit.core.naming.nameFilterSG(Material.name())
 
 
-
-    # GET UI PARAMETERS
+    # show dialog
     if not options:
-        return
-
+        dialog = MaterialExport.Dialog(initname=selection)
+        dialog.exec()
+        options = dialog.getOptions()
+        if not options: return
 
 
     # version tag
@@ -158,18 +158,45 @@ def Export (options=None, data=None):
 
 
     # generate preview image
-    if os.path.exists(MaterialPath) and options.prman:
+    if os.path.exists(MaterialPath):
+        if options.prman or options.hydra:
+            toolkit.system.ostree.buildUsdRoot(
+                MaterialRoot, previews=True)
+
+            previewsPath = os.path.join( MaterialRoot,
+                toolkit.system.ostree.SUBDIR_PREVIEWS, version)
+            if os.path.exists(previewsPath):
+                shutil.rmtree(previewsPath)
+            os.mkdir(previewsPath)
+
+            if options.prman:
+                toolkit.maya.renderman.createShaderPreview(
+                    previewsPath, periodic=True)
+
+            # NEED IMPLEMENTATION
+            if options.hydra:
+                pass
+
+
+    # export selected as maya File
+    if options.maya:
         toolkit.system.ostree.buildUsdRoot(
-            MaterialRoot, previews=True)
+            MaterialRoot, sources=True)
 
-        previewsPath = os.path.join( MaterialRoot,
-            toolkit.system.ostree.SUBDIR_PREVIEWS, version)
-        if os.path.exists(previewsPath):
-            shutil.rmtree(previewsPath)
-        os.mkdir(previewsPath)
+        MayaFileName = "{}.ma".format(options.materialName)
+        MayaPath = os.path.join(
+            MaterialRoot,
+            toolkit.system.ostree.SUBDIR_SOURCES,
+            MayaFileName )
 
-        toolkit.maya.renderman.createShaderPreview(
-            previewsPath, periodic=True)
+        if os.path.exists(MayaPath):
+            mayaMessage = "Source Overwritten: "
+        else:
+            mayaMessage = "Source Saved: "
+
+        toolkit.maya.export.Maya(MayaPath, binary=False)
+
+        toolkit.maya.message.info(mayaMessage + MayaFileName)
 
 
     # result message

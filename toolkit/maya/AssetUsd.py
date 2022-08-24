@@ -17,13 +17,13 @@ from widgets import (
 import toolkit.core.timing
 import toolkit.system.ostree
 
-import toolkit.maya.scene
 import toolkit.maya.camera
 import toolkit.maya.export
 import toolkit.maya.outliner
 import toolkit.maya.message
 import toolkit.maya.MaterialUsd
 
+import toolkit.maya.scene
 importlib.reload(toolkit.maya.scene)
 
 import toolkit.usd.material
@@ -71,26 +71,19 @@ def Export (options=None):
     """
 
 
-    MSelectionList = OpenMaya.MSelectionList()
-    OpenMaya.MGlobal.getActiveSelectionList(MSelectionList)
-
-    if MSelectionList.isEmpty():
-        text = "Select Any Object"
-        toolkit.maya.message.warning(text)
-        toolkit.maya.message.viewport(text)
-        return
-
-
     if not options:
         selection = toolkit.maya.outliner.getSelectionName()
+        if not selection:
+            text = "Select Any Object"
+            toolkit.maya.message.warning(text)
+            toolkit.maya.message.viewport(text)
+            return
         
         dialog = AssetExport.Dialog(initname=selection)
         dialog.exec()
 
         options = dialog.getOptions()
-
-    if not options:
-        return
+        if not options: return
 
 
 
