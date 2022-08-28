@@ -124,8 +124,13 @@ def CreateInput (shader, name, data):
             "material1",
             "material2" ]:
             sdfType = Sdf.ValueTypeNames.Color3f
+        elif name == "normal":
+            sdfType = Sdf.ValueTypeNames.Normal3f
         else:
             sdfType = Sdf.ValueTypeNames.Float3
+
+    elif inputType == "float4":
+        sdfType = Sdf.ValueTypeNames.Float4
 
     elif inputType == "normal":
         sdfType = Sdf.ValueTypeNames.Float3

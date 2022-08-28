@@ -176,11 +176,11 @@ class Manager (object):
                     if MPlug.isConnected() and shaderType != "PxrManifold2D":
 
                         if not prman and attrName not in [
-                                "diffuseColor",
-                                "roughness",
-                                "uvCoord"]:
+                                "diffuseColor", "metallic", "roughness",
+                                "normal", "displacement",
+                                "opacity", "uvCoord"]:
                             continue
-                        
+
                         valueType = toolkit.maya.mplug.getAs( MPlug, asType=True )
 
                         if prman:
@@ -203,6 +203,21 @@ class Manager (object):
                                 sourceNode,
                                 prman=prman,
                                 collector=collector )
+                        
+
+                            if (shaderType == "usdPreviewSurface"
+                                    and attrName == "displacement"):
+                                sourceName = sourceNode.name()
+
+                                units = 0.1           # UNIT DEPEND
+                                collector[sourceName]["inputs"]["bias"] = dict(
+                                    value=tuple([-0.5*units]*4),
+                                    type="float4",
+                                    connection=False )
+                                collector[sourceName]["inputs"]["scale"] = dict(
+                                    value=tuple([1.0*units]*4),
+                                    type="float4",
+                                    connection=False )
 
 
 

@@ -17,13 +17,16 @@ import toolkit.system.ostree
 
 import toolkit.maya.outliner
 import toolkit.maya.message
+import toolkit.maya.attribute
 import toolkit.maya.renderman
 
 import toolkit.maya.hypershade
 importlib.reload(toolkit.maya.hypershade)
 
 import toolkit.usd.material
+import toolkit.usd.imaging
 
+import maya.cmds as mayaCommand
 import maya.OpenMaya as OpenMaya
 
 
@@ -61,12 +64,9 @@ def Export (options=None, data=None):
         MSelectionList = OpenMaya.MSelectionList()
         OpenMaya.MGlobal.getSelectionListByName(
             selection, MSelectionList)
-
         MPlug = OpenMaya.MPlug()
         MSelectionList.getPlug(0, MPlug)
-
-        MObject = MPlug.node()
-        Material = OpenMaya.MFnDependencyNode(MObject)
+        Material = OpenMaya.MFnDependencyNode(MPlug.node())
     
         HypershadeManager = toolkit.maya.hypershade.Manager()
         data = dict(
@@ -82,6 +82,14 @@ def Export (options=None, data=None):
         dialog.exec()
         options = dialog.getOptions()
         if not options: return
+
+
+    # get attributes
+    periodic = False
+    if mayaCommand.attributeQuery(
+            "periodic", node=selection, exists=True):
+        periodic = mayaCommand.getAttr(
+            "{}.periodic".format(selection) )
 
 
     # version tag
@@ -152,7 +160,7 @@ def Export (options=None, data=None):
         data["items"][MaterialName] = dict(
             published = toolkit.core.timing.getTimeCode(),
             comment   = options.comment,
-            periodic  = True,      # FIGURE IT OUT
+            periodic  = periodic,
             lama      = True,      # FIGURE IT OUT
             mix       = False )    # FIGURE IT OUT
 
@@ -171,11 +179,12 @@ def Export (options=None, data=None):
 
             if options.prman:
                 toolkit.maya.renderman.createShaderPreview(
-                    previewsPath, periodic=True)
+                    previewsPath, periodic=periodic)
 
-            # NEED IMPLEMENTATION
             if options.hydra:
-                pass
+                toolkit.usd.imaging.recordMaterialPreview(
+                    MaterialPath, periodic=periodic,
+                    displacement=True )    # FIGURE IT OUT
 
 
     # export selected as maya File

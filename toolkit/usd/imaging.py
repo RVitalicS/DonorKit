@@ -14,11 +14,12 @@ import shutil
 import toolkit.system.stream
 from toolkit.system.ostree import SUBDIR_PREVIEWS
 from toolkit.core.timing import isAnimation
+import toolkit.core.geometry as geometry
 
 import toolkit.usd.attribute
 
 
-from pxr import Sdf, Gf, Usd, UsdGeom, UsdLux
+from pxr import Sdf, Gf, Vt, Usd, UsdGeom, UsdShade, UsdLux
 
 
 
@@ -77,7 +78,9 @@ def recordCommand (
 
 
 
-def recordAssetPreviews (usdpath, timedata, width=480, ratio=16/9):
+def recordAssetPreviews (
+        usdpath, timedata,
+        width=480, ratio=16/9 ):
 
 
     stageScene = Usd.Stage.Open(usdpath)
@@ -176,7 +179,7 @@ def recordAssetPreviews (usdpath, timedata, width=480, ratio=16/9):
 
     frameSpec = "{}:{}".format(startTime, endTime)
 
-    command = recordCommand (
+    command = recordCommand(
         pathLight, pathFrames,
         frameSpec=frameSpec,
         camera=scenepathCamera,
@@ -186,4 +189,108 @@ def recordAssetPreviews (usdpath, timedata, width=480, ratio=16/9):
         renderer="GL" )
 
     command += ["&&", "rm", pathLight]
+    toolkit.system.stream.terminal(command)
+
+
+
+
+
+
+def recordMaterialPreview ( usdpath,
+        periodic=True, displacement=False,
+        width=480, ratio=16/9 ):
+
+
+    pathMaterial = os.path.dirname(usdpath)
+    filenameMaterial = os.path.basename(usdpath)
+    nameGroup = re.sub(r"\.usd[ac]*$", "", filenameMaterial)
+    pathGroup = os.path.join(pathMaterial, SUBDIR_PREVIEWS, nameGroup)
+
+    pathRender = os.path.join(pathGroup, "render.usda")
+    Stage = Usd.Stage.CreateNew(pathRender)
+    Layer = Stage.GetRootLayer()
+
+    CameraPath = Sdf.Path("/Camera")
+    Camera = UsdGeom.Camera.Define(Stage, CameraPath)
+    Camera.AddXformOp(UsdGeom.XformOp.TypeTransform).Set(
+        value=Gf.Matrix4d(
+             0.89879, 0      ,  0.43837, 0,
+             0.33466, 0.6459 , -0.68616, 0,
+            -0.28314, 0.76342,  0.58053, 0,
+            -0.504  , 1.323  ,  1.057  , 1) )
+    Camera.CreateClippingRangeAttr(Gf.Vec2f(0.01, 100))
+    vAperture = 23.999952
+    Camera.CreateHorizontalApertureAttr(vAperture*ratio)
+    Camera.CreateVerticalApertureAttr(vAperture)
+
+    LightPath = Sdf.Path("/Light")
+    Light = UsdLux.DomeLight.Define(Stage, LightPath)
+    texture = os.path.join(rootDir, "databank", "envmap.exr")
+    Light.CreateTextureFileAttr(texture)
+    RotateYOp = Light.AddRotateYOp()
+    RotateYOp.Set(90)
+
+    MeshPath = Sdf.Path("/Plane")
+    if periodic:
+        scale = 3.0
+    else:
+        scale = 1.0
+    if displacement:
+        divisions = 64
+        complexity = "veryhigh"
+        scheme = "catmullClark"
+    else:
+        divisions = 0
+        complexity = "low"
+        scheme = "none"
+    faceCounts = geometry.createPlaneFaceCounts(divisions)
+    indices    = geometry.createPlaneIndices(divisions)
+    points     = geometry.createPlanePoints(scale, divisions)
+    normals    = geometry.createPlaneNormals(divisions)
+    texCoord   = geometry.createPlaneTexCoord(scale, divisions)
+    
+    Mesh = UsdGeom.Mesh.Define(Stage, MeshPath)
+    MeshPrim = Stage.GetPrimAtPath(MeshPath)
+    Mesh.CreateDoubleSidedAttr(1)
+    Mesh.CreateFaceVertexCountsAttr(Vt.IntArray(faceCounts))
+    Mesh.CreateFaceVertexIndicesAttr(Vt.IntArray(indices))
+    Mesh.CreatePointsAttr(Vt.Vec3fArray(points))
+    Mesh.CreateNormalsAttr(Vt.Vec3fArray(normals))
+    TexCoord = MeshPrim.CreateAttribute(
+        "primvars:st",
+        Sdf.ValueTypeNames.TexCoord2fArray,
+        custom=False)
+    TexCoord.Set(value=Vt.Vec2fArray(texCoord))
+    TexCoord.SetMetadata("interpolation", "faceVarying")
+    Indices = MeshPrim.CreateAttribute(
+        "primvars:st:indices",
+        Sdf.ValueTypeNames.IntArray,
+        custom=False)
+    Indices.Set(value=Vt.IntArray(indices) )
+    Indices.SetMetadata("interpolation", "faceVarying")
+    Mesh.CreateSubdivisionSchemeAttr(scheme)
+
+    MaterialPath = Sdf.Path("/Material")
+    Material = UsdShade.Material.Define(Stage, MaterialPath)
+    MaterialPrim = Stage.GetPrimAtPath(MaterialPath)
+    MaterialPrim.GetPayloads().AddPayload(usdpath)
+    MeshPrim.ApplyAPI(UsdShade.MaterialBindingAPI)
+    UsdShade.MaterialBindingAPI(MeshPrim).Bind(Material)
+
+    Layer.defaultPrim = MeshPath.name
+    Layer.Export(pathRender, args=dict(format="usda") )
+
+
+    filenameFrames = "Hydra.f###.png"
+    pathFrames = os.path.join(pathGroup, filenameFrames)
+
+    command = recordCommand(
+        pathRender, pathFrames,
+        camera=CameraPath.pathString,
+        imageWidth=width,
+        complexity=complexity,
+        colorCorrectionMode="sRGB",
+        renderer="GL" )
+
+    command += ["&&", "rm", pathRender]
     toolkit.system.stream.terminal(command)
