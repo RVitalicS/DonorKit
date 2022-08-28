@@ -205,18 +205,27 @@ class Manager (object):
                                 collector=collector )
                         
 
-                            if (shaderType == "usdPreviewSurface"
-                                    and attrName == "displacement"):
+                            if shaderType == "usdPreviewSurface":
                                 sourceName = sourceNode.name()
 
-                                units = 0.1           # UNIT DEPEND
-                                collector[sourceName]["inputs"]["bias"] = dict(
-                                    value=tuple([-0.5*units]*4),
-                                    type="float4",
-                                    connection=False )
-                                collector[sourceName]["inputs"]["scale"] = dict(
-                                    value=tuple([1.0*units]*4),
-                                    type="float4",
+                                if attrName == "displacement":
+                                    units = 0.1           # UNIT DEPEND
+                                    collector[sourceName]["inputs"]["bias"] = dict(
+                                        value=tuple([-0.5*units]*4),
+                                        type="float4",
+                                        connection=False )
+                                    collector[sourceName]["inputs"]["scale"] = dict(
+                                        value=tuple([1.0*units]*4),
+                                        type="float4",
+                                        connection=False )
+
+                                if attrName == "diffuseColor":
+                                    space = "sRGB"
+                                else:
+                                    space = "raw"
+                                collector[sourceName]["inputs"]["sourceColorSpace"] = dict(
+                                    value=space,
+                                    type="token",
                                     connection=False )
 
 
