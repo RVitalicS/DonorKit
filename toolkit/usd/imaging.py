@@ -17,6 +17,7 @@ from toolkit.core.timing import isAnimation
 import toolkit.core.geometry as geometry
 
 import toolkit.usd.attribute
+from toolkit.usd.editor import addMaterialPayload
 
 
 from pxr import Sdf, Gf, Vt, Usd, UsdGeom, UsdShade, UsdLux
@@ -208,6 +209,7 @@ def recordMaterialPreview ( usdpath,
 
     pathRender = os.path.join(pathGroup, "render.usda")
     Stage = Usd.Stage.CreateNew(pathRender)
+    UsdGeom.SetStageUpAxis(Stage, "Y")
     Layer = Stage.GetRootLayer()
 
     CameraPath = Sdf.Path("/Camera")
@@ -229,6 +231,9 @@ def recordMaterialPreview ( usdpath,
     Light.CreateTextureFileAttr(texture)
     RotateYOp = Light.AddRotateYOp()
     RotateYOp.Set(90)
+    FormatInput = Light.CreateInput(
+        "texture:format", Sdf.ValueTypeNames.Token)
+    FormatInput.Set("latlong")
 
     MeshPath = Sdf.Path("/Plane")
     if periodic:
@@ -273,7 +278,7 @@ def recordMaterialPreview ( usdpath,
     MaterialPath = Sdf.Path("/Material")
     Material = UsdShade.Material.Define(Stage, MaterialPath)
     MaterialPrim = Stage.GetPrimAtPath(MaterialPath)
-    MaterialPrim.GetPayloads().AddPayload(usdpath)
+    addMaterialPayload(MaterialPrim, usdpath)
     MeshPrim.ApplyAPI(UsdShade.MaterialBindingAPI)
     UsdShade.MaterialBindingAPI(MeshPrim).Bind(Material)
 

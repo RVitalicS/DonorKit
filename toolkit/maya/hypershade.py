@@ -221,8 +221,10 @@ class Manager (object):
 
                                 if attrName == "diffuseColor":
                                     space = "sRGB"
-                                else:
+                                elif attrName in ["displacement", "normal"]:
                                     space = "raw"
+                                else:
+                                    space = "auto"
                                 collector[sourceName]["inputs"]["sourceColorSpace"] = dict(
                                     value=space,
                                     type="token",

@@ -10,7 +10,7 @@ import toolkit.core.naming
 import toolkit.usd.attribute
 
 
-from pxr import UsdGeom, Sdf, Vt, Gf, Work
+from pxr import Usd, UsdGeom, UsdShade, Sdf, Vt, Gf, Work
 
 Work.SetMaximumConcurrencyLimit()
 
@@ -381,3 +381,76 @@ def addMayaAttributes (stage, tree, path="/"):
 
 
             addMayaAttributes(stage, item["children"], path=itempath)
+
+
+
+
+
+
+def addMaterialPayload (Material, *payloads):
+
+    """
+        Add payload(s) to material,
+        Append override attributes scale(x2) and bias(-1)
+        for textures used as normal map
+
+        :param Material: Material Primitive
+        :type  Material: Usd.Prim
+
+        :param payloads: path(s) to material usd file
+        :type  payloads: str
+    """
+
+
+    # add payload and read it
+    Stage = Material.GetStage()
+    for payload in payloads:
+        Material.GetPayloads().AddPayload(payload)
+
+        PayloadStage = Usd.Stage.Open(payload)
+        DefaultPrim = PayloadStage.GetDefaultPrim()
+        if not DefaultPrim.IsValid():
+            continue
+
+        # find shader and get normal input
+        for Prim in PayloadStage.Traverse():
+            if Prim.GetTypeName() != "Shader":
+                continue
+
+            Shader = UsdShade.Shader(Prim)
+            if Shader.GetShaderId() != "UsdPreviewSurface":
+                continue
+
+            for Input in Shader.GetInputs():
+                if Input.GetBaseName() != "normal":
+                    continue
+                if not Input.HasConnectedSource():
+                    continue
+
+                ConnectableAPI = Input.GetConnectedSource()[0]
+                Prim = ConnectableAPI.GetPrim()
+
+                # define override primitive
+                OverridePath = Sdf.Path(Material.GetPath())
+                defaultScope = False
+                for Path in Prim.GetPath().GetPrefixes():
+                    if Path == DefaultPrim.GetPath():
+                        defaultScope = True
+                        continue
+                    OverridePath = OverridePath.AppendChild(Path.name)
+
+                if not defaultScope:
+                    continue
+                OverridePrim = Stage.OverridePrim(OverridePath)
+
+                # create attributes
+                AttributeScale = OverridePrim.CreateAttribute(
+                    "inputs:scale",
+                    Sdf.ValueTypeNames.Float4,
+                    custom=False)
+                AttributeScale.Set(value=(2.0, 2.0, 2.0, 2.0))
+                AttributeBias = OverridePrim.CreateAttribute(
+                    "inputs:bias",
+                    Sdf.ValueTypeNames.Float4,
+                    custom=False)
+                AttributeBias.Set(value=(-1.0,-1.0,-1.0,-1.0))
