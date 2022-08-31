@@ -328,10 +328,9 @@ class Manager (object):
         for item in tree:
 
             materials = item["materials"]
-            materialNames = []
             for Material in materials:
 
-                materialName = toolkit.core.naming.nameFilterSG(Material.name())
+                materialName = str(Material.name())
                 if materialName not in collector:
 
                     HypershadeManager = hypershade.Manager(self.RMAN_DEFAULTS)
@@ -341,17 +340,9 @@ class Manager (object):
 
                     self.RMAN_DEFAULTS = HypershadeManager.RMAN_DEFAULTS
 
-                    # FIGURE OUT
-                    # - periodic
-                    # - lama
-                    # - mix
                     collector[materialName] = dict(
                         render=render,
                         preview=preview )
-
-                materialNames.append(materialName)
-
-            item["materials"] = materialNames
 
             self.collectshaders(
                 item["children"],
@@ -402,6 +393,24 @@ class Manager (object):
 
 
 
+    def extractMaterialNames (self, tree):
+
+
+        for item in tree:
+
+            materials = []
+            for Material in item["materials"]:
+                name = str(Material.name())
+                materials.append(name)
+                item["materials"] = materials
+
+            children = item["children"]
+            item["children"] = self.extractMaterialNames(children)
+
+        return tree
+
+
+
     def get (self):
 
         data = self.scan()
@@ -413,6 +422,8 @@ class Manager (object):
             self.shaders = {}
 
         self.root = self.getroot(data)
+
+        data = self.extractMaterialNames(data)
         self.tree = self.cut(data)
 
 

@@ -73,8 +73,6 @@ def Export (options=None, data=None):
             render = HypershadeManager.getPrmanNetwork(Material),
             preview= HypershadeManager.getPreviewNetwork(Material))
 
-        # name = toolkit.core.naming.nameFilterSG(Material.name())
-
 
     # show dialog
     if not options:

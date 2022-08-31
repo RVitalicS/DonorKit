@@ -212,10 +212,6 @@ def copyStage (source, target,
             if ChildPrim.GetTypeName() == "Scope":
                 continue
 
-        if ChildPrim.GetTypeName() == "GeomSubset":
-            newname = toolkit.core.naming.nameFilterSG(childname)
-            cutedpath = re.sub("{}$".format(childname), newname, cutedpath)
-
         NewPath = Sdf.Path(cutedpath)
         NewPrim = target.DefinePrim(
             NewPath, ChildPrim.GetTypeName())
