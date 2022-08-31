@@ -10,7 +10,7 @@ import re
 
 
 
-def nameFilter (text):
+def rule_Input (text):
 
     text = re.sub(
         r"[^A-Za-z0-9_-]",
@@ -23,7 +23,7 @@ def nameFilter (text):
 
 
 
-def nameFilterSG (name):
+def rule_Material (name):
 
     name = re.sub(
         r"_*SG$",

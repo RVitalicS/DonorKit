@@ -395,7 +395,6 @@ class Manager (object):
 
     def extractMaterialNames (self, tree):
 
-
         for item in tree:
 
             materials = []
@@ -408,6 +407,36 @@ class Manager (object):
             item["children"] = self.extractMaterialNames(children)
 
         return tree
+
+
+
+    def treeMaterialNaming (self, tree, rule):
+
+        for item in tree:
+
+            materials = []
+            for name in item["materials"]:
+                materials.append(rule(name))
+            item["materials"] = materials
+
+            children = item["children"]
+            item["children"] = self.treeMaterialNaming(
+                children, rule)
+
+        return tree
+
+
+
+    def applyMaterialNaming (self, rule):
+
+        collector = dict()
+        for name, data in self.shaders.items():
+            key = rule(name)
+            collector[key] = data
+        self.shaders = collector
+
+        self.tree = self.treeMaterialNaming(
+            self.tree, rule)
 
 
 

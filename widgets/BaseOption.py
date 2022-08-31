@@ -8,8 +8,8 @@ from . import resources
 
 import toolkit.core.calculate
 import toolkit.core.graphics
-import toolkit.core.naming
 import toolkit.core.ui
+from toolkit.core.naming import rule_Input
 
 from toolkit.ensure.QtWidgets import *
 from toolkit.ensure.QtCore import *
@@ -1009,7 +1009,7 @@ class NameEdit (QtWidgets.QLineEdit):
             pass
 
         elif text != self.defaultName:
-            text = toolkit.core.naming.nameFilter(text)
+            text = rule_Input(text)
             self.setText(text)
 
         return text
@@ -1163,7 +1163,7 @@ class FlatComboBox (QtWidgets.QComboBox):
     def textFilter (self, text):
 
         if text != self.errorName:
-            text = toolkit.core.naming.nameFilter(text)
+            text = rule_Input(text)
             self.setEditText(text)
 
 

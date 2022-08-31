@@ -14,6 +14,9 @@ from widgets import (
     Metadata)
 
 
+
+from toolkit.core.naming import rule_Material
+
 import toolkit.core.timing
 import toolkit.system.ostree
 
@@ -97,6 +100,7 @@ def Export (options=None):
 
     mayaScene = toolkit.maya.scene.Manager(
         getshaders=options.surfacing)
+    mayaScene.applyMaterialNaming(rule_Material)
 
     if not mayaScene.tree:
         text = "Wrong Selection"
@@ -181,7 +185,8 @@ def Export (options=None):
         toolkit.usd.editor.copyStage(
             StageSource,
             Stage,
-            root=mayaScene.root, units=units)
+            root=mayaScene.root, units=units,
+            namingGeomSubset=rule_Material)
 
         toolkit.usd.editor.addMayaAttributes(Stage, mayaScene.tree)
         Stage.GetRootLayer().Export(

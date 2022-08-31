@@ -5,7 +5,7 @@ from toolkit.ensure.QtWidgets import *
 from toolkit.ensure.QtCore import *
 from toolkit.ensure.QtGui import *
 
-import toolkit.core.naming
+from toolkit.core.naming import rule_Input
 
 from . import BaseItem
 from . import FolderPainter
@@ -36,7 +36,7 @@ class NameLine (QtWidgets.QLineEdit):
 
     def setName (self, text):
 
-        text = toolkit.core.naming.nameFilter(text)
+        text = rule_Input(text)
         self.setText(text)
 
 

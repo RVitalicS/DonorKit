@@ -175,8 +175,9 @@ def copyAttrubutes (source, target, units=1.0, time=1.0):
 def copyStage (source, target,
                root=None,
                units=None,
-               children=None):
-    
+               children=None,
+               namingGeomSubset=None):
+
 
     if root is None:
         root = "/"
@@ -212,6 +213,11 @@ def copyStage (source, target,
             if ChildPrim.GetTypeName() == "Scope":
                 continue
 
+        if namingGeomSubset:
+            if ChildPrim.GetTypeName() == "GeomSubset":
+                parentpath = re.sub(childname+r"$", "",cutedpath)
+                cutedpath = parentpath + namingGeomSubset(childname)
+
         NewPath = Sdf.Path(cutedpath)
         NewPrim = target.DefinePrim(
             NewPath, ChildPrim.GetTypeName())
@@ -225,7 +231,8 @@ def copyStage (source, target,
         copyStage(source, target,
                   root=root,
                   units=units,
-                  children=ChildPrim.GetAllChildren())
+                  children=ChildPrim.GetAllChildren(),
+                  namingGeomSubset=namingGeomSubset)
 
 
 
