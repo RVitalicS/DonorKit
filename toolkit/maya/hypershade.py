@@ -209,7 +209,7 @@ class Manager (object):
                                 sourceName = sourceNode.name()
 
                                 if attrName == "displacement":
-                                    units = 0.1           # UNIT DEPEND
+                                    units = 0.01           # UNIT DEPEND
                                     collector[sourceName]["inputs"]["bias"] = dict(
                                         value=tuple([-0.5*units]*4),
                                         type="float4",
