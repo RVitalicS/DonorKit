@@ -84,7 +84,7 @@ def Export (options=None, data=None):
 
     # get attributes
     periodic = False
-    if mayaCommand.attributeQuery(
+    if selection and mayaCommand.attributeQuery(
             "periodic", node=selection, exists=True):
         periodic = mayaCommand.getAttr(
             "{}.periodic".format(selection) )
