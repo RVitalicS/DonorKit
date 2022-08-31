@@ -167,6 +167,7 @@ def Export (options=None):
             startTime=options.minTime,
             endTime=options.maxTime,
             shading=options.surfacing )
+        StageSource = Usd.Stage.Open(SourceModelPath)
 
 
 
@@ -176,15 +177,14 @@ def Export (options=None):
         else:
             modelMessage = "Model Saved: "
 
-        OldStage = Usd.Stage.Open(SourceModelPath)
-        NewStage = Usd.Stage.CreateNew(ModelPath)
+        Stage = Usd.Stage.CreateNew(ModelPath)
         toolkit.usd.editor.copyStage(
-            OldStage,
-            NewStage,
+            StageSource,
+            Stage,
             root=mayaScene.root, units=units)
 
-        toolkit.usd.editor.addMayaAttributes(NewStage, mayaScene.tree)
-        NewStage.GetRootLayer().Export(
+        toolkit.usd.editor.addMayaAttributes(Stage, mayaScene.tree)
+        Stage.GetRootLayer().Export(
             ModelPath, args=dict(format="usdc") )
 
         toolkit.maya.message.info(modelMessage + ModelFileName)
@@ -200,14 +200,13 @@ def Export (options=None):
         else:
             animationMessage = "Animation Saved: "
 
-        OldStage = Usd.Stage.Open(SourceModelPath)
-        NewStage = Usd.Stage.CreateNew(AnimationPath)
+        Stage = Usd.Stage.CreateNew(AnimationPath)
         toolkit.usd.editor.copyAnimation(
-            OldStage,
-            NewStage,
+            StageSource,
+            Stage,
             root=mayaScene.root, reference=ModelPath, units=units )
 
-        NewStage.GetRootLayer().Export(
+        Stage.GetRootLayer().Export(
             AnimationPath, args=dict(format="usdc") )
 
         toolkit.maya.message.info(animationMessage + AnimationFileName)
