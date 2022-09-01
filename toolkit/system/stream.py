@@ -7,6 +7,9 @@ import json
 import subprocess
 
 
+from widgets import Settings
+
+
 from toolkit.ensure.QtCore import *
 
 
@@ -126,7 +129,15 @@ def terminal (command, echo=False):
 
 def openFolder (path):
 
-    command = ["nautilus", path]
+    command = []
+    with Settings.Manager(
+            app="ExternalTools",
+            update=False ) as settings:
+
+        command  = settings["folder"]
+        command  = command.split(" ")
+        command += [path]
+
     terminal(command)
 
 
@@ -136,5 +147,13 @@ def openFolder (path):
 
 def openUsd (path):
 
-    command = ["usdview", path]
+    command = []
+    with Settings.Manager(
+            app="ExternalTools",
+            update=False ) as settings:
+    
+        command  = settings["usd"]
+        command  = command.split(" ")
+        command += [path]
+    
     terminal(command)

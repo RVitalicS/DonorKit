@@ -6,6 +6,9 @@ import os
 import re
 
 
+from widgets import Settings
+
+
 
 
 
@@ -25,9 +28,14 @@ def rule_Input (text):
 
 def rule_Material (name):
 
-    name = re.sub(
-        r"_*SG$",
-        "", str(name) )
+    with Settings.Manager(
+            app="MaterialExport",
+            update=False ) as settings:
+
+        name = re.sub(
+            settings["resub"][0],
+            settings["resub"][1],
+            str(name) )
 
     return name
 

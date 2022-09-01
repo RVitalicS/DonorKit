@@ -67,7 +67,15 @@ class ManagerData (object):
                 link=True,
                 prman=False,
                 hydra=False,
-                maya=False ))
+                maya=False,
+                resub=["_*SG$", ""] ))
+
+        elif app == "ExternalTools":
+
+            filename = ".Settings_ExternalTools.json"
+            self.defaults = dict(
+                folder="nautilus",
+                usd="usdview" )
 
         self.path = os.path.join(
             rootDir, "databank", filename )
