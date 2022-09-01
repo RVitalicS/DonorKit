@@ -29,7 +29,7 @@ buttons.append(dict(
     enableBackground=False,
     style="iconOnly",
     sourceType="python",
-    image="DonorManager",
+    image="store.svg",
     command="""
 # define libraries to manage assets
 # os.environ["ASSETLIBS"]=/server/library
@@ -43,12 +43,31 @@ buttons.append(dict(label="Separator"))
 
 
 buttons.append(dict(
+    label="UsdMaterialExport",
+    annotation="Export selected as USD material",
+    enableBackground=False,
+    style="iconOnly",
+    sourceType="python",
+    image="face.svg",
+    command="""
+# define libraries to export assets
+# os.environ["ASSETLIBS"]=/server/library
+
+import importlib
+from toolkit.maya import MaterialUsd
+
+importlib.reload(MaterialUsd)
+MaterialUsd.Export()
+"""))
+
+
+buttons.append(dict(
     label="UsdExport",
     annotation="Export selected to USD asset",
     enableBackground=False,
     style="iconOnly",
     sourceType="python",
-    image="UsdExport",
+    image="wing.svg",
     command="""
 # define libraries to export assets
 # os.environ["ASSETLIBS"]=/server/library

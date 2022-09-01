@@ -37,7 +37,7 @@ class Donor (
         self.setWindowTitle("Donor Manager")
         self.setWindowIcon(
             QtGui.QIcon(os.path.join(
-                root, "install", "icons", "DonorManager.svg" ) ))
+                root, "install", "icons", "store.svg" ) ))
         self.setObjectName("DonorManager")
 
 
