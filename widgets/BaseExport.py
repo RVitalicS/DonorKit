@@ -3,6 +3,7 @@
 
 
 import toolkit.core.naming
+from toolkit.core import Metadata
 
 from toolkit.ensure.QtCore import *
 
@@ -175,7 +176,7 @@ class Navigation (object):
             self.BrowserPath.resolve(), 
             self.ExportOptions.nameEdit.text())
 
-        status = toolkit.core.metadata.getStatus(path)
+        status = Metadata.getStatus(path)
         self.ExportOptions.status.set(status)
 
 
@@ -292,7 +293,7 @@ class NameLogic (object):
             name = self.ExportOptions.nameEdit.text()
             path = os.path.join(directory, name)
 
-            info = toolkit.core.metadata.getInfo(path)
+            info = Metadata.getInfo(path)
             if info:
                 self.ExportOptions.infoEdit.set(info)
             else:

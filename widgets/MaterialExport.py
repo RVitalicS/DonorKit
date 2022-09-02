@@ -6,8 +6,8 @@ import os
 
 from . import theme
 
-import toolkit.core.metadata
 import toolkit.core.naming
+from toolkit.core import Metadata
 
 
 from toolkit.ensure.QtWidgets import *
@@ -133,7 +133,7 @@ class Dialog (
         materialname = self.getMaterialName()
 
         self.ExportOptions.commentEdit.hide()
-        comment = toolkit.core.metadata.getComment(materialpath, materialname)
+        comment = Metadata.getComment(materialpath, materialname)
         if not comment:
             self.ExportOptions.commentEdit.setDefault()
         else:
@@ -288,6 +288,7 @@ class Dialog (
             class DataClass: pass
             options = DataClass()
 
+            options.library = self.BrowserPath.getCurrentLibrary()
             options.materialPath = self.BrowserPath.resolve()
             options.materialName = self.ExportOptions.nameEdit.text()
 

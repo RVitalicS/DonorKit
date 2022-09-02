@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 
 
-
-import os
 import re
 
 import toolkit.system.ostree
 import toolkit.system.stream
 
-import toolkit.core.metadata
 import toolkit.core.naming
 import toolkit.core.timing
-
-from toolkit.core.metadata import METAFILE
+from toolkit.core import Metadata
 
 from toolkit.ensure.QtCore import *
 from toolkit.ensure.QtGui import *
@@ -22,7 +18,6 @@ from .items import DirectoryDelegate
 from .items import FolderDelegate
 from .items import AssetUsdDelegate
 
-from . import Metadata
 from . import Settings
 
 
@@ -252,7 +247,7 @@ class Browser (object):
 
 
     def __init__(self):
-        self.metafile = METAFILE
+        self.metafile = Metadata.METAFILE
         self.assetsNames = list()
 
 
@@ -280,7 +275,7 @@ class Browser (object):
                 continue
 
             folderPath = os.path.join(path, name)
-            dataType = toolkit.core.metadata.getType(folderPath)
+            dataType = Metadata.getType(folderPath)
 
             if dataType in ["usdasset", "usdmaterial"]:
                 if dataType not in showTypes:

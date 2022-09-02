@@ -5,7 +5,7 @@ import os
 import re
 
 import toolkit.core.naming
-from toolkit.core.metadata import METAFILE
+from toolkit.core.Metadata import METAFILE
 
 
 # define names of directories

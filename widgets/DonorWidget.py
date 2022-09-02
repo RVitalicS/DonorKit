@@ -5,8 +5,6 @@
 import os, re
 OCIO = os.getenv("OCIO")
 
-
-from . import resources
 from . import theme
 
 import toolkit.usd.reporter
@@ -15,8 +13,8 @@ import toolkit.system.stream
 
 import toolkit.core.naming
 import toolkit.core.timing
-import toolkit.core.metadata
 from toolkit.core import colorspace
+from toolkit.core import Metadata
 
 from toolkit.ensure.QtWidgets import *
 from toolkit.ensure.QtCore import *
@@ -29,7 +27,6 @@ from .items import ColorDelegate
 from . import BaseWidget
 from . import DonorUI
 
-from . import Metadata
 from . import Settings
 
 UIGlobals = Settings.UIGlobals

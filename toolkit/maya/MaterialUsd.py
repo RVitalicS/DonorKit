@@ -7,10 +7,9 @@ import os
 import shutil
 import importlib
 
-from widgets import (
-    MaterialExport,
-    Metadata)
+from widgets import MaterialExport
 
+from toolkit.core import Metadata
 import toolkit.core.naming
 import toolkit.core.timing
 import toolkit.system.ostree
@@ -35,7 +34,8 @@ import maya.OpenMaya as OpenMaya
 def Export (options=None, data=None):
 
     """
-        options.materialPath = "/server/library"
+        options.library      = "/server/library"
+        options.materialPath = "/server/library/shaders"
         options.materialName = "Plastic"
         options.version      = 1
         options.variant      = None/"Red"
@@ -108,8 +108,8 @@ def Export (options=None, data=None):
 
     # make usd files
     payloads = []
+    overwritten = False
     for target, scheme in data.items():
-        message = "Shader Saved: "
 
         if scheme.get("shaders"):
 
@@ -125,7 +125,7 @@ def Export (options=None, data=None):
             payloads.append(pathusd)
 
             if os.path.exists(pathusd):
-                message = "Shader Overwritten: "
+                overwritten = True
 
             scheme["name"] = options.materialName
             toolkit.usd.material.make(
@@ -149,18 +149,34 @@ def Export (options=None, data=None):
 
 
     # create/update .metadata.json
+    if not overwritten:
+        ID = Metadata.generateID(asset="usdmaterial")
     with Metadata.MetadataManager(
             MaterialRoot,
             metatype="usdmaterial") as data:
 
         data["info"] = options.info
         data["status"] = options.status
-        data["items"][MaterialName] = dict(
+
+        attributes = dict(
             published = toolkit.core.timing.getTimeCode(),
             comment   = options.comment,
             periodic  = periodic,
             lama      = True,      # FIGURE IT OUT
             mix       = False )    # FIGURE IT OUT
+        if not overwritten:
+            attributes["id"] = ID
+        
+        data["items"][MaterialName] = attributes
+
+    # add/update shader to library
+    if options.library and not overwritten:
+        with Metadata.MetadataManager(
+                options.library,
+                metatype="root") as data:
+            relpath = MaterialPath.replace(
+                options.library, "")
+            data["usdmaterial"][ID] = relpath
 
 
     # generate preview image
@@ -207,4 +223,7 @@ def Export (options=None, data=None):
 
 
     # result message
+    message = "Shader Saved: "
+    if overwritten:
+        message = "Shader Overwritten: "
     toolkit.maya.message.info(message + options.materialName)

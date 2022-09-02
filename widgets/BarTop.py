@@ -11,8 +11,7 @@ rootDir = os.path.dirname(thisDir)
 import toolkit.core.calculate
 import toolkit.core.graphics
 import toolkit.core.ui
-
-from toolkit.core.metadata import METAFILE
+from toolkit.core import Metadata
 
 
 from toolkit.system import stream
@@ -315,7 +314,7 @@ class Bar (QtWidgets.QWidget):
                 continue
 
             dirname = os.path.dirname(path)
-            metadata = os.path.join(dirname, METAFILE)
+            metadata = os.path.join(dirname, Metadata.METAFILE)
             if not os.path.exists(metadata):
                 continue
 
@@ -327,7 +326,7 @@ class Bar (QtWidgets.QWidget):
 
                     if not re.search(r"\.json*$", filename):
                         continue
-                    elif filename == METAFILE:
+                    elif filename == Metadata.METAFILE:
                         continue
 
                     filepath = os.path.join(dirname, filename)
@@ -388,7 +387,7 @@ class Bar (QtWidgets.QWidget):
             path = self.resolve()
 
         if os.path.isdir(path):
-            dataType = toolkit.core.metadata.getType(path)
+            dataType = Metadata.getType(path)
 
             if dataType == "usdasset":
                 return True
@@ -402,7 +401,7 @@ class Bar (QtWidgets.QWidget):
             path = self.resolve()
 
         if os.path.isdir(path):
-            dataType = toolkit.core.metadata.getType(path)
+            dataType = Metadata.getType(path)
 
             if dataType == "usdmaterial":
                 return True
@@ -417,7 +416,7 @@ class Bar (QtWidgets.QWidget):
             path = self.resolve()
 
         if os.path.isdir(path):
-            dataType = toolkit.core.metadata.getType(path)
+            dataType = Metadata.getType(path)
 
             if dataType == "foldercolors":
                 return True
@@ -433,7 +432,7 @@ class Bar (QtWidgets.QWidget):
 
         if os.path.isfile(path):
             path = os.path.dirname(path)
-            dataType = toolkit.core.metadata.getType(path)
+            dataType = Metadata.getType(path)
 
             if dataType == "foldercolors":
                 return True
@@ -540,16 +539,23 @@ class Bar (QtWidgets.QWidget):
         path = os.getenv("ASSETLIBS", "")
 
         for rootPath in path.split(":"):
-            assetPath = os.path.join(rootPath, METAFILE)
-
-            if os.path.exists(assetPath):
-                data = toolkit.system.stream.dataread(assetPath)
-
-                if data["type"] == "root":
-                    name = data["name"]
+            with Metadata.MetadataManager(
+                    rootPath, update=False) as data:
+            
+                if data.get("type") == "root":
+                    name = data.get("name")
                     libraries[name] = rootPath
 
         return libraries
+
+
+
+    def getCurrentLibrary (self):
+
+        libname = self.rootButton.text()
+        path = self.libraries.get(libname, "")
+        
+        return path
 
 
 

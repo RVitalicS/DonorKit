@@ -9,12 +9,9 @@ import importlib
 
 from pxr import Usd
 
-from widgets import (
-    AssetExport,
-    Metadata)
+from widgets import AssetExport
 
-
-
+from toolkit.core import Metadata
 from toolkit.core.naming import rule_Material
 
 import toolkit.core.timing
@@ -34,8 +31,6 @@ import toolkit.usd.editor
 import toolkit.usd.asset
 import toolkit.usd.imaging
 
-
-import maya.OpenMaya as OpenMaya
 import maya.OpenMayaAnim as OpenMayaAnim
 
 
@@ -235,6 +230,7 @@ def Export (options=None):
             class DataClass: pass
             uishadow = DataClass()
 
+            uishadow.library      = None
             uishadow.materialPath = MaterialPath
             uishadow.materialName = MaterialName
             uishadow.version      = options.version
