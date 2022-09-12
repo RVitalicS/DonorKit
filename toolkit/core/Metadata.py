@@ -86,6 +86,26 @@ def getStatus (path):
 
 
 
+def getID (path, filename):
+
+    ID = None
+
+    metadataPath = os.path.join(path, METAFILE)
+    if os.path.exists(metadataPath):
+        if stream.validJSON(metadataPath):
+            data = stream.dataread(metadataPath)
+
+            items = data.get("items", dict())
+            itemdata = items.get(filename, dict())
+            ID = itemdata.get("id", None)
+
+    return ID
+
+
+
+
+
+
 def generateID (
         libraries=None,
         asset="usdmaterial" ):

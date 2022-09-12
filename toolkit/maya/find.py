@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import maya.cmds as mayaCommand
 import maya.OpenMaya as OpenMaya
 
 
@@ -60,3 +61,30 @@ def shaderByName (name):
     shader = OpenMaya.MFnDependencyNode(MObject)
     
     return shader
+
+
+
+
+
+def selectionMeshes (selection=None):
+
+    meshes = []
+
+    if selection == None:
+        selection = mayaCommand.ls(
+            selection=True, long=True,
+            noIntermediate=True )
+
+    for dagPath in selection:
+
+        if mayaCommand.nodeType(dagPath) == "mesh":
+            meshes.append(dagPath)
+
+        elif mayaCommand.nodeType(dagPath) == "transform":
+            listRelatives = mayaCommand.listRelatives(
+                dagPath, children=True, fullPath=True) or []
+
+            meshes += selectionMeshes(
+                selection=listRelatives)
+
+    return meshes

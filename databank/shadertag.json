@@ -1,0 +1,92 @@
+[
+    {
+        "id": {
+            "UsdPreviewSurface": "usdPreviewSurface"
+        },
+        "inputs": {},
+        "outputs": {
+            "surface": "outColor"
+        },
+        "mayatype": "shader"
+    },
+    {
+        "id": {
+            "UsdUVTexture": "file"
+        },
+        "inputs": {
+            "file": "fileTextureName",
+            "sourceColorSpace": "colorSpace",
+            "st": "uvCoord",
+            "scale": null,
+            "bias":  null,
+            "wrapS": null,
+            "wrapT": null
+        },
+        "outputs": {
+            "rgb": "outColor",
+            "r": "outColorR"
+        },
+        "mayatype": "texture"
+    },
+    {
+        "id": {
+            "UsdTransform2d": "place2dTexture"
+        },
+        "inputs": {
+            "in": null,
+            "rotation": "rotateUV",
+            "scale": "repeatUV",
+            "translation": "offset"
+        },
+        "outputs": {
+            "result": "outUV"
+        },
+        "mayatype": "utility"
+    },
+    {
+        "id": {
+            "UsdPrimvarReader_float2": null
+        },
+        "inputs": {},
+        "outputs": {},
+        "mayatype": null
+    },
+    {
+        "id": {
+            "LamaAdd": "LamaAdd",
+            "LamaConductor": "LamaConductor",
+            "LamaDielectric": "LamaDielectric",
+            "LamaDiffuse": "LamaDiffuse",
+            "LamaEmission": "LamaEmission",
+            "LamaHairChiang": "LamaHairChiang",
+            "LamaLayer": "LamaLayer",
+            "LamaMix": "LamaMix",
+            "LamaSSS": "LamaSSS",
+            "LamaSheen": "LamaSheen",
+            "LamaSurface": "LamaSurface",
+            "LamaTranslucent": "LamaTranslucent",
+            "LamaTricolorSSS": "LamaTricolorSSS",
+            "PxrLayerSurface": "PxrLayerSurface",
+            "PxrSurface": "PxrSurface",
+            "PxrConstant": "PxrConstant"
+        },
+        "inputs": {},
+        "outputs": {
+            "out": "outColor"
+        },
+        "mayatype": "shader"
+    },
+    {
+        "id": {
+            "PxrTexture": "PxrTexture",
+            "PxrMultiTexture": "PxrMultiTexture",
+            "PxrLayeredTexture": "PxrLayeredTexture",
+            "PxrPtexture": "PxrPtexture",
+            "PxrProjectionLayer": "PxrProjectionLayer",
+            "PxrBumpRoughness": "PxrBumpRoughness"
+        },
+        "inputs": {},
+        "outputs": {},
+        "mayatype": "texture"
+    }
+]
