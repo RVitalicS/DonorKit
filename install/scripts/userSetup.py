@@ -92,10 +92,9 @@ def createButton ():
 
     # create shelf if not exists
     shelfName = "DonorKit"
-    firstRun = False
     if shelfName not in shelves:
-        firstRun = True
         cmds.shelfLayout(shelfName, parent=gShelfTopLevel)
+    else: return
 
 
     # get existing members
@@ -103,12 +102,12 @@ def createButton ():
     labels = [cmds.shelfButton(n, query=True, label=True) for n in names]
 
 
-    # add buttons if not exist
+    # add buttons
     for button in buttons:
         buttonName = button.get("label")
 
         if buttonName == "Separator":
-            if firstRun: addSeparator(shelfName)
+            addSeparator(shelfName)
             continue
 
         if buttonName not in labels:
