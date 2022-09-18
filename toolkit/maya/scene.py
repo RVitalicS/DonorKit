@@ -6,8 +6,6 @@ import os
 import importlib
 
 
-import toolkit.core.naming
-
 from . import hypershade
 importlib.reload(hypershade)
 
@@ -40,8 +38,6 @@ class Manager (object):
 
 
     def __init__ (self, getshaders=True):
-        
-        self.RMAN_DEFAULTS = dict()
 
         self.tree    = list()
         self.shaders = dict()
@@ -325,6 +321,7 @@ class Manager (object):
 
     def collectshaders (self, tree, collector={}):
 
+        RMAN_DEFAULTS, ASSETS = dict(), dict()
         for item in tree:
 
             materials = item["materials"]
@@ -333,16 +330,14 @@ class Manager (object):
                 materialName = str(Material.name())
                 if materialName not in collector:
 
-                    HypershadeManager = hypershade.Manager(self.RMAN_DEFAULTS)
+                    HypershadeManager = hypershade.Manager(
+                        data=RMAN_DEFAULTS, assets=ASSETS )
+                    scheme = HypershadeManager.getUsdBuildScheme(Material)
 
-                    render  = HypershadeManager.getPrmanNetwork(Material)
-                    preview = HypershadeManager.getPreviewNetwork(Material)
+                    RMAN_DEFAULTS = HypershadeManager.RMAN_DEFAULTS
+                    ASSETS        = HypershadeManager.ASSETS
 
-                    self.RMAN_DEFAULTS = HypershadeManager.RMAN_DEFAULTS
-
-                    collector[materialName] = dict(
-                        render=render,
-                        preview=preview )
+                    collector[materialName] = scheme
 
             self.collectshaders(
                 item["children"],
@@ -358,21 +353,18 @@ class Manager (object):
         for item in tree:
 
             _scope = [i for i in scope]
-
             name = item["name"]
             children = item["children"]
             selected = item["selected"]
 
             if not selected:
                 _scope.append( name )
-
             else:
                 root = os.path.join("/", *_scope)
                 return os.path.join(root, name)
 
             path = self.getroot(children, scope=_scope)
             path = str(path)
-
 
         return path
 
@@ -381,9 +373,7 @@ class Manager (object):
     def cut (self, tree):
 
         treeCut=list()
-
         for item in tree:
-
             treeCut = self.cut(item["children"])
 
             if item["selected"] :

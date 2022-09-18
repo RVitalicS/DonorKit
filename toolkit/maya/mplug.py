@@ -6,6 +6,21 @@ import maya.OpenMaya as OpenMaya
 
 
 
+def isValidCompound (MPlug):
+
+    apiType = MPlug.attribute().apiType()
+    if apiType != OpenMaya.MFn.kCompoundAttribute:
+        return True
+    
+    if MPlug.isNetworked():
+        return True
+
+    return False
+
+
+
+
+
 def getAs ( MPlug,
         asValue = False ,
         asType  = False ,
@@ -18,7 +33,14 @@ def getAs ( MPlug,
     attrName  = attribute.name()
 
     apiType = MObject.apiType()
-    if echo: print( "[API Type] {}: {}".format(attrName, apiType) )
+    if echo: print( "[API Type] {}: {}".format(
+        attrName, MObject.apiTypeStr()) )
+
+
+    if MPlug.isChild():
+        if not isValidCompound(MPlug.parent()):
+            return
+
 
     if apiType == OpenMaya.MFn.kNumericAttribute:
 
@@ -31,10 +53,10 @@ def getAs ( MPlug,
             if asValue: return MPlug.asBool()
             
         elif unitType in [ 
-            OpenMaya.MFnNumericData.kInt,
-            OpenMaya.MFnNumericData.kByte,
-            OpenMaya.MFnNumericData.kShort,
-            OpenMaya.MFnNumericData.kLong ]:
+                OpenMaya.MFnNumericData.kInt,
+                OpenMaya.MFnNumericData.kByte,
+                OpenMaya.MFnNumericData.kShort,
+                OpenMaya.MFnNumericData.kLong ]:
 
             if echo: print( "{}: int".format(attrName) )
             if asType: return "int"
@@ -94,12 +116,11 @@ def getAs ( MPlug,
 
 
     elif apiType in [ 
-        OpenMaya.MFn.kAttribute2Float,
-        OpenMaya.MFn.kAttribute2Double ]:
+            OpenMaya.MFn.kAttribute2Float,
+            OpenMaya.MFn.kAttribute2Double ]:
 
         result = []
         for index in range( MPlug.numChildren() ):
-
             value = getAs( MPlug.child(index),
                    asValue=True, echo=echo )
             result.append( value )
@@ -110,18 +131,19 @@ def getAs ( MPlug,
 
 
     elif apiType in [ 
-        OpenMaya.MFn.kAttribute3Float,
-        OpenMaya.MFn.kAttribute3Double,
-        OpenMaya.MFn.kCompoundAttribute ]:
+            OpenMaya.MFn.kAttribute3Float,
+            OpenMaya.MFn.kAttribute3Double,
+            OpenMaya.MFn.kCompoundAttribute ]:
+
+        if not isValidCompound(MPlug):
+            return
 
         result = []
         for index in range( MPlug.numChildren() ):
-
             value = getAs( MPlug.child(index),
                    asValue=True, echo=echo )
             result.append( value )
         
-
         typeString = "float3"
         if attribute.isUsedAsColor():
             typeString = "color3f"

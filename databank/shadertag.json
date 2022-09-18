@@ -1,6 +1,18 @@
 [
     {
         "id": {
+            "Material": "shadingEngine"
+        },
+        "inputs": {
+            "surface": "surfaceShader",
+            "ri:surface": "rman__surface",
+            "ri:displacement": "rman__displacement"
+        },
+        "outputs": {},
+        "mayatype": "shadingEngine"
+    },
+    {
+        "id": {
             "UsdPreviewSurface": "usdPreviewSurface"
         },
         "inputs": {},
@@ -24,7 +36,9 @@
         },
         "outputs": {
             "rgb": "outColor",
-            "r": "outColorR"
+            "r": "outColorR",
+            "g": "outColorG",
+            "b": "outColorB"
         },
         "mayatype": "texture"
     },
@@ -68,7 +82,8 @@
             "LamaTricolorSSS": "LamaTricolorSSS",
             "PxrLayerSurface": "PxrLayerSurface",
             "PxrSurface": "PxrSurface",
-            "PxrConstant": "PxrConstant"
+            "PxrConstant": "PxrConstant",
+            "PxrDisplace": "PxrDisplace"
         },
         "inputs": {},
         "outputs": {

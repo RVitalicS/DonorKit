@@ -3,11 +3,16 @@
 
 
 import os
+import re
 
 import toolkit.maya.mplug
 import toolkit.maya.find
 import toolkit.maya.attribute
 
+from toolkit.usd import naming as nameMirror
+
+from toolkit.core import Metadata
+from toolkit.usd import read
 
 import xml.etree.ElementTree as ET
 import oslquery
@@ -36,9 +41,10 @@ def getSelectionName ():
 class Manager (object):
 
 
-    def __init__ (self, data=dict()):
+    def __init__ (self, data=dict(), assets=dict()):
         
         self.RMAN_DEFAULTS = data
+        self.ASSETS = assets
 
 
 
@@ -142,13 +148,10 @@ class Manager (object):
     def getNetwork (self, shader, prman=True, collector={}):
 
         shaderType = shader.typeName()
-        shaderName = shader.name()
+        shaderName = str(shader.name())
 
         if not prman and shaderType not in [
-            "usdPreviewSurface",
-            "file",
-            "place2dTexture"]:
-
+                "usdPreviewSurface", "file", "place2dTexture"]:
             return collector
 
         if shaderName not in collector:
@@ -156,6 +159,10 @@ class Manager (object):
             shaderData = dict(
                 id=shaderType,
                 inputs=inputs )
+
+            assetID = self.getAssetID(shaderName)
+            if assetID:
+                shaderData["asset"] = assetID
             
             collector[shaderName] = shaderData
 
@@ -168,8 +175,8 @@ class Manager (object):
                 attribute = OpenMaya.MFnAttribute(MObject)
 
                 attrName = attribute.name()
-
                 MPlug = shader.findPlug(attrName)
+
 
                 if attribute.isWritable():
 
@@ -177,8 +184,7 @@ class Manager (object):
 
                         if not prman and attrName not in [
                                 "diffuseColor", "metallic", "roughness",
-                                "normal", "displacement",
-                                "opacity", "uvCoord"]:
+                                "normal", "displacement", "opacity", "uvCoord"]:
                             continue
 
                         valueType = toolkit.maya.mplug.getAs( MPlug, asType=True )
@@ -195,7 +201,7 @@ class Manager (object):
                         if MPlugSource.info():
 
                             inputs[attrName] = dict(
-                                value=MPlugSource.name(),
+                                value=MPlugSource.name().split("."),
                                 type=valueType,
                                 connection=True )
                             
@@ -203,33 +209,6 @@ class Manager (object):
                                 sourceNode,
                                 prman=prman,
                                 collector=collector )
-                        
-
-                            if shaderType == "usdPreviewSurface":
-                                sourceName = sourceNode.name()
-
-                                if attrName == "displacement":
-                                    units = 0.01           # UNIT DEPEND
-                                    collector[sourceName]["inputs"]["bias"] = dict(
-                                        value=tuple([-0.5*units]*4),
-                                        type="float4",
-                                        connection=False )
-                                    collector[sourceName]["inputs"]["scale"] = dict(
-                                        value=tuple([1.0*units]*4),
-                                        type="float4",
-                                        connection=False )
-
-                                if attrName == "diffuseColor":
-                                    space = "sRGB"
-                                elif attrName in ["displacement", "normal"]:
-                                    space = "raw"
-                                else:
-                                    space = "auto"
-                                collector[sourceName]["inputs"]["sourceColorSpace"] = dict(
-                                    value=space,
-                                    type="token",
-                                    connection=False )
-
 
 
                     elif prman:
@@ -277,19 +256,26 @@ class Manager (object):
 
 
                     elif attrName in [
-                        "diffuseColor",
-                        "emissiveColor",
-                        "opacity",
-                        "ior",
-                        "metallic",
-                        "roughness",
-                        "clearcoat",
-                        "clearcoatRoughness",
-                        "fileTextureName" ] and not MPlug.isDefaultValue():
+                            "diffuseColor", "emissiveColor", "opacity",
+                            "ior", "metallic", "roughness", "clearcoat",
+                            "clearcoatRoughness", "fileTextureName",
+                            "colorSpace" ] and not MPlug.isDefaultValue():
 
-                        value = toolkit.maya.mplug.getAs( MPlug, asValue=True )
-                        if not value is None:
-                            typeString = toolkit.maya.mplug.getAs( MPlug, asType=True )
+                        value = toolkit.maya.mplug.getAs(MPlug, asValue=True)
+                        if value != None:
+                            typeString = toolkit.maya.mplug.getAs(MPlug, asType=True)
+
+                            inputs[attrName] = dict(
+                                value=value,
+                                type=typeString,
+                                connection=False )
+
+                    elif shaderType == "place2dTexture" and attrName in [
+                            "repeatUV", "rotateUV", "offset"]:
+
+                        value = toolkit.maya.mplug.getAs(MPlug, asValue=True)
+                        if value != None:
+                            typeString = toolkit.maya.mplug.getAs(MPlug, asType=True)
 
                             inputs[attrName] = dict(
                                 value=value,
@@ -303,9 +289,12 @@ class Manager (object):
 
     def getPrmanNetwork (self, shaderGroup):
 
+        inputs = dict()
+
         material = dict(
-            surface=None,
-            displacement=None,
+            material=dict(
+                name=str(shaderGroup.name()),
+                inputs=inputs ),
             shaders=dict())
 
         for connection in [
@@ -317,24 +306,27 @@ class Manager (object):
             if shaderPlug.isConnected():
                 connectionSource = shaderPlug.source()
 
-                material[connection] = connectionSource.name()
+                inputs[attrName] = connectionSource.name().split(".")
                     
                 shader = OpenMaya.MFnDependencyNode(
                     connectionSource.node() )
 
                 material["shaders"] = self.getNetwork(
-                    shader,
-                    prman=True,
-                    collector=material["shaders"] )
+                    shader, prman=True,
+                    collector=material.get("shaders") )
 
         return material
 
 
 
-    def getPreviewNetwork (self, shaderGroup):
-        
+    def getHydraNetwork (self, shaderGroup):
+
+        inputs = dict()
+
         material = dict(
-            surface=None,
+            material=dict(
+                name=str(shaderGroup.name()),
+                inputs=inputs ),
             shaders=dict())
 
         attrName = "surfaceShader"
@@ -343,77 +335,338 @@ class Manager (object):
         if shaderPlug.isConnected():
             connectionSource = shaderPlug.source()
 
-            material["surface"] = connectionSource.name()
+            inputs[attrName] = connectionSource.name().split(".")
 
             shader = OpenMaya.MFnDependencyNode(
                 connectionSource.node() )
 
             network = self.getNetwork(
-                shader,
-                prman=False,
-                collector=material["shaders"] )
-            material["shaders"] = self.editPreviewNetwork(network)
+                shader, prman=False,
+                collector=material.get("shaders") )
 
         return material
 
 
 
-    def editPreviewNetwork (self, data):
+    def makeUsdScheme (self, data, renderer):
 
-        network = dict()
-        replace = dict()
+        data = self.applyUsdNaming(data)
+        if renderer == "hydra":
+            data["shaders"] = self.editHydraNetwork(
+                data.get("shaders", {}))
 
+        # REFERENCE SWITCH
+        data = self.groupReferences(data)
 
-        # add manifold transform node
-        for shaderName, value in data.items():
+        references = data.get("references", {})
+        for ID, schemeRef in references.items():
 
-            if value.get("id") == "place2dTexture":
-                nameTransform = shaderName + "Transform"
+            scheme = self.getAssetScheme(ID)
+            if not scheme:
+                continue
+            schemeUsd = scheme.get(renderer)
 
-                outputManifold  = shaderName + ".outUV"
-                outputTransform = nameTransform + ".outUV"
-
-                shader = toolkit.maya.find.shaderByName(shaderName)
-                repeatUV = toolkit.maya.attribute.get(shader, "repeatUV")
-                rotateUV = toolkit.maya.attribute.get(shader, "rotateUV")
-                offset = toolkit.maya.attribute.get(shader, "offset")
-
-                network[nameTransform] = dict(
-                    id="UsdTransform2d",
-                    inputs={
-                        "in": {
-                            "value": outputManifold,
-                            "type": "float2",
-                            "connection": True
-                        },
-                        "scale": {
-                            "value": toolkit.maya.mplug.getAs(repeatUV, asValue=True),
-                            "type": toolkit.maya.mplug.getAs(repeatUV, asType=True),
-                            "connection": False
-                        },
-                        "rotation": {
-                            "value": toolkit.maya.mplug.getAs(rotateUV, asValue=True),
-                            "type": toolkit.maya.mplug.getAs(rotateUV, asType=True),
-                            "connection": False
-                        },
-                        "translation": {
-                            "value": toolkit.maya.mplug.getAs(offset, asValue=True),
-                            "type": toolkit.maya.mplug.getAs(offset, asType=True),
-                            "connection": False
-                        }
-                    } )
-
-                replace[outputManifold] = outputTransform
+            assetName = schemeUsd.get("name")
+            assetPath = schemeUsd.get("path")
+            if not assetPath:
+                continue
 
 
-        # edit manifold bindings
-        for shaderName, item in data.items():
-            for key, value in item.get("inputs").items():
-                output = value.get("value")
-                if output in replace:
-                    value["value"] = replace.get(output)
+            schemeRef["name"] = assetName
+            schemeRef["path"] = assetPath
 
-            network[shaderName] = item
+            overrideShaders = dict()
+            shadersUsd = schemeUsd.get("shaders", {})
+            shadersRef = schemeRef.get("shaders", {})
+
+            for nodeName, specRef in shadersRef.items():
+                specUsd = shadersUsd.get(nodeName)
+
+                overrideInputs = dict()
+                inputsUsd = specUsd.get("inputs", {})
+                inputsRef = specRef.get("inputs", {})
+
+                for inplug, inputRef in inputsRef.items():
+                    inputUsd = inputsUsd.get(inplug, {})
+
+                    if inplug in inputsUsd:
+                        inputsUsd.pop(inplug)
+
+                    connectionRef = inputRef.get("connection")
+                    connectionUsd = inputUsd.get("connection")
+
+                    valueRef = inputRef.get("value")
+                    valueUsd = inputUsd.get("value")
+
+                    if type(valueRef) == tuple:
+                        valueRef = list(valueRef)
+
+                    hasChanges = False
+                    if connectionRef != connectionUsd:
+                        hasChanges = True
+                    elif valueRef != valueUsd:
+                        hasChanges = True
+
+                    if hasChanges:
+                        overrideInputs[inplug] = inputRef
 
 
-        return network
+                # after loop {inputsUsd} has to be empty
+                # if it's not, then get attribute value
+                for usdInput in inputsUsd:
+                    mayaInput = nameMirror.mayaInput(specRef.get("id"), usdInput)
+                    MFnDependencyNode = toolkit.maya.find.shaderByName(nodeName)
+                    MPlug = MFnDependencyNode.findPlug(mayaInput)
+
+                    value = toolkit.maya.mplug.getAs(MPlug, asValue=True)
+                    valueType = toolkit.maya.mplug.getAs(MPlug, asType=True)
+                    overrideInputs[usdInput] = dict(
+                        value=value, type=valueType, connection=False )
+
+
+                if overrideInputs:
+                    overrideShaders[nodeName] = dict(
+                        id=specRef.get("id"),
+                        inputs=overrideInputs)
+
+            schemeRef["shaders"] = overrideShaders
+
+        return data
+
+
+
+    def applyUsdNaming (self, data):
+
+
+        def getShaderID (name):
+            Shader = toolkit.maya.find.shaderByName(name)
+            return Shader.typeName()
+
+
+        inputs = dict()
+        material = data.get("material", {})
+        inputsMaterial = material.get("inputs", {})
+        for mayaInput, inputValue in inputsMaterial.items():
+            nodeName, mayaOutput = inputValue
+            usdInput = nameMirror.usdInput("shadingEngine", mayaInput)
+            usdOutput = nameMirror.usdOutput(
+                getShaderID(nodeName), mayaOutput)
+            inputs[usdInput] = [nodeName, usdOutput]
+        material["inputs"] = inputs
+
+
+        shadersBuffer = dict()
+        shaders = data.get("shaders", {})
+        for nameShader, specShader in shadersData.items():
+            mayaID = specShader.get("id")
+            usdID = nameMirror.usdID(mayaID)
+            if usdID == None: continue
+
+            inputs = dict()
+            inputsShader = specShader.get("inputs")
+            for mayaInput, specInput in inputsShader.items():
+                usdInput = nameMirror.usdInput(mayaID, mayaInput)
+
+                value = specInput.get("value")
+                valueType = specInput.get("type")
+                connection = specInput.get("connection")
+                if connection:
+                    nodeName, mayaOutput = specInput.get("value")
+                    usdOutput = nameMirror.usdOutput(
+                        getShaderID(nodeName), mayaOutput)
+                    value = [nodeName, usdOutput]
+                inputs[usdInput] = dict(
+                    value=value,
+                    type=valueType,
+                    connection=connection )
+
+            buffer = dict(id=usdID,inputs=inputs)
+            assetID = specShader.get("asset", None)
+            if assetID != None:
+                buffer["asset"] = assetID
+            shadersBuffer[nameShader] = buffer
+
+        data["shaders"] = shadersBuffer
+
+
+        return data
+
+
+
+    def editHydraNetwork (self, data):
+
+        units = 0.01           # UNIT DEPEND
+        dataPrimvar = None
+        for nameShader, specShader in data.items():
+            nodeID = specShader.get("id")
+
+            if nodeID == "UsdPreviewSurface":
+                inputs = specShader.get("inputs", {})
+                for nameInput, specInput in inputs.items():
+                    if not specInput.get("connection"):
+                        continue
+                    
+                    childName = specInput.get("value")[0]
+                    childShader = data.get(childName, None)
+                    if childShader == None: continue
+                    data[childName] = childShader
+
+                    childInputs = childShader.get("inputs", {})
+                    childShader["inputs"] = childInputs
+
+                    # add scale and offset for displacement texutre
+                    if nameInput == "displacement":
+
+                        childInputs["bias"] = dict(
+                            value=list([round(-0.5*units,4)]*4),
+                            type="float4",
+                            connection=False )
+                        childInputs["scale"] = dict(
+                            value=list([round(1.0*units,4)]*4),
+                            type="float4",
+                            connection=False )
+
+                    # apply color space rules
+                    ocioConfig = os.getenv("OCIO")
+                    if not ocioConfig:
+                        if "sourceColorSpace" in childInputs:
+                            childInputs.pop("sourceColorSpace")
+                        continue
+
+                    colorSpace = childInputs.get("sourceColorSpace")
+                    if not colorSpace:
+                        continue
+
+                    value = colorSpace.get("value")
+                    if nameInput == "diffuseColor" and value in ["acescg"]:
+                        value = "sRGB"
+                    elif nameInput in ["displacement", "normal"]:
+                        value = "raw"
+                    else:
+                        value = "auto"
+                    colorSpace["value"] = value
+            
+            elif nodeID == "UsdUVTexture":
+                inputs = specShader.get("inputs", {})
+                inputs["wrapS"] = dict(
+                    connection=False, 
+                    type="token", 
+                    value="repeat")
+                inputs["wrapT"] = dict(
+                    connection=False, 
+                    type="token", 
+                    value="repeat")
+            
+            elif nodeID == "UsdTransform2d":
+                nodePrimvar = f"{nameShader}Primvar"
+
+                dataItem = dict(
+                    id="UsdPrimvarReader_float2",
+                    inputs=dict(
+                        varname=dict(
+                            connection=False, 
+                            type="token", 
+                            value="st" )))
+                assetID = specShader.get("asset", None)
+                if assetID != None:
+                    dataItem["asset"] = assetID
+                dataPrimvar = dict()
+                dataPrimvar[nodePrimvar] = dataItem
+
+                inputs = specShader.get("inputs", {})
+                inputs["in"] = dict(
+                    connection=True, 
+                    type="float2", 
+                    value=[nodePrimvar, "result"])
+
+        if dataPrimvar != None:
+            data.update(dataPrimvar)
+
+        return data
+
+
+
+    def groupReferences (self, data):
+        
+        references = dict()
+        shaders    = dict()
+
+        for name, spec in data.get("shaders").items():
+            
+            assetID = spec.get("asset")
+            if assetID:
+                reference = references.get(assetID, {})
+                references[assetID] = reference
+
+                overrides = reference.get("shaders", {})
+                reference["shaders"] = overrides
+
+                if name not in overrides:
+                    overrides[name] = dict(
+                        id=spec.get("id"),
+                        inputs=spec.get("inputs"))
+            else:
+                shaders[name] = spec
+
+        data["references"] = references
+        data["shaders"]    = shaders
+
+        return data
+
+
+
+    def getAssetID (self, node):
+
+        if mayaCommand.attributeQuery(
+                "assetID", node=node, exists=True):
+            return mayaCommand.getAttr(f"{node}.assetID")
+
+
+
+    def getAssetScheme (self, ID):
+
+        if ID in self.ASSETS:
+            return self.ASSETS[ID]
+
+        path = Metadata.findMaterial(ID)
+        if not path: return
+
+        prman, hydra = dict(), dict()
+        for pathRef in read.asReferences(path):
+
+            if re.match(r".*RenderMan\.usd[ac]*$", pathRef):
+                prman = read.asUsdBuildScheme(pathRef)
+                prman["name"] = read.asDefaultPrim(pathRef)
+                prman["path"] = pathRef
+
+            elif re.match(r".*Hydra\.usd[ac]*$", pathRef):
+                hydra = read.asUsdBuildScheme(pathRef)
+                hydra["name"] = read.asDefaultPrim(pathRef)
+                hydra["path"] = pathRef
+
+        scheme = dict(prman=prman, hydra=hydra)
+        self.ASSETS[ID] = scheme
+
+        return scheme
+
+
+
+    def getBuildScheme (self, shaderGroup):
+
+        prman = self.getPrmanNetwork(shaderGroup)
+        hydra = self.getHydraNetwork(shaderGroup)
+
+        return dict(prman=prman, hydra=hydra)
+
+
+
+    def getUsdBuildScheme (self, shaderGroup):
+
+        data = self.getBuildScheme(shaderGroup)
+
+        prman = self.makeUsdScheme(
+            data.get("prman"), "prman")
+        hydra = self.makeUsdScheme(
+            data.get("hydra"), "hydra")
+
+        return dict(prman=prman, hydra=hydra)

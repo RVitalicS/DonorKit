@@ -13,6 +13,7 @@ from pxr import UsdGeom
 from toolkit.maya import find
 from toolkit.maya import outliner
 from toolkit.maya import stage as outlinerStage
+import toolkit.maya.message as mayaMessage
 
 from toolkit.core import naming
 from toolkit.core import message
@@ -93,8 +94,8 @@ def loadMaterial (path):
         """ Add string ID attribute to a given node """
 
         mayaCommand.select(node, replace=True, noExpand=True)
-        mayaCommand.addAttr(longName="donorID", dataType="string")
-        mayaCommand.setAttr(node + ".donorID", ID, type="string")
+        mayaCommand.addAttr(longName="assetID", dataType="string", hidden=True)
+        mayaCommand.setAttr(f"{node}.assetID", ID, type="string")
         mayaCommand.select(clear=True)
 
 
@@ -102,7 +103,7 @@ def loadMaterial (path):
     selection = mayaCommand.ls(selection=True)
     meshes = find.selectionMeshes()
 
-    
+
     # get asset data
     path = os.path.realpath(path)
     filename  = os.path.basename(path)
@@ -115,6 +116,9 @@ def loadMaterial (path):
     materialName = material.get("name")
 
     if mayaCommand.objExists(materialName):
+        text = "Material Name Conflict"
+        mayaMessage.viewport(text)
+        mayaMessage.warning(text)
         return
 
 
@@ -160,6 +164,10 @@ def loadMaterial (path):
         for attr, spec in inputs.items():
             attribute = f"{nodeName}.{attr}"
             value = spec.get("value")
+
+            if attr == "colorSpace":
+                mayaCommand.setAttr(
+                    f"{nodeName}.ignoreColorSpaceFileRules", 1)
 
             if spec.get("connection"):
                 outplug = ".".join(value)

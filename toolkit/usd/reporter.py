@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
 
-from toolkit.ensure.Usd import *
-from toolkit.ensure.Ar import *
-
 import os, re
+
+from toolkit.usd import read
 
 
 
@@ -20,28 +19,9 @@ def getUsdReferences (path, container=None):
     if path not in container:
         container.append(path)
 
-    Resolver = Ar.GetResolver()
-    
-    stage = Usd.Stage.Open( Resolver.Resolve(path) )
-    layers = stage.GetRootLayer().GetExternalReferences()
-
-    for layer in layers:
-
-        working = re.match(r"^\./.*",   layer)
-        above   = re.match(r"^\.\./.*", layer)
-
-        if working:
-            path = re.sub(r"^\.",
-                root, layer)
-        elif above:
-            path = re.sub(r"^\.\.",
-                os.path.dirname(root), layer)
-        else:
-            path = layer
-
+    for reference in read.asReferences(path):
         container = getUsdReferences(
-            Resolver.Resolve(path),
-            container=container)
+            reference, container=container)
 
     return container
 

@@ -10,7 +10,7 @@ import importlib
 from widgets import MaterialExport
 
 from toolkit.core import Metadata
-import toolkit.core.naming
+from toolkit.core import naming
 import toolkit.core.timing
 import toolkit.system.ostree
 
@@ -27,6 +27,29 @@ import toolkit.usd.imaging
 
 import maya.cmds as mayaCommand
 import maya.OpenMaya as OpenMaya
+
+
+
+
+
+def hasSelfReference (path, data):
+
+    filename  = os.path.basename(path)
+    directory = os.path.dirname(path)
+
+    assetID = Metadata.getID(directory, filename)
+    if not assetID:
+        return False
+
+    for renderer, scheme in data.items():
+        references = scheme.get("references", {})
+        for referenceID in references:
+
+            if assetID == referenceID:
+                return True
+
+    return False
+
 
 
 
@@ -58,6 +81,15 @@ def Export (options=None, data=None):
         return
 
 
+    # show dialog
+    if not options:
+        name = naming.rule_Material(selection)
+        dialog = MaterialExport.Dialog(initname=name)
+        dialog.exec()
+        options = dialog.getOptions()
+        if not options: return
+
+
     # create export data
     if not data:
 
@@ -69,35 +101,32 @@ def Export (options=None, data=None):
         Material = OpenMaya.MFnDependencyNode(MPlug.node())
     
         HypershadeManager = toolkit.maya.hypershade.Manager()
-        data = dict(
-            render = HypershadeManager.getPrmanNetwork(Material),
-            preview= HypershadeManager.getPreviewNetwork(Material))
-
-
-    # show dialog
-    if not options:
-        dialog = MaterialExport.Dialog(initname=selection)
-        dialog.exec()
-        options = dialog.getOptions()
-        if not options: return
+        data = HypershadeManager.getUsdBuildScheme(Material)
 
 
     # get attributes
-    periodic = False
+    periodic = True
     if selection and mayaCommand.attributeQuery(
             "periodic", node=selection, exists=True):
-        periodic = mayaCommand.getAttr(
-            "{}.periodic".format(selection) )
+        periodic = mayaCommand.getAttr(f"{selection}.periodic")
 
 
     # version tag
-    version = "v{:02d}".format(options.version)
+    version = f"v{options.version:02d}"
     if options.variant:
-        version += "-{}".format(options.variant)
+        version += f"-{options.variant}"
 
     MaterialRoot = os.path.join(options.materialPath, options.materialName)
-    MaterialName = "{}.usda".format(version)
+    MaterialName = f"{version}.usda"
     MaterialPath = os.path.join(MaterialRoot, MaterialName)
+
+
+    # check for self reference
+    if hasSelfReference(MaterialPath, data):
+        text = "Export Stopped: Reference Loop"
+        toolkit.maya.message.warning(text)
+        toolkit.maya.message.viewport(text)
+        return
 
 
     # create shader asset directory
@@ -107,34 +136,31 @@ def Export (options=None, data=None):
 
 
     # make usd files
-    payloads = []
+    references = []
     overwritten = False
-    for target, scheme in data.items():
+    for renderer, scheme in data.items():
 
-        if scheme.get("shaders"):
+        if renderer == "prman":
+            fileName = f"{version}.RenderMan.usda"
+        elif renderer == "hydra":
+            fileName = f"{version}.Hydra.usda"
+        else: continue
 
-            if target == "render":
-                prman=True
-                fileName = "{}.RenderMan.usda".format(version)
+        if not scheme.get("shaders"):
+            if not scheme.get("references"):
+                continue
 
-            else:
-                prman=False
-                fileName = "{}.Hydra.usda".format(version)
+        pathusd = os.path.join(MaterialRoot, fileName)
+        references.append(pathusd)
 
-            pathusd = os.path.join(MaterialRoot, fileName)
-            payloads.append(pathusd)
+        if os.path.exists(pathusd):
+            overwritten = True
 
-            if os.path.exists(pathusd):
-                overwritten = True
-
-            scheme["name"] = options.materialName
-            toolkit.usd.material.make(
-                pathusd, scheme, prman=prman )
-
+        toolkit.usd.material.make(pathusd, scheme)
 
     # weld shaders
     toolkit.usd.material.weld(
-        MaterialPath, options.materialName, payloads)
+        MaterialPath, options.materialName, references)
 
 
     # create/update symbolic link
@@ -149,11 +175,15 @@ def Export (options=None, data=None):
 
 
     # create/update .metadata.json
-    if not overwritten:
-        ID = Metadata.generateID(asset="usdmaterial")
     with Metadata.MetadataManager(
             MaterialRoot,
             metatype="usdmaterial") as data:
+
+        dataLast = data.get("items").get(MaterialName)
+        if dataLast:
+            ID = dataLast.get("id")
+        else:
+            ID = Metadata.generateID(asset="usdmaterial")
 
         data["info"] = options.info
         data["status"] = options.status
@@ -163,9 +193,8 @@ def Export (options=None, data=None):
             comment   = options.comment,
             periodic  = periodic,
             lama      = True,      # FIGURE IT OUT
-            mix       = False )    # FIGURE IT OUT
-        if not overwritten:
-            attributes["id"] = ID
+            mix       = False,     # FIGURE IT OUT
+            id        = ID )
         
         data["items"][MaterialName] = attributes
 
@@ -206,7 +235,7 @@ def Export (options=None, data=None):
         toolkit.system.ostree.buildUsdRoot(
             MaterialRoot, sources=True)
 
-        MayaFileName = "{}.ma".format(options.materialName)
+        MayaFileName = f"{version}.ma"
         MayaPath = os.path.join(
             MaterialRoot,
             toolkit.system.ostree.SUBDIR_SOURCES,

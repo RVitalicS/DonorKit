@@ -137,6 +137,29 @@ def generateID (
 
 
 
+def findMaterial (ID):
+
+    libraries = os.getenv("ASSETLIBS", "")
+    for root in libraries.split(":"):
+
+        path = os.path.join(root, METAFILE)
+        if not os.path.exists(path): continue
+        if not stream.validJSON(path): continue
+
+        data = stream.dataread(path)
+        assets = data.get("usdmaterial", {})
+        if ID in assets:
+            asset = assets.get(ID)
+            asset = f"{root}{asset}"
+            
+            if os.path.exists(asset):
+                return asset
+
+
+
+
+
+
 def buildMaterialData (library, root=None, collector=None):
 
     if root == None:

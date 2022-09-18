@@ -6,7 +6,7 @@ import os
 import re
 
 
-from pxr import Usd, UsdGeom, UsdShade, Sdf
+from pxr import Usd, UsdShade, Sdf, Gf
 
 import toolkit.usd.editor
 
@@ -17,65 +17,20 @@ import toolkit.usd.editor
 
 
 
-def nameditor (outputName, prman=True):
-
-    if not prman:
-
-        if outputName == "fileTextureName":
-            outputName = "file"
-
-        elif outputName == "uvCoord":
-            outputName = "st"
-
-        elif outputName == "rotateUV":
-            outputName = "rotation"
-
-        elif outputName == "repeatUV":
-            outputName = "scale"
-
-        elif outputName == "offset":
-            outputName = "translation"
-
-        elif outputName == "outUV":
-            outputName = "result"
-
-        elif outputName == "outColor":
-            outputName = "rgb"
-
-        elif outputName == "outColorR":
-            outputName = "r"
-
-        return outputName
-
-
-    if outputName == "outColor":
-        outputName = "out"
-
-    return outputName
-
-
-
-
-
-
-
-def patheditor (path):
+def pathEnvEncoder (path):
 
     ENVIRONMENT_VARIABLES = os.getenv(
         "VFX_GLOBALS", "").split(":")
-
     for VARIABLE in ENVIRONMENT_VARIABLES:
         
         value = os.getenv(VARIABLE, "")
-        if value:
+        if not value: continue
+        for scope in value.split(":"):
 
-            for scope in value.split(":"):
-
-                if re.match( "^{}.+".format(scope), path):
-                    return re.sub(
-                        "^{}".format(scope),
-                        "${"+VARIABLE+"}",
-                        path )
+            if not re.match(f"^{scope}.+", path):
+                continue
+            return re.sub(
+                f"^{scope}", "${"+VARIABLE+"}", path)
 
     return path
 
@@ -85,60 +40,66 @@ def patheditor (path):
 
 
 
-def CreateInput (shader, name, data):
+def createInput (shader, name, data):
 
-
-    inputType  = data["type"]
-    inputValue = data["value"]
+    value    = data["value"]
+    typeName = data["type"]
 
     connection = data["connection"]
 
     sdfType = None
-    if inputType == "int":
+    if typeName == "int":
         sdfType = Sdf.ValueTypeNames.Int
 
-    elif inputType in ["float", "double"]:
+    elif typeName in ["float", "double"]:
         sdfType = Sdf.ValueTypeNames.Float
 
-    elif inputType == "string":
+    elif typeName == "string":
         if name in ["filename", "file", "b2r_texture"]:
             sdfType = Sdf.ValueTypeNames.Asset
-            inputValue = patheditor(inputValue)
+            if not connection:
+                value = pathEnvEncoder(value)
         else:
             sdfType = Sdf.ValueTypeNames.String
 
-    elif inputType in ["color", "color3f"]:
+    elif typeName in ["color", "color3f"]:
+        if not connection:
+            value = Gf.Vec3f(value)
         sdfType = Sdf.ValueTypeNames.Color3f
 
-    elif inputType == "float2":
+    elif typeName == "float2":
+        if not connection:
+            value = Gf.Vec2f(value)
         sdfType = Sdf.ValueTypeNames.Float2
 
-    elif inputType == "float3":
+    elif typeName in ["float3", "vector"]:
+        if not connection:
+            value = Gf.Vec3f(value)
         if name in [
-            "input",
-            "color",
-            "diffuseColor",
-            "baseColor",
-            "edgeColor",
-            "reflectivity",
-            "material1",
-            "material2" ]:
+                "input", "color", "diffuseColor",
+                "baseColor", "edgeColor", "reflectivity",
+                "material1",  "material2" ]:
             sdfType = Sdf.ValueTypeNames.Color3f
+
         elif name == "normal":
             sdfType = Sdf.ValueTypeNames.Normal3f
         else:
             sdfType = Sdf.ValueTypeNames.Float3
 
-    elif inputType == "float4":
+    elif typeName == "float4":
+        if not connection:
+            value = Gf.Vec4f(value)
         sdfType = Sdf.ValueTypeNames.Float4
 
-    elif inputType == "normal":
+    elif typeName == "normal":
+        if not connection:
+            value = Gf.Vec3f(value)
         sdfType = Sdf.ValueTypeNames.Float3
 
-    elif inputType == "bool":
+    elif typeName == "bool":
         sdfType = Sdf.ValueTypeNames.Bool
 
-    elif inputType == "token":
+    elif typeName == "token":
         sdfType = Sdf.ValueTypeNames.Token
 
 
@@ -146,7 +107,7 @@ def CreateInput (shader, name, data):
         ShaderInput = shader.CreateInput(name, sdfType)
 
         if not connection:
-            ShaderInput.Set(inputValue)
+            ShaderInput.Set(value)
 
 
 
@@ -154,169 +115,142 @@ def CreateInput (shader, name, data):
 
 
 
-def make (pathusd, data,
-          root="/",
-          scope="",
-          comment="",
-          documentation="",
-          prman=True):
+def make (pathusd, data, comment="", documentation=""):
 
 
-    MaterialName         = data["name"]
-    MaterialSurface      = None
-    MaterialDisplacement = None
-    MaterialShaders      = data["shaders"]
+    # extract data
+    dataMaterial   = data.get("material", {})
+    dataShaders    = data.get("shaders", {})
+    dataReferences = data.get("references", {})
 
-    for key in data:
-        if key == "surface":
-            MaterialSurface = data[key]
-        elif key == "displacement":
-            MaterialDisplacement = data[key]
+    nameMaterial   = dataMaterial.get("name")
 
 
+    # create stage and define material
+    Stage = Usd.Stage.CreateNew(pathusd)
+    Layer = Stage.GetRootLayer()
 
-    defaultPrim = MaterialName
-
-    stage = Usd.Stage.CreateNew(pathusd)
-
-
-    pathitems = root.split("/")
-    pathitems = [ i for i in pathitems if i]
-
-    root = Sdf.Path("/")
-    for item in pathitems:
-        if not defaultPrim: defaultPrim = item
-        root = root.AppendChild(item)
+    MaterialPath = Sdf.Path(f"/{nameMaterial}")
+    Material = UsdShade.Material.Define(Stage, MaterialPath)
 
 
-    if scope:
-        if not defaultPrim: defaultPrim = scope
-        root = root.AppendChild(scope)
-        UsdGeom.Scope.Define(stage, root)
+    # define material references and shader overrides
+    for ID, scheme in dataReferences.items():
+
+        refMaterial = scheme.get("name")
+        refPath = pathEnvEncoder(scheme.get("path"))
+
+        RefMaterial = UsdShade.Material.Define(Stage, 
+            Sdf.Path(f"/{nameMaterial}/{refMaterial}") )
+        RefMaterial.GetPrim().GetReferences().AddReference(refPath)
+
+        shaders = scheme.get("shaders", {})
+        if not shaders: continue
+
+        for refShader, shaderSpec in shaders.items():
+
+            OverPrimPath = Sdf.Path(
+                f"/{nameMaterial}/{refMaterial}/{refShader}" )
+            OverPrim = Stage.OverridePrim(OverPrimPath)
+            Shader = UsdShade.Shader(OverPrim)
+
+            ShaderInputs = shaderSpec.get("inputs", {})
+            for inputName, inputData in ShaderInputs.items():
+                createInput(Shader, inputName, inputData)
 
 
-    MaterialPath = root.AppendChild(MaterialName)
-    ShadingGroup = UsdShade.Material.Define(stage, MaterialPath)
+    # create new shader nodes
+    for nameShader, specShader in dataShaders.items():
 
+        ShaderPath = MaterialPath.AppendChild(nameShader)
+        Shader = UsdShade.Shader.Define(Stage, ShaderPath)
 
-    for ShaderName in MaterialShaders:
-        ShaderData = MaterialShaders[ShaderName]
-
-
-        ShaderPath = MaterialPath.AppendChild(ShaderName)
-        Shader = UsdShade.Shader.Define(stage, ShaderPath)
-
-        ShaderInputs = ShaderData["inputs"]
-        ShaderID     = ShaderData["id"]
-
-        if not prman:
-            if ShaderID == "file":
-                ShaderID = "UsdUVTexture"
-                ShaderInputs["wrapS"] = dict(
-                    connection=False, 
-                    type="token", 
-                    value="repeat")
-                ShaderInputs["wrapT"] = dict(
-                    connection=False, 
-                    type="token", 
-                    value="repeat")
-
-            elif ShaderID == "place2dTexture":
-                ShaderID = "UsdPrimvarReader_float2"
-                ShaderInputs["varname"] = dict(
-                    connection=False, 
-                    type="token", 
-                    value="st")
-
-            elif ShaderID in  [
-                "pxrUsdPreviewSurface",
-                "usdPreviewSurface"]:
-                ShaderID = "UsdPreviewSurface"
-
+        ShaderID = specShader.get("id")
         Shader.CreateIdAttr(ShaderID)
 
-
-        for inputName in ShaderInputs:
-            inputData = ShaderInputs[inputName]
-            inputName = nameditor(inputName, prman=prman)
-            CreateInput(Shader, inputName, inputData)
+        inputs = specShader.get("inputs", {})
+        for inputName, inputData in inputs.items():
+            createInput(Shader, inputName, inputData)
 
 
-    for ShaderName in MaterialShaders:
-        ShaderData = MaterialShaders[ShaderName]
+    def getShaderPath (name):
 
-        inputPath = MaterialPath.AppendChild(ShaderName)
-        ShaderIn = UsdShade.NodeGraph.Get(stage, inputPath)
+        root = f"/{nameMaterial}"
 
+        for shader in dataShaders:
+            if name != shader: continue
 
-        ShaderInputs = ShaderData["inputs"]
-        for inputName in ShaderInputs:
-            inputData = ShaderInputs[inputName]
-            inputName = nameditor(inputName, prman=prman)
+            path = f"{root}/{shader}"
+            return Sdf.Path(path)
+        
+        for ID, scheme in dataReferences.items():
+            shaders = scheme.get("shaders", {})
+            for shader in shaders:
+                if name != shader: continue
 
-            if inputData["connection"]:
+                material = scheme.get("name")
+                path = f"{root}/{material}/{shader}"
+                return Sdf.Path(path)
 
-
-                ShaderInput = ShaderIn.GetInput(inputName)
-                if ShaderInput:
-
-                    Source  = inputData["value"]
-                    SourceConnection  = Source.split(".")
-
-                    outputName = SourceConnection[1]
-                    outputName = nameditor(outputName, prman=prman)
-
-                    outputPath = MaterialPath.AppendChild(SourceConnection[0])
-                    ShaderOut = UsdShade.NodeGraph.Get(stage, outputPath)
-
-                    ShaderInput.ConnectToSource(
-                        ShaderOut.ConnectableAPI(), outputName)
+        for ID, scheme in dataReferences.items():
+            RefStage = Usd.Stage.Open(
+                scheme.get("path") )
+            for Prim in RefStage.Traverse():
+                if Prim.GetName() == name:
+                    path = Prim.GetPath().pathString
+                    return Sdf.Path(root + path)
 
 
+    def makeConnections (data):
 
-    def makeOutputConnection (Source, materialOutputName):
+        for nameNode, specNode in data.items():
+            Shader = UsdShade.NodeGraph.Get(
+                Stage, getShaderPath(nameNode))
 
-        SourceConnection = Source.split(".")
+            inputs = specNode.get("inputs", {})
+            for namePlug, dataPlug in inputs.items():
+                if not dataPlug.get("connection"):
+                    continue
+                ShaderInput = Shader.GetInput(namePlug)
+                if not ShaderInput:
+                    continue
 
-        outputName = SourceConnection[1]
-        if prman:
-            outputName = nameditor(outputName, prman=prman)
-        else:
-            outputName = "surface"
-
-        outputPath = MaterialPath.AppendChild(SourceConnection[0])
-        ShaderOutput = UsdShade.NodeGraph.Get(stage, outputPath)
-
-        SurfaceOutput = ShadingGroup.CreateOutput(
-            materialOutputName,
-            Sdf.ValueTypeNames.Token)
-
-        SurfaceOutput.ConnectToSource(
-            ShaderOutput.ConnectableAPI(), outputName)
-
-
-    if MaterialSurface:
-        makeOutputConnection(
-            MaterialSurface,
-            "{}surface".format("ri:" if prman else "") )
-
-    if MaterialDisplacement:
-        makeOutputConnection(
-            MaterialDisplacement,
-            "{}displacement".format("ri:" if prman else "") )
+                sourceNode, sourcePlug = dataPlug["value"]
+                ShaderSource = UsdShade.NodeGraph.Get(
+                    Stage, getShaderPath(sourceNode))
+                ShaderInput.ConnectToSource(
+                    ShaderSource.ConnectableAPI(), sourcePlug)
 
 
+    # connect shaders to network
+    makeConnections(dataShaders)
+    for ID, scheme in dataReferences.items():
+        dataShadersRef = scheme.get("shaders", {})
+        makeConnections(dataShadersRef)
 
-    layer = stage.GetRootLayer()
+
+    # connect material with shaders
+    for inPlug, connection in dataMaterial.get("inputs", {}).items():
+        nodeName, outPlug = connection
+
+        ShaderPath = getShaderPath(nodeName)
+        ShaderOutput = UsdShade.NodeGraph.Get(Stage, ShaderPath)
+
+        MaterialOutput = Material.CreateOutput(
+            inPlug, Sdf.ValueTypeNames.Token)
+        MaterialOutput.ConnectToSource(
+            ShaderOutput.ConnectableAPI(), outPlug)
+
+
+    # save material
+    Layer.defaultPrim = nameMaterial
 
     if comment:
-        layer.comment = comment
+        Layer.comment = comment
     if documentation:
-        layer.documentation = documentation
-    if defaultPrim:
-        layer.defaultPrim = defaultPrim
+        Layer.documentation = documentation
 
-    layer.Save()
+    Layer.Save()
 
 
 
@@ -324,7 +258,7 @@ def make (pathusd, data,
 
 
 
-def weld (pathusd, name, payloads):
+def weld (pathusd, name, references):
 
     Stage = Usd.Stage.CreateNew(pathusd)
     Path = Sdf.Path("/{}".format(name))
@@ -332,9 +266,9 @@ def weld (pathusd, name, payloads):
     Material = UsdShade.Material.Define(Stage, Path)
     MaterialPrim = Stage.GetPrimAtPath(Path)
 
-    for path in payloads:
+    for path in references:
         path = toolkit.usd.editor.makeRelative(path, pathusd)
-        MaterialPrim.GetPayloads().AddPayload(path)
+        MaterialPrim.GetReferences().AddReference(path)
 
     layer = Stage.GetRootLayer()
     layer.defaultPrim = name
