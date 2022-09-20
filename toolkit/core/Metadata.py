@@ -200,6 +200,19 @@ def buildMaterialData (library, root=None, collector=None):
 
 
 
+def refreshMaterialData (library):
+
+    with MetadataManager(library) as data:
+        materialdata = buildMaterialData(library)
+        
+        data["usdmaterial"] = materialdata
+        data["scantime"] = timing.getTimeCode()
+
+
+
+
+
+
 
 class GenerationManager_root (object):
 
@@ -213,7 +226,7 @@ class GenerationManager_root (object):
     def isCurrent (self):
         
         version = self.getGeneration()
-        if version != 2:
+        if version != 3:
             return False
         else:
             return True
@@ -227,6 +240,10 @@ class GenerationManager_root (object):
             self.toSecondGen()
             version = 2
 
+        if version == 2:
+            self.toThirdGen()
+            version = 3
+
         return self.data
 
 
@@ -239,13 +256,26 @@ class GenerationManager_root (object):
     def toSecondGen (self):
         self.data["generation"] = 2
 
-        root = os.path.dirname(self.path)
-        materialdata = buildMaterialData(root)
-        self.data["usdmaterial"] = materialdata
+        self.data["usdmaterial"] = dict()
 
         if self.echo:
             print('INFO <Metadata>: '
                 + 'changed to 2nd generation '
+                + 'for "{}"'.format(self.path))
+
+
+    def toThirdGen (self):
+        self.data["generation"] = 3
+
+        root = os.path.dirname(self.path)
+        materialdata = buildMaterialData(root)
+        self.data["usdmaterial"] = materialdata
+
+        self.data["scantime"] = timing.getTimeCode()
+
+        if self.echo:
+            print('INFO <Metadata>: '
+                + 'changed to 3rd generation '
                 + 'for "{}"'.format(self.path))
 
 
@@ -426,9 +456,10 @@ class Metadata (object):
 
         if metatype == "root":
             self.default_data = dict(
-                generation=2,
+                generation=3,
                 type="root",
                 name=os.path.basename(path),
+                scantime=timing.getTimeCode(),
                 usdmaterial=dict(),
                 info="" )
 

@@ -20,7 +20,7 @@ def getTimeCode ():
 
 
 
-def getTimeDifference (timeString):
+def getTimeDelta (timeString):
 
     timeSplit = timeString.split(" ")
 
@@ -43,7 +43,6 @@ def getTimeDifference (timeString):
     hourCurrent   = time.strftime("%H", time.localtime() )
     minuteCurrent = time.strftime("%M", time.localtime() )
 
-
     timeCurrent = datetime.datetime(
         int(yearCurrent), 
         int(monthCurrent),
@@ -58,8 +57,16 @@ def getTimeDifference (timeString):
         hour=int(hourPublished),
         minute=int(minutePublished))
 
+    return timeCurrent-timePublished
 
-    timeDelta = timeCurrent-timePublished
+
+
+
+
+
+def getTimeDifference (timeString):
+
+    timeDelta = getTimeDelta(timeString)
 
     days    = timeDelta.days
     seconds = timeDelta.seconds
@@ -93,6 +100,20 @@ def getTimeDifference (timeString):
         return "{} min. ago".format(minutes)
 
     return "a sec. ago"
+
+
+
+
+
+
+def isDayAgo (timeString):
+
+    timeDelta = getTimeDelta(timeString)
+
+    if timeDelta.days > 0:
+        return True
+    else:
+        return False
 
 
 

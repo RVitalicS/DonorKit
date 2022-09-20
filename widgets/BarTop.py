@@ -12,6 +12,7 @@ import toolkit.core.calculate
 import toolkit.core.graphics
 import toolkit.core.ui
 from toolkit.core import Metadata
+from toolkit.core import timing
 
 
 from toolkit.system import stream
@@ -539,12 +540,21 @@ class Bar (QtWidgets.QWidget):
         path = os.getenv("ASSETLIBS", "")
 
         for rootPath in path.split(":"):
+
+            needRefresh = False
             with Metadata.MetadataManager(
                     rootPath, update=False) as data:
             
                 if data.get("type") == "root":
                     name = data.get("name")
                     libraries[name] = rootPath
+
+                    scantime = data.get("scantime")
+                    if timing.isDayAgo(scantime):
+                        needRefresh = True
+
+            if needRefresh:
+                Metadata.refreshMaterialData(rootPath)
 
         return libraries
 
