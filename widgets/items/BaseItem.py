@@ -145,6 +145,8 @@ class Editor (QtWidgets.QWidget):
     favoriteClicked = Signal(QtCore.QModelIndex)
     tokenClicked    = Signal(QtCore.QModelIndex)
 
+    refresh = Signal(QtCore.QModelIndex)
+
 
 
     def __init__ (self, parent, index, theme):

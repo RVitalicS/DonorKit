@@ -88,6 +88,8 @@ def Make (base):
 
 
         def connectUi (self):
+            
+            self.Browser.refreshLibrary.connect(self.refreshLibrary)
 
             self.Browser.iconClicked.connect(self.iconClicked)
             self.Browser.tokenClicked.connect(self.tokenClicked)

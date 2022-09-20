@@ -597,6 +597,15 @@ class Browser (object):
 
 
 
+    def refreshLibrary (self, index):
+
+        data = index.data(QtCore.Qt.EditRole)
+        libname = data.get("name")
+        path = self.BrowserPath.libraries.get(libname, "")
+        Metadata.refreshMaterialData(path)
+
+
+
 
 
 

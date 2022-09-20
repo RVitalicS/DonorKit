@@ -18,6 +18,7 @@ UIGlobals = Settings.UIGlobals
 
 class Browser (QtWidgets.QListView):
 
+    refreshLibrary = Signal(QtCore.QModelIndex)
     createFolderQuery = Signal(QtCore.QModelIndex)
     createFolder      = Signal(QtCore.QModelIndex, str)
     link            = Signal(QtCore.QModelIndex)
@@ -530,3 +531,9 @@ class Browser (QtWidgets.QListView):
     def linkBridge (self, index):
 
         self.link.emit(index)
+
+
+
+    def refreshLibrarySignal (self, index):
+
+        self.refreshLibrary.emit(index)

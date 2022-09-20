@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-
-
+import math
 import toolkit.core.graphics
 
 from .BasePainterGeneral import (
@@ -25,6 +24,14 @@ UIGlobals = Settings.UIGlobals
 class Item (BaseItem.Painter):
 
 
+    def __init__ (self, theme):
+        super(Item, self).__init__(theme)
+
+        self.controlMode = False
+        self.refreshArea = QtCore.QRect()
+
+
+
     def paint (self, painter, option, index):
         super(Item, self).paint(painter, option, index)
         
@@ -45,19 +52,6 @@ class Item (BaseItem.Painter):
 
     def paintLibrary (self):
 
-        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-
-        libraryImage = QtGui.QImage(":/icons/library.png")
-        if self.hover:
-            colorBackground = QtGui.QColor(self.theme.color.libraryHover)
-            colorText = self.theme.color.kicker
-            libraryImage = toolkit.core.graphics.recolor(libraryImage, self.theme.color.violet)
-
-        else:
-            colorBackground = QtGui.QColor(self.theme.color.libraryBackground)
-            colorText = self.theme.color.text
-            libraryImage = toolkit.core.graphics.recolor(libraryImage, self.theme.color.text)
-
 
         # BACKGROUND
         colorOutline = QtGui.QColor(self.theme.color.libraryOutline)
@@ -70,10 +64,17 @@ class Item (BaseItem.Painter):
             self.iconRect.width()  - borderWidth *2 ,
             self.iconRect.height() - borderWidth *2 )
 
+        if self.hover:
+            colorBackground = QtGui.QColor(self.theme.color.libraryHover)
+        else:
+            colorBackground = QtGui.QColor(self.theme.color.libraryBackground)
+
+        self.painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         self.painter.fillRect(borderRect, colorBackground)
 
 
         # ICON
+        libraryImage = QtGui.QImage(":/icons/library.png")
         offsetIcon = int((
             self.height - self.space*2 - libraryImage.height() )/2)
 
@@ -81,11 +82,42 @@ class Item (BaseItem.Painter):
                 self.pointX + self.space + offsetIcon,
                 self.pointY + self.space + offsetIcon)
 
-        self.painter.drawImage(iconPosition, libraryImage)
+        if self.controlMode:
+            refreshImage = QtGui.QImage(":/icons/librefresh.png")
+
+            offsetArea = 10
+            self.refreshArea = QtCore.QRect(
+                iconPosition.x() - offsetArea,
+                iconPosition.y() - offsetArea,
+                refreshImage.width()  + offsetArea * 2 ,
+                refreshImage.height() + offsetArea * 2 )
+
+            deltaX = refreshImage.width() / 2 - libraryImage.width() / 2
+            deltaY = refreshImage.height()/ 2 - libraryImage.height()/ 2
+
+            iconPosition = QtCore.QPointF(
+                iconPosition.x() - deltaX,
+                iconPosition.y() - deltaY)
+
+            drawImage = refreshImage
+
+        else:
+            self.refreshArea = QtCore.QRect(0,0,0,0)
+            drawImage = libraryImage
+
+
+        if self.hover:
+            colorText = self.theme.color.kicker
+            drawImage = toolkit.core.graphics.recolor(drawImage, self.theme.color.violet)
+        else:
+            colorText = self.theme.color.text
+            drawImage = toolkit.core.graphics.recolor(drawImage, self.theme.color.text)
+
+        self.painter.setRenderHint(QtGui.QPainter.SmoothPixmapTransform, True)
+        self.painter.drawImage(iconPosition, drawImage)
 
 
         # NAME
-        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.setPen(
             QtGui.QPen(
                 QtGui.QBrush( QtGui.QColor(colorText) ),
@@ -111,6 +143,7 @@ class Item (BaseItem.Painter):
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
         textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
 
+        self.painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
         self.painter.drawText(
             QtCore.QRectF(nameArea),
             text,
