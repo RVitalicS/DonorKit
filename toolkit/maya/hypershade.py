@@ -457,7 +457,7 @@ class Manager (object):
 
         shadersBuffer = dict()
         shaders = data.get("shaders", {})
-        for nameShader, specShader in shadersData.items():
+        for nameShader, specShader in shaders.items():
             mayaID = specShader.get("id")
             usdID = nameMirror.usdID(mayaID)
             if usdID == None: continue
