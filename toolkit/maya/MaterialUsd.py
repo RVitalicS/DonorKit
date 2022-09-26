@@ -9,18 +9,17 @@ import importlib
 
 from widgets import MaterialExport
 
+from toolkit.system import ostree
 from toolkit.core import Metadata
 from toolkit.core import naming
-import toolkit.core.timing
-import toolkit.system.ostree
+from toolkit.core import timing
+from toolkit.maya import find
+from toolkit.maya import attribute
+from toolkit.maya import renderman
+from toolkit.maya import message
 
-import toolkit.maya.outliner
-import toolkit.maya.message
-import toolkit.maya.attribute
-import toolkit.maya.renderman
-
-import toolkit.maya.hypershade
-importlib.reload(toolkit.maya.hypershade)
+from toolkit.maya import hypershade
+importlib.reload(hypershade)
 
 import toolkit.usd.material
 import toolkit.usd.imaging
@@ -73,11 +72,11 @@ def Export (options=None, data=None):
 
 
     # selection filter
-    selection = toolkit.maya.hypershade.getSelectionName()
+    selection = hypershade.getSelectionName()
     if not selection and not data:
         text = "Select Any Material"
-        toolkit.maya.message.warning(text)
-        toolkit.maya.message.viewport(text)
+        message.warning(text)
+        message.viewport(text)
         return
 
 
@@ -100,7 +99,7 @@ def Export (options=None, data=None):
         MSelectionList.getPlug(0, MPlug)
         Material = OpenMaya.MFnDependencyNode(MPlug.node())
     
-        HypershadeManager = toolkit.maya.hypershade.Manager()
+        HypershadeManager = hypershade.Manager()
         data = HypershadeManager.getUsdBuildScheme(Material)
 
 
@@ -124,8 +123,8 @@ def Export (options=None, data=None):
     # check for self reference
     if hasSelfReference(MaterialPath, data):
         text = "Export Stopped: Reference Loop"
-        toolkit.maya.message.warning(text)
-        toolkit.maya.message.viewport(text)
+        message.warning(text)
+        message.viewport(text)
         return
 
 
@@ -188,15 +187,15 @@ def Export (options=None, data=None):
         data["info"] = options.info
         data["status"] = options.status
 
-        attributes = dict(
-            published = toolkit.core.timing.getTimeCode(),
+        assetSpec = dict(
+            published = timing.getTimeCode(),
             comment   = options.comment,
             periodic  = periodic,
             lama      = True,      # FIGURE IT OUT
             mix       = False,     # FIGURE IT OUT
             id        = ID )
         
-        data["items"][MaterialName] = attributes
+        data["items"][MaterialName] = assetSpec
 
     # add/update shader to library
     if options.library and not overwritten:
@@ -208,20 +207,26 @@ def Export (options=None, data=None):
             data["usdmaterial"][ID] = relpath
 
 
+    # add/overwrite ID attribute
+    if options.library:
+        MFnDependencyNode = find.shaderByName(selection)
+        attribute.assignNetworkID(MFnDependencyNode, ID)
+
+
     # generate preview image
     if os.path.exists(MaterialPath):
         if options.prman or options.hydra:
-            toolkit.system.ostree.buildUsdRoot(
+            ostree.buildUsdRoot(
                 MaterialRoot, previews=True)
 
             previewsPath = os.path.join( MaterialRoot,
-                toolkit.system.ostree.SUBDIR_PREVIEWS, version)
+                ostree.SUBDIR_PREVIEWS, version)
             if os.path.exists(previewsPath):
                 shutil.rmtree(previewsPath)
             os.mkdir(previewsPath)
 
             if options.prman:
-                toolkit.maya.renderman.createShaderPreview(
+                renderman.createShaderPreview(
                     previewsPath, periodic=periodic)
 
             if options.hydra:
@@ -232,13 +237,13 @@ def Export (options=None, data=None):
 
     # export selected as maya File
     if options.maya:
-        toolkit.system.ostree.buildUsdRoot(
+        ostree.buildUsdRoot(
             MaterialRoot, sources=True)
 
         MayaFileName = f"{version}.ma"
         MayaPath = os.path.join(
             MaterialRoot,
-            toolkit.system.ostree.SUBDIR_SOURCES,
+            ostree.SUBDIR_SOURCES,
             MayaFileName )
 
         if os.path.exists(MayaPath):
@@ -248,11 +253,11 @@ def Export (options=None, data=None):
 
         toolkit.maya.export.Maya(MayaPath, binary=False)
 
-        toolkit.maya.message.info(mayaMessage + MayaFileName)
+        message.info(mayaMessage + MayaFileName)
 
 
     # result message
-    message = "Shader Saved: "
+    text = "Shader Saved: "
     if overwritten:
-        message = "Shader Overwritten: "
-    toolkit.maya.message.info(message + options.materialName)
+        text = "Shader Overwritten: "
+    message.info(text + options.materialName)

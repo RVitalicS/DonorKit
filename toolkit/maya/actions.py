@@ -12,6 +12,7 @@ from pxr import UsdGeom
 
 from toolkit.maya import find
 from toolkit.maya import outliner
+from toolkit.maya import attribute
 from toolkit.maya import stage as outlinerStage
 import toolkit.maya.message as mayaMessage
 
@@ -90,15 +91,6 @@ def loadMaterial (path):
     """
 
 
-    def markID (node, ID):
-        """ Add string ID attribute to a given node """
-
-        mayaCommand.select(node, replace=True, noExpand=True)
-        mayaCommand.addAttr(longName="assetID", dataType="string", hidden=True)
-        mayaCommand.setAttr(f"{node}.assetID", ID, type="string")
-        mayaCommand.select(clear=True)
-
-
     # get selected meshes
     selection = mayaCommand.ls(selection=True)
     meshes = find.selectionMeshes()
@@ -128,7 +120,6 @@ def loadMaterial (path):
         renderable=True,
         noSurfaceShader=True,
         name=materialName )
-    markID(shadingGroup, ID)
 
     for mesh in meshes:
         mayaCommand.select(mesh, replace=True)
@@ -158,11 +149,10 @@ def loadMaterial (path):
         else:
             mayaCommand.shadingNode(nodeType,
                 asUtility=True, name=nodeName)
-        markID(nodeName, ID)
 
         inputs = nodeSpec.get("inputs")
         for attr, spec in inputs.items():
-            attribute = f"{nodeName}.{attr}"
+            attrName = f"{nodeName}.{attr}"
             value = spec.get("value")
 
             if attr == "colorSpace":
@@ -171,17 +161,17 @@ def loadMaterial (path):
 
             if spec.get("connection"):
                 outplug = ".".join(value)
-                inplug = attribute
+                inplug = attrName
                 connections.append([outplug, inplug])
 
             elif spec.get("type") in ["float", "int"]:
-                mayaCommand.setAttr(attribute, value)
+                mayaCommand.setAttr(attrName, value)
 
             elif spec.get("type") == "string":
-                mayaCommand.setAttr(attribute, value,
+                mayaCommand.setAttr(attrName, value,
                     type=spec.get("type"))
             else:
-                mayaCommand.setAttr(attribute, *value,
+                mayaCommand.setAttr(attrName, *value,
                     type=spec.get("type"))
 
 
@@ -189,6 +179,10 @@ def loadMaterial (path):
     for pair in connections:
         mayaCommand.connectAttr(*pair)
 
+
+    # add ID attribute
+    MFnDependencyNode = find.shaderByName(shadingGroup)
+    attribute.assignNetworkID(MFnDependencyNode, ID)
 
     # restore selection
     mayaCommand.select(selection, replace=True)

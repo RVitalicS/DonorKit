@@ -2,7 +2,7 @@
 
 import maya.OpenMaya as OpenMaya
 
-import toolkit.maya.mplug
+from toolkit.maya import mplug
 
 
 
@@ -28,10 +28,48 @@ def get (node, name):
 def getValue (node, name):
 
     attribute = get(node, name)
-    attributeValue = toolkit.maya.mplug.getAs(
+    attributeValue = mplug.getAs(
         attribute, asValue=True )
     
     return attributeValue
+
+
+
+
+
+def assignNetworkID (node, ID):
+
+    typeName = node.typeName()
+    if typeName in ["expression"]:
+        return
+
+    isMaterial = typeName == "shadingEngine"
+
+    attrName = "assetID"
+    hasID = node.hasAttribute(attrName)
+
+    if not isMaterial:
+        if not hasID:
+            attribute = OpenMaya.MFnTypedAttribute()
+            MObject = attribute.create(
+                attrName, attrName,
+                OpenMaya.MFnData.kString)
+            attribute.setHidden(True)
+            node.addAttribute(MObject)
+
+        MPlug = node.findPlug(attrName)
+        MPlug.setString(ID)
+
+
+    for index in range(node.attributeCount()):
+        MObject = node.attribute(index)
+        MPlug = node.findPlug(MObject)
+
+        source = MPlug.source()
+        if source.isNull(): continue
+
+        nodeSource = OpenMaya.MFnDependencyNode(source.node())
+        assignNetworkID(nodeSource, ID)
 
 
 
