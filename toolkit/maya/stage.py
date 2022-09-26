@@ -66,14 +66,18 @@ def getAnyPath ():
     MItSelectionList = OpenMaya.MItSelectionList(
         MSelectionList, OpenMaya.MFn.kPluginShape)
 
-    MObject = OpenMaya.MObject()
-    MDagPath = OpenMaya.MDagPath()
-
     while not MItSelectionList.isDone():
-        MItSelectionList.getDagPath(MDagPath, MObject)
+        MObject = OpenMaya.MObject()
+        MItSelectionList.getDependNode(MObject)
+        node = OpenMaya.MFnDependencyNode(MObject)
         
-        return MDagPath.fullPathName()
-        # MItSelectionList.next()
+        if node.typeName() == "mayaUsdProxyShape":
+            MDagPath = OpenMaya.MDagPath()
+            MItSelectionList.getDagPath(
+                MDagPath, OpenMaya.MObject())
+            return MDagPath.fullPathName()
+        
+        MItSelectionList.next()
 
 
 
@@ -86,14 +90,18 @@ def getSelectedPath ():
     MItSelectionList = OpenMaya.MItSelectionList(
         MSelectionList, OpenMaya.MFn.kPluginShape)
 
-    MObject = OpenMaya.MObject()
-    MDagPath = OpenMaya.MDagPath()
-
     while not MItSelectionList.isDone():
-        MItSelectionList.getDagPath(MDagPath, MObject)
+        MObject = OpenMaya.MObject()
+        MItSelectionList.getDependNode(MObject)
+        node = OpenMaya.MFnDependencyNode(MObject)
         
-        return MDagPath.fullPathName()
-        # MItSelectionList.next()
+        if node.typeName() == "mayaUsdProxyShape":
+            MDagPath = OpenMaya.MDagPath()
+            MItSelectionList.getDagPath(
+                MDagPath, OpenMaya.MObject())
+            return MDagPath.fullPathName()
+        
+        MItSelectionList.next()
 
 
 
