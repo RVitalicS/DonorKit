@@ -172,6 +172,72 @@ def copyAttrubutes (source, target, units=1.0, time=1.0):
 
 
 
+def editTexCoord (Prim):
+
+    coords = dict()
+
+    for Attribute in Prim.GetAttributes():
+
+        attrName  = Attribute.GetBaseName()
+        attrType  = Attribute.GetTypeName()
+
+        if attrType != Sdf.ValueTypeNames.TexCoord2fArray:
+            continue
+
+        attrMetadata = Attribute.GetAllMetadata()
+        customData = attrMetadata.get("customData", {})
+        mayaData = customData.get("Maya", {})
+        mayaName = mayaData.get("name")
+
+        if type(mayaName) == str:
+            coords[attrName] = mayaName
+
+    deleteName = None
+    for attrName, mayaName in coords.items():
+        if attrName == "st": continue
+        if mayaName != "st": continue
+        if "st" in coords:
+            deleteName = attrName
+            break
+
+    for attrName, mayaName in coords.items():
+        nameCoord = f"primvars:{attrName}"
+        nameIndex = f"primvars:{attrName}:indices"
+
+        if attrName != deleteName:
+            AttrCoord = Prim.GetAttribute(nameCoord)
+            AttrIndex = Prim.GetAttribute(nameIndex)
+
+            valueCoord = AttrCoord.Get()
+            valueIndex = AttrIndex.Get()
+
+            typeCoord = AttrCoord.GetTypeName()
+            typeIndex = AttrIndex.GetTypeName()
+
+            customCoord = AttrCoord.IsCustom()
+            customIndex = AttrIndex.IsCustom()
+
+        Prim.RemoveProperty(nameCoord)
+        Prim.RemoveProperty(nameIndex)
+
+        if attrName != deleteName:
+            AttrCoord = Prim.CreateAttribute(
+                f"primvars:{mayaName}", typeCoord,
+                custom=customCoord)
+            AttrCoord.Set(value=valueCoord)
+            AttrCoord.SetMetadata(
+                "interpolation", "faceVarying")
+
+            AttrIndex = Prim.CreateAttribute(
+                f"primvars:{mayaName}:indices", typeIndex,
+                custom=customIndex)
+            AttrIndex.Set(value=valueIndex)
+
+
+
+
+
+
 def copyStage (source, target,
                root=None,
                units=None,
@@ -227,6 +293,8 @@ def copyStage (source, target,
 
         copyAttrubutes(ChildPrim, NewPrim, units=units)
 
+        if ChildPrim.GetTypeName() == "Mesh":
+            editTexCoord(NewPrim)
 
         copyStage(source, target,
                   root=root,
