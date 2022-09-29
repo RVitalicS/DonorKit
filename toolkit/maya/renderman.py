@@ -6,19 +6,18 @@ import os
 
 import maya.cmds as mayaCommand
 
-import toolkit.system.stream
-import toolkit.maya.export
-import toolkit.maya.hypershade
+from toolkit.system import stream
+from toolkit.maya import export
+from toolkit.maya import hypershade
+from toolkit.maya import message
+
+import databank
 
 
 ocioConfig = os.getenv("OCIO", "")
 
 nameExr = "Render.exr"
 namePng = "Prman.f000.png"
-
-thisDir = os.path.dirname(__file__)
-toolDir = os.path.dirname(thisDir)
-rootDir = os.path.dirname(toolDir)
 
 
 
@@ -28,7 +27,7 @@ def createShaderRIB (directory, filldisplay=True):
 
 
     # get selected shading group
-    MATERIAL = toolkit.maya.hypershade.getSelectionName()
+    MATERIAL = hypershade.getSelectionName()
     if not MATERIAL: return
 
 
@@ -68,20 +67,20 @@ def createShaderRIB (directory, filldisplay=True):
 
     # export rib file
     mayaCommand.select(meshname, replace=True)
-    path_ExportRib = os.path.join(directory, "export.rib")
-    toolkit.maya.export.RIB(path_ExportRib)
+    ribExport_path = os.path.join(directory, "export.rib")
+    export.RIB(ribExport_path)
     mayaCommand.select([MATERIAL], replace=True, noExpand=True)
     mayaCommand.delete(meshname)
 
 
     # cut rib and edit displacement strenght
-    data_ExportRib = toolkit.system.stream.fileread(path_ExportRib)
-    data_ExportRib = re.sub(r"\n(\t|\s)*", "\n", data_ExportRib)
-    data_ExportRib = re.sub(r'\n\"', ' "', data_ExportRib)
-    data_ExportRib = re.sub(r'\n', " >LINEPOINT< ", data_ExportRib)
+    ribExport = stream.fileread(ribExport_path)
+    ribExport = re.sub(r"\n(\t|\s)*", "\n", ribExport)
+    ribExport = re.sub(r'\n\"', ' "', ribExport)
+    ribExport = re.sub(r'\n', " >LINEPOINT< ", ribExport)
 
-    data_ShaderRib = ""
-    AttrScopes = re.findall(r"AttributeBegin.*?AttributeEnd", data_ExportRib)
+    ribShader = ""
+    AttrScopes = re.findall(r"AttributeBegin.*?AttributeEnd", ribExport)
     for scope in AttrScopes:
         scope = re.sub(r"\s*\>LINEPOINT\<\s*", "\n", scope)
 
@@ -95,38 +94,38 @@ def createShaderRIB (directory, filldisplay=True):
                 isShader = False
 
         if isShader:
-            data_ShaderRib = "\n{}\n".format(scope)
+            ribShader = f"\n{scope}\n"
             break
 
-    data_ShaderRib = re.sub(
+    ribShader = re.sub(
         r'\"float dispAmount\" \[.+?\]',
         '"float dispAmount" [0.01]',           # UNIT DEPEND
-        data_ShaderRib)
-    os.remove(path_ExportRib)
+        ribShader)
+    ribShader = re.sub(
+        r'\"string name_uvSet\" \[\"[\w\s]*\"\]',
+        '"string name_uvSet" [""]',
+        ribShader)
+    os.remove(ribExport_path)
 
 
     # display rib part
-    databank = os.path.join(rootDir, "databank")
     if ocioConfig:
-        path_DisplayRib = os.path.join(databank, "display-exr.rib")
+        ribDisplay = databank.RIB_DISPLAY_EXR
         OUTPUTPATH = os.path.join(directory, nameExr)
     else:
-        path_DisplayRib = os.path.join(databank, "display-png.rib")
+        ribDisplay = databank.RIB_DISPLAY_PNG
         OUTPUTPATH = os.path.join(directory, namePng)
 
-    data_DisplayRib = toolkit.system.stream.fileread(path_DisplayRib)
-    data_DisplayRib = re.sub(r"\%OUTPUTPATH\%", OUTPUTPATH, data_DisplayRib)
+    ribDisplay = re.sub(r"\%OUTPUTPATH\%", OUTPUTPATH, ribDisplay)
 
 
     # mesh rib part
     if DISPLACESHADER:
-        path_MeshRib = os.path.join(databank, "mesh-subdivision.rib")
-        data_MeshRib = toolkit.system.stream.fileread(path_MeshRib)
-        data_MeshRib = re.sub(r"\%DISPLACESHADER\%", DISPLACESHADER, data_MeshRib)
-        data_MeshRib = re.sub(r"\%MATERIAL\%", MATERIAL, data_MeshRib)
+        ribMesh = databank.RIB_MESH_SUBD
+        ribMesh = re.sub(r"\%DISPLACESHADER\%", DISPLACESHADER, ribMesh)
+        ribMesh = re.sub(r"\%MATERIAL\%", MATERIAL, ribMesh)
     else:
-        path_MeshRib = os.path.join(databank, "mesh.rib")
-        data_MeshRib = toolkit.system.stream.fileread(path_MeshRib)
+        ribMesh = databank.RIB_MESH
 
     if filldisplay:
         P  = " ".join( [str(i) for i in [
@@ -145,27 +144,26 @@ def createShaderRIB (directory, filldisplay=True):
         ST = " ".join(
             [str(i) for i in [0,0, 1,0, 1,1, 0,1]] )
     
-    data_MeshRib = re.sub(r"\%P\%", P, data_MeshRib)
-    data_MeshRib = re.sub(r"\%ST\%", ST, data_MeshRib)
+    ribMesh = re.sub(r"\%P\%", P, ribMesh)
+    ribMesh = re.sub(r"\%ST\%", ST, ribMesh)
 
 
     # get all rib parts together
-    path_PreviewRib = os.path.join(databank, "preview-shader.rib")
-    data_PreviewRib = toolkit.system.stream.fileread(path_PreviewRib)
+    ribPreview = databank.RIB_PREVIEW
 
-    data_PreviewRib = re.sub(r"\%BXDFSHADER\%", BXDFSHADER, data_PreviewRib)
-    data_PreviewRib = re.sub(r"\%MATERIAL\%", MATERIAL, data_PreviewRib)
+    ribPreview = re.sub(r"\%BXDFSHADER\%", BXDFSHADER, ribPreview)
+    ribPreview = re.sub(r"\%MATERIAL\%", MATERIAL, ribPreview)
 
-    data_PreviewRib = re.sub(r"\%DISPLAYRIB\%", data_DisplayRib, data_PreviewRib)
-    data_PreviewRib = re.sub(r"\%SHADERRIB\%", data_ShaderRib, data_PreviewRib)
-    data_PreviewRib = re.sub(r"\%MESHRIB\%", data_MeshRib, data_PreviewRib)
+    ribPreview = re.sub(r"\%DISPLAYRIB\%", ribDisplay, ribPreview)
+    ribPreview = re.sub(r"\%SHADERRIB\%", ribShader, ribPreview)
+    ribPreview = re.sub(r"\%MESHRIB\%", ribMesh, ribPreview)
 
 
     # write to file
-    path_RenderRib = os.path.join(directory, "render.rib")
-    toolkit.system.stream.filewrite(path_RenderRib, data_PreviewRib)
+    pathRib = os.path.join(directory, "render.rib")
+    stream.filewrite(pathRib, ribPreview)
 
-    return path_RenderRib
+    return pathRib
 
 
 
@@ -176,8 +174,10 @@ def createShaderPreview (directory, periodic=True, echo=False):
     # render
     path_RenderRib = createShaderRIB(directory, filldisplay=periodic)
     if os.path.exists(path_RenderRib):
+        message.info("Work On RenderMan Preview")
+
         command = ["prman", path_RenderRib]
-        toolkit.system.stream.terminal(command, echo=True)
+        stream.terminal(command, echo=True)
         os.remove(path_RenderRib)
 
     outputPng = os.path.join(directory, namePng)
@@ -199,10 +199,9 @@ def createShaderPreview (directory, periodic=True, echo=False):
 
     # result message
     if os.path.exists(outputPng):
-        if echo:
-            message = 'INFO: preview saved to directory: "{}"'
-            print(message.format(outputPng))
+        if echo: message.info(
+            f'Preview Saved to Directory: "{outputPng}"' )
         return outputPng
     elif echo:
-        message = 'INFO: preview creation failed'
-        print(message)
+        message.warning(
+            'Preview Creation Failed' )

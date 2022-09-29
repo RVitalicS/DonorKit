@@ -380,7 +380,7 @@ class Manager (object):
             shadersRef = schemeRef.get("shaders", {})
 
             for nodeName, specRef in shadersRef.items():
-                specUsd = shadersUsd.get(nodeName)
+                specUsd = shadersUsd.get(nodeName, {})
 
                 overrideInputs = dict()
                 inputsUsd = specUsd.get("inputs", {})

@@ -221,6 +221,7 @@ def editTexCoord (Prim):
         Prim.RemoveProperty(nameIndex)
 
         if attrName != deleteName:
+            mayaName = mayaName.replace(" ", "_")
             AttrCoord = Prim.CreateAttribute(
                 f"primvars:{mayaName}", typeCoord,
                 custom=customCoord)
