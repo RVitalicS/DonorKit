@@ -333,6 +333,8 @@ class Browser (object):
 
             elif os.path.exists(folderPath):
                 if os.path.isdir(folderPath):
+                    if re.match(r"\..*",name):
+                        continue
                     library.append(dict(
                         type="folder",
                         name=name,
