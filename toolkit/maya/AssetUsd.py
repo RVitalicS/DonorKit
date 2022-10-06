@@ -165,7 +165,7 @@ def Export (options=None):
             animation= 1 if options.animation else 0,
             startTime=options.minTime,
             endTime=options.maxTime,
-            shading=options.surfacing )
+            shading=True )
         StageSource = Usd.Stage.Open(SourceModelPath)
 
 
@@ -254,16 +254,24 @@ def Export (options=None):
             options.assetPath,
             options.assetName )
 
+        makeAsset = True
+        if os.path.exists(AssetPath) and not options.surfacing:
+            if options.modelling and options.modellingOverride:
+                makeAsset = False
+            elif options.animation and options.animationOverride:
+                makeAsset = False
+
         if os.path.exists(AssetPath):
             assetMessage = "Asset Overwritten: "
         else:
             assetMessage = "Asset Saved: "
 
-        toolkit.usd.asset.make (
-            ReferencePath,
-            AssetPath,
-            mayaScene.tree,
-            mayaScene.root )
+        if makeAsset:
+            toolkit.usd.asset.make (
+                ReferencePath,
+                AssetPath,
+                mayaScene.tree,
+                mayaScene.root )
 
 
         # Create/Update Symbolic Link
