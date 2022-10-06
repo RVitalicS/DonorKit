@@ -361,9 +361,7 @@ class Manager (object):
         references = data.get("references", {})
         for ID, schemeRef in references.items():
 
-            scheme = self.getAssetScheme(ID)
-            if not scheme:
-                continue
+            scheme = self.ASSETS[ID]
             schemeUsd = scheme.get(renderer)
 
             assetName = schemeUsd.get("name")
@@ -616,20 +614,26 @@ class Manager (object):
 
         for name, spec in data.get("shaders").items():
             
-            assetID = spec.get("asset")
-            if assetID:
-                reference = references.get(assetID, {})
-                references[assetID] = reference
-
-                overrides = reference.get("shaders", {})
-                reference["shaders"] = overrides
-
-                if name not in overrides:
-                    overrides[name] = dict(
-                        id=spec.get("id"),
-                        inputs=spec.get("inputs"))
-            else:
+            ID = spec.get("asset")
+            if not ID:
                 shaders[name] = spec
+                continue
+            
+            scheme = self.getAssetScheme(ID)
+            if not scheme:
+                shaders[name] = spec
+                continue
+
+            reference = references.get(ID, {})
+            references[ID] = reference
+
+            overrides = reference.get("shaders", {})
+            reference["shaders"] = overrides
+
+            if name not in overrides:
+                overrides[name] = dict(
+                    id=spec.get("id"),
+                    inputs=spec.get("inputs"))
 
         data["references"] = references
         data["shaders"]    = shaders
