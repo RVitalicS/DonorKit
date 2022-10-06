@@ -154,6 +154,9 @@ def make (pathusd, data, comment="", documentation=""):
             OverPrim = Stage.OverridePrim(OverPrimPath)
             Shader = UsdShade.Shader(OverPrim)
 
+            ShaderID = shaderSpec.get("id")
+            if ShaderID: Shader.CreateIdAttr(ShaderID)
+
             ShaderInputs = shaderSpec.get("inputs", {})
             for inputName, inputData in ShaderInputs.items():
                 createInput(Shader, inputName, inputData)

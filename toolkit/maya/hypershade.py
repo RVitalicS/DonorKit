@@ -382,10 +382,18 @@ class Manager (object):
             for nodeName, specRef in shadersRef.items():
                 specUsd = shadersUsd.get(nodeName, {})
 
-                overrideInputs = dict()
+                idUsd = specUsd.get("id", {})
+                idRef = specRef.get("id", {})
+
                 inputsUsd = specUsd.get("inputs", {})
                 inputsRef = specRef.get("inputs", {})
 
+                if idRef != idUsd:
+                    overrideShaders[nodeName] = dict(
+                        id=idRef, inputs=inputsRef)
+                    continue
+
+                overrideInputs = dict()
                 for inplug, inputRef in inputsRef.items():
                     inputUsd = inputsUsd.get(inplug, {})
 
@@ -400,6 +408,9 @@ class Manager (object):
 
                     if type(valueRef) == tuple:
                         valueRef = list(valueRef)
+                    elif type(valueRef) == float:
+                        valueRef = round(valueRef, 4)
+                        valueUsd = round(valueUsd, 4)
 
                     hasChanges = False
                     if connectionRef != connectionUsd:
@@ -412,26 +423,38 @@ class Manager (object):
 
 
                 # after loop {inputsUsd} has to be empty
-                # if it's not, then get attribute value
                 for usdInput in inputsUsd:
-                    mayaInput = nameMirror.mayaInput(specRef.get("id"), usdInput)
+                    mayaInput = nameMirror.mayaInput(idRef, usdInput)
                     MFnDependencyNode = toolkit.maya.find.shaderByName(nodeName)
-                    MPlug = MFnDependencyNode.findPlug(mayaInput)
 
-                    value = toolkit.maya.mplug.getAs(MPlug, asValue=True)
-                    valueType = toolkit.maya.mplug.getAs(MPlug, asType=True)
-                    overrideInputs[usdInput] = dict(
-                        value=value, type=valueType, connection=False )
+                    MPlug = MFnDependencyNode.findPlug(mayaInput)
+                    overrideInputs[usdInput] = self.getMPlugSpec(MPlug)
 
 
                 if overrideInputs:
                     overrideShaders[nodeName] = dict(
-                        id=specRef.get("id"),
-                        inputs=overrideInputs)
+                        id=None, inputs=overrideInputs)
 
             schemeRef["shaders"] = overrideShaders
 
         return data
+
+
+
+    def getMPlugSpec (self, MPlug):
+
+        valueType = toolkit.maya.mplug.getAs(MPlug, asType=True)
+
+        if not MPlug.isConnected():
+            return dict(
+                value=toolkit.maya.mplug.getAs(MPlug, asValue=True),
+                type=valueType,
+                connection=False)
+        else:
+            return dict(
+                value=MPlug.source().name().split("."),
+                type=valueType,
+                connection=True)
 
 
 
