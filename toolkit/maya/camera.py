@@ -12,9 +12,15 @@ from toolkit.maya.scene import getUnits
 
 def getCurrent ():
 
-    M3dView = OpenMayaUI.M3dView.active3dView()
     MDagPath = OpenMaya.MDagPath()
-    M3dView.getCamera(MDagPath)
+
+    if OpenMayaUI.M3dView.numberOf3dViews() > 0:
+        M3dView = OpenMayaUI.M3dView.active3dView()
+        M3dView.getCamera(MDagPath)
+    else:
+        MSelectionList = OpenMaya.MSelectionList()
+        MSelectionList.add("|persp|perspShape")
+        MSelectionList.getDagPath(0, MDagPath)
 
     return OpenMaya.MFnCamera(MDagPath)
 
