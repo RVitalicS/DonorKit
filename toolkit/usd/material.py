@@ -55,7 +55,13 @@ def createInput (shader, name, data):
         sdfType = Sdf.ValueTypeNames.Float
 
     elif typeName == "string":
-        if name in ["filename", "file", "b2r_texture"]:
+        if name in [
+                "filename", "filename0",
+                "filename1", "filename2",
+                "filename3", "filename4",
+                "filename5", "filename6",
+                "filename7", "filename8",
+                "filename9", "file", "b2r_texture"]:
             sdfType = Sdf.ValueTypeNames.Asset
             if not connection:
                 value = pathEnvEncoder(value)
