@@ -241,11 +241,6 @@ class Manager (object):
                             elif value != valueDefault:
                                     collectAttibue = True
 
-                            if shaderType == "PxrDisplace":
-                                if attrName == "dispAmount":
-                                    if not collectAttibue:
-                                        value = 0.01          # UNIT DEPEND
-                                        collectAttibue = True
 
                             if collectAttibue:
                                 inputs[attrName] = dict(
@@ -354,6 +349,10 @@ class Manager (object):
         if renderer == "hydra":
             data["shaders"] = self.editHydraNetwork(
                 data.get("shaders", {}))
+        elif renderer == "prman":
+            data["shaders"] = self.editPrmanNetwork(
+                data.get("shaders", {}))
+
 
         # REFERENCE SWITCH
         data = self.groupReferences(data)
@@ -518,6 +517,7 @@ class Manager (object):
 
         units = 0.01           # UNIT DEPEND
         dataPrimvar = None
+
         for nameShader, specShader in data.items():
             nodeID = specShader.get("id")
 
@@ -602,6 +602,37 @@ class Manager (object):
 
         if dataPrimvar != None:
             data.update(dataPrimvar)
+
+        return data
+
+
+
+    def editPrmanNetwork (self, data):
+
+        units = 0.01           # UNIT DEPEND
+
+        for nameShader, specShader in data.items():
+            nodeID = specShader.get("id")
+
+            if nodeID == "PxrDisplace":
+                MFnDependencyNode = toolkit.maya.find.shaderByName(nameShader)
+                MPlug = MFnDependencyNode.findPlug("dispAmount")
+                specInput = self.getMPlugSpec(MPlug)
+
+                if not specInput.get("connection"):
+                    specInput["value"] = round(
+                        specInput.get("value") * units, 4)
+                    specShader["inputs"]["dispAmount"] = specInput
+
+            elif nodeID == "PxrRoundCube":
+                MFnDependencyNode = toolkit.maya.find.shaderByName(nameShader)
+                MPlug = MFnDependencyNode.findPlug("frequency")
+                specInput = self.getMPlugSpec(MPlug)
+
+                if not specInput.get("connection"):
+                    specInput["value"] = round(
+                        specInput.get("value") / units, 4)
+                    specShader["inputs"]["frequency"] = specInput
 
         return data
 

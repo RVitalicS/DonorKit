@@ -73,7 +73,7 @@ def createShaderRIB (directory, filldisplay=True):
     mayaCommand.delete(meshname)
 
 
-    # cut rib and edit displacement strenght
+    # cut rib and edit values
     ribExport = stream.fileread(ribExport_path)
     ribExport = re.sub(r"\n(\t|\s)*", "\n", ribExport)
     ribExport = re.sub(r'\n\"', ' "', ribExport)
@@ -98,13 +98,53 @@ def createShaderRIB (directory, filldisplay=True):
             break
 
     ribShader = re.sub(
-        r'\"float dispAmount\" \[.+?\]',
-        '"float dispAmount" [0.01]',           # UNIT DEPEND
-        ribShader)
-    ribShader = re.sub(
         r'\"string name_uvSet\" \[\"[\w\s]*\"\]',
         '"string name_uvSet" [""]',
         ribShader)
+
+    units = 0.01           # UNIT DEPEND
+    subtext = []
+    for line in ribShader.splitlines():
+
+        if re.match(r'\s*Displace \"PxrDisplace\"', line):
+            submap, text = list(), list()
+            pattern = r'\"float dispAmount\" \[.+?\]'
+            for match in re.finditer(pattern, line):
+                value = re.search(r"\[.*\]", match.group())
+                if value:
+                    value = float(value.group()[1:-1])
+                    submap.append([match,
+                        f'"float dispAmount" [{value*units}]'])
+            posend = 0
+            for pair in submap:
+                match, edited = pair
+                text.append(line[posend:match.start()])
+                text.append(edited)
+                posend = match.end()
+            text.append(line[posend:len(line)])
+            line = "".join(text)
+
+        elif re.match(r'\s*Pattern \"PxrRoundCube\"', line):
+            submap, text = list(), list()
+            pattern = r'\"float frequency\" \[.+?\]'
+            for match in re.finditer(pattern, line):
+                value = re.search(r"\[.*\]", match.group())
+                if value:
+                    value = float(value.group()[1:-1])
+                    submap.append([match,
+                        f'"float frequency" [{value/units}]'])
+            posend = 0
+            for pair in submap:
+                match, edited = pair
+                text.append(line[posend:match.start()])
+                text.append(edited)
+                posend = match.end()
+            text.append(line[posend:len(line)])
+            line = "".join(text)
+
+        subtext.append(line)
+    ribShader = "\n".join(subtext)
+
     os.remove(ribExport_path)
 
 

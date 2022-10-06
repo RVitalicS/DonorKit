@@ -91,6 +91,8 @@ def loadMaterial (path):
     """
 
 
+    units = 0.01           # UNIT DEPEND
+
     # get selected meshes
     selection = mayaCommand.ls(selection=True)
     meshes = find.selectionMeshes()
@@ -173,6 +175,13 @@ def loadMaterial (path):
             else:
                 mayaCommand.setAttr(attrName, *value,
                     type=spec.get("type"))
+
+        if nodeType == "PxrDisplace":
+            mayaCommand.setAttr(f"{nodeName}.dispAmount",
+                inputs.get("dispAmount").get("value") / units)
+        elif nodeType == "PxrRoundCube":
+            mayaCommand.setAttr(f"{nodeName}.frequency",
+                inputs.get("frequency").get("value") * units)
 
 
     # connect shaders to network
