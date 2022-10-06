@@ -19,21 +19,10 @@ Work.SetMaximumConcurrencyLimit()
 
 
 
-def makeRelative (target, source):
+def makeRelative (path, anchor):
 
-    targetSdfPath = Sdf.Path( os.path.dirname( target ) )
-    sourceSdfPath = Sdf.Path( os.path.dirname( source ) )
-
-    relativeSdfPath = targetSdfPath.MakeRelativePath(sourceSdfPath)
-
-    relative = "{}/{}".format(
-        relativeSdfPath.pathString,
-        os.path.basename( target ) )
-
-    if re.match( r"^\w+.*", relative ):
-        relative = "./" + relative
-
-    return relative
+    return os.path.relpath(path,
+        start=os.path.dirname(anchor) )
 
 
 
@@ -221,16 +210,17 @@ def editTexCoord (Prim):
         Prim.RemoveProperty(nameIndex)
 
         if attrName != deleteName:
-            mayaName = mayaName.replace(" ", "_")
+            if attrName != "st":
+                attrName = mayaName.replace(" ", "_")
             AttrCoord = Prim.CreateAttribute(
-                f"primvars:{mayaName}", typeCoord,
+                f"primvars:{attrName}", typeCoord,
                 custom=customCoord)
             AttrCoord.Set(value=valueCoord)
             AttrCoord.SetMetadata(
                 "interpolation", "faceVarying")
 
             AttrIndex = Prim.CreateAttribute(
-                f"primvars:{mayaName}:indices", typeIndex,
+                f"primvars:{attrName}:indices", typeIndex,
                 custom=customIndex)
             AttrIndex.Set(value=valueIndex)
 
