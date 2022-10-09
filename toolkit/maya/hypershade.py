@@ -358,8 +358,9 @@ class Manager (object):
         data = self.groupReferences(data)
 
 
-        # find out overrides
+        shaders = data.get("shaders", {})
         references = data.get("references", {})
+
         lostConnections = dict()
         for ID, schemeRef in references.items():
 
@@ -378,6 +379,13 @@ class Manager (object):
             shadersUsd = schemeUsd.get("shaders", {})
             shadersRef = schemeRef.get("shaders", {})
 
+            # block reference node
+            # with name used for new one
+            for nodeName in shadersUsd:
+                if nodeName in shaders:
+                    overrideShaders[nodeName] = None
+
+            # find out overrides
             for nodeName, specRef in shadersRef.items():
                 specUsd = shadersUsd.get(nodeName, {})
 
@@ -441,7 +449,6 @@ class Manager (object):
 
 
         # create new node for referenced one with changed type
-        shaders = data.get("shaders", {})
         for nodeName, nodeSpec in lostConnections.items():
             shaders[nodeName] = nodeSpec
 
@@ -501,7 +508,7 @@ class Manager (object):
 
 
     def getOutputData (self, nodeName):
-        
+
         data = dict()
 
         MFnDependencyNode = toolkit.maya.find.shaderByName(nodeName)
@@ -522,6 +529,8 @@ class Manager (object):
 
                 nodeDest = OpenMaya.MFnDependencyNode(
                     MPlugDest.node() )
+                if nodeDest.typeName() == "shadingEngine":
+                    continue
                 if not nodeDest.hasAttribute("assetID"):
                     continue
 
