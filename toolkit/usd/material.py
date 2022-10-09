@@ -151,18 +151,17 @@ def make (pathusd, data, comment="", documentation=""):
         RefMaterial.GetPrim().GetReferences().AddReference(refPath)
 
         shaders = scheme.get("shaders", {})
-        if not shaders: continue
-
         for refShader, shaderSpec in shaders.items():
 
             OverPrimPath = Sdf.Path(
                 f"/{nameMaterial}/{refMaterial}/{refShader}" )
             OverPrim = Stage.OverridePrim(OverPrimPath)
+
+            if not shaderSpec:
+                OverPrim.SetActive(False)
+                continue
+
             Shader = UsdShade.Shader(OverPrim)
-
-            ShaderID = shaderSpec.get("id")
-            if ShaderID: Shader.CreateIdAttr(ShaderID)
-
             ShaderInputs = shaderSpec.get("inputs", {})
             for inputName, inputData in ShaderInputs.items():
                 createInput(Shader, inputName, inputData)
@@ -195,7 +194,10 @@ def make (pathusd, data, comment="", documentation=""):
         for ID, scheme in dataReferences.items():
             shaders = scheme.get("shaders", {})
             for shader in shaders:
-                if name != shader: continue
+                if name != shader:
+                    continue
+                if not shaders.get(shader):
+                    continue
 
                 material = scheme.get("name")
                 path = f"{root}/{material}/{shader}"
@@ -213,6 +215,7 @@ def make (pathusd, data, comment="", documentation=""):
     def makeConnections (data):
 
         for nameNode, specNode in data.items():
+            if not specNode: continue
             Shader = UsdShade.NodeGraph.Get(
                 Stage, getShaderPath(nameNode))
 

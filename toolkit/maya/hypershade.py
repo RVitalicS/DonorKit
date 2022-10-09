@@ -357,17 +357,19 @@ class Manager (object):
         # REFERENCE SWITCH
         data = self.groupReferences(data)
 
+
+        # find out overrides
         references = data.get("references", {})
+        lostConnections = dict()
         for ID, schemeRef in references.items():
 
-            scheme = self.ASSETS[ID]
-            schemeUsd = scheme.get(renderer)
+            scheme = self.ASSETS.get(ID, {})
+            schemeUsd = scheme.get(renderer, {})
 
             assetName = schemeUsd.get("name")
             assetPath = schemeUsd.get("path")
             if not assetPath:
                 continue
-
 
             schemeRef["name"] = assetName
             schemeRef["path"] = assetPath
@@ -385,11 +387,14 @@ class Manager (object):
                 inputsUsd = specUsd.get("inputs", {})
                 inputsRef = specRef.get("inputs", {})
 
+                # mark node as inactive
                 if idRef != idUsd:
-                    overrideShaders[nodeName] = dict(
+                    overrideShaders[nodeName] = None
+                    lostConnections[nodeName] = dict(
                         id=idRef, inputs=inputsRef)
                     continue
 
+                # find changed values
                 overrideInputs = dict()
                 for inplug, inputRef in inputsRef.items():
                     inputUsd = inputsUsd.get(inplug, {})
@@ -405,7 +410,7 @@ class Manager (object):
 
                     if type(valueRef) == tuple:
                         valueRef = list(valueRef)
-                    elif type(valueRef) == float:
+                    elif type(valueRef) == type(valueUsd) == float:
                         valueRef = round(valueRef, 4)
                         valueUsd = round(valueUsd, 4)
 
@@ -419,7 +424,7 @@ class Manager (object):
                         overrideInputs[inplug] = inputRef
 
 
-                # after loop {inputsUsd} has to be empty
+                # if attribute go back to its defaults
                 for usdInput in inputsUsd:
                     mayaInput = nameMirror.mayaInput(idRef, usdInput)
                     MFnDependencyNode = toolkit.maya.find.shaderByName(nodeName)
@@ -433,6 +438,39 @@ class Manager (object):
                         id=None, inputs=overrideInputs)
 
             schemeRef["shaders"] = overrideShaders
+
+
+        # create new node for referenced one with changed type
+        shaders = data.get("shaders", {})
+        for nodeName, nodeSpec in lostConnections.items():
+            shaders[nodeName] = nodeSpec
+
+        # update lost connections
+        for nodeName in lostConnections:
+            dataUpdate = self.getOutputData(nodeName)
+            for ID, schemeUpdate in dataUpdate.items():
+
+                shadersUpdate = schemeUpdate.get("shaders", {})
+                for nodeNameUpdate, specUpdate in shadersUpdate.items():
+                    if nodeNameUpdate in shaders:
+                        continue
+
+                    schemeRef = references.get(ID, {})
+                    references[ID] = schemeRef
+
+                    shadersRef = schemeRef.get("shaders", {})
+                    schemeRef["shaders"] = shadersRef
+
+                    specRef = shadersRef.get(nodeNameUpdate, {})
+                    shadersRef[nodeNameUpdate] = specRef
+
+                    inputsRef = specRef.get("inputs", {})
+                    specRef["inputs"] = inputsRef
+
+                    inputsUpdate = specUpdate.get("inputs", {})
+                    for plugName, plugSpec in inputsUpdate.items():
+                        inputsRef[plugName] = plugSpec
+
 
         return data
 
@@ -448,10 +486,66 @@ class Manager (object):
                 type=valueType,
                 connection=False)
         else:
+
+            nodeName, mayaOutput = MPlug.source().name().split(".")
+            Shader = toolkit.maya.find.shaderByName(nodeName)
+
+            usdOutput = nameMirror.usdOutput(
+                Shader.typeName(), mayaOutput)
+
             return dict(
-                value=MPlug.source().name().split("."),
+                value=[nodeName, usdOutput],
                 type=valueType,
                 connection=True)
+
+
+
+    def getOutputData (self, nodeName):
+        
+        data = dict()
+
+        MFnDependencyNode = toolkit.maya.find.shaderByName(nodeName)
+        for index in range(MFnDependencyNode.attributeCount()):
+
+            MFnAttribute = OpenMaya.MFnAttribute(
+                MFnDependencyNode.attribute(index))
+            MPlug = MFnDependencyNode.findPlug(
+                MFnAttribute.name())
+
+            if MFnAttribute.isHidden() or not MPlug.isConnected():
+                continue
+
+            MPlugArray = OpenMaya.MPlugArray()
+            MPlug.destinations(MPlugArray)
+            for index in range(MPlugArray.length()):
+                MPlugDest = MPlugArray[index]
+
+                nodeDest = OpenMaya.MFnDependencyNode(
+                    MPlugDest.node() )
+                if not nodeDest.hasAttribute("assetID"):
+                    continue
+
+                ID = nodeDest.findPlug("assetID").asString()
+                nodeName, mayaInput = MPlugDest.name().split(".")
+
+                dataReference = data.get(ID, {})
+                data[ID] = dataReference
+
+                dataShaders = dataReference.get("shaders", {})
+                dataReference["shaders"] = dataShaders
+
+                dataNode = dataShaders.get(nodeName, {})
+                dataShaders[nodeName] = dataNode
+
+                dataInputs = dataNode.get("inputs", {})
+                dataNode["inputs"] = dataInputs
+
+                usdInput = nameMirror.usdInput(
+                    nodeDest.typeName(), mayaInput)
+
+                dataInputs[usdInput] = self.getMPlugSpec(MPlugDest)
+
+        return data
 
 
 
