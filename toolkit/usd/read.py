@@ -32,17 +32,21 @@ def asDefaultPrim (path):
 
 def asReferences (path):
 
-    root = os.path.dirname(path)
-    os.chdir(root)
-
     Resolver = Ar.GetResolver()
     path = Resolver.Resolve(path)
+    if not os.path.exists(path): return []
+
+    root = os.path.dirname(path)
+    os.chdir(root)
 
     Stage = Usd.Stage.Open(path)
     Layer = Stage.GetRootLayer()
     References = Layer.GetExternalReferences()
 
-    return [os.path.realpath(i) for i in References]
+    References = [Resolver.Resolve(i) for i in References]
+    References = [os.path.realpath(i) for i in References]
+    
+    return References
 
 
 

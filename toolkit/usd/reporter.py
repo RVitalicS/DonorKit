@@ -23,6 +23,11 @@ def getUsdReferences (path, container=None):
         container = getUsdReferences(
             reference, container=container)
 
+    cleaned = []
+    for item in container:
+        if item not in cleaned:
+            cleaned.append(item)
+    
     return container
 
 
