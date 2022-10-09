@@ -97,11 +97,6 @@ def createShaderRIB (directory, filldisplay=True):
             ribShader = f"\n{scope}\n"
             break
 
-    ribShader = re.sub(
-        r'\"string name_uvSet\" \[\"[\w\s]*\"\]',
-        '"string name_uvSet" [""]',
-        ribShader)
-
     units = 0.01           # UNIT DEPEND
     subtext = []
     for line in ribShader.splitlines():
@@ -142,6 +137,26 @@ def createShaderRIB (directory, filldisplay=True):
             text.append(line[posend:len(line)])
             line = "".join(text)
 
+        else:
+            submap, text = list(), list()
+            pattern = r'\"string name_uvSet\" \[\"[\w\s]+\"\]'
+            for match in re.finditer(pattern, line):
+                value = re.search(r"\[\".*\"\]", match.group())
+                if value:
+                    value = value.group()[2:-2]
+                    if value != "world":
+                        submap.append([match,
+                            '"string name_uvSet" [""]'])
+            posend = 0
+            for pair in submap:
+                match, edited = pair
+                text.append(line[posend:match.start()])
+                text.append(edited)
+                posend = match.end()
+            text.append(line[posend:len(line)])
+            line = "".join(text)
+
+
         subtext.append(line)
     ribShader = "\n".join(subtext)
 
@@ -175,6 +190,7 @@ def createShaderRIB (directory, filldisplay=True):
              1.5, 0, -1.5]] )
         ST = " ".join(
             [str(i) for i in [-1,-1, 2,-1, 2,2, -1,2]] )
+        WORLD = ST
     else:
         P  = " ".join( [str(i) for i in [
             -0.5, 0,  0.5,
@@ -183,9 +199,11 @@ def createShaderRIB (directory, filldisplay=True):
              0.5, 0, -0.5]])
         ST = " ".join(
             [str(i) for i in [0,0, 1,0, 1,1, 0,1]] )
+        WORLD = ST
     
     ribMesh = re.sub(r"\%P\%", P, ribMesh)
     ribMesh = re.sub(r"\%ST\%", ST, ribMesh)
+    ribMesh = re.sub(r"\%WORLD\%", WORLD, ribMesh)
 
 
     # get all rib parts together

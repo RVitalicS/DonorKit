@@ -6,4 +6,5 @@
 			"vertex point P" [%P%]
 			"facevarying normal N" [0 1 0 0 1 0 0 1 0 0 1 0]
 			"facevarying float[2] st" [%ST%]
+			"facevarying float[2] world" [%WORLD%]
 	ObjectEnd

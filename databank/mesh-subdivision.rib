@@ -21,4 +21,5 @@
 			"catmull-clark" [4] [0 1 3 2] ["facevaryingpropagatecorners" "creasemethod" "interpolateboundary" "facevaryinginterpolateboundary"] [1 0 0 0 0 1 1 0 0 1 0 0] [1 1 3] [] ["normal"]
 			"vertex point P" [%P%]
 			"facevarying float[2] st" [%ST%]
+			"facevarying float[2] world" [%WORLD%]
 	ObjectEnd
