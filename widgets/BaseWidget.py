@@ -266,8 +266,10 @@ class Browser (object):
         self.assetsNames = []
 
         favorites = []
+        hidden = True
         with Settings.Manager(self.theme.app, False) as settings:
             favorites = settings.get("favorites", [])
+            hidden = settings.get("hidden", True)
 
         for name in os.listdir(path):
 
@@ -333,7 +335,7 @@ class Browser (object):
 
             elif os.path.exists(folderPath):
                 if os.path.isdir(folderPath):
-                    if re.match(r"\..*",name):
+                    if hidden and re.match(r"\..*",name):
                         continue
                     library.append(dict(
                         type="folder",

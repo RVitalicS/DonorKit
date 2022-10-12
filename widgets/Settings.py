@@ -40,6 +40,7 @@ class ManagerData (object):
             size=[820, 590],
             iconSize=1,
             location="",
+            hidden=True,
             bookmarks=[],
             favorites=[],
             favoriteFilter=False,
