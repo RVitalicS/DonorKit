@@ -50,7 +50,7 @@ class Manager (object):
 
     def typeEditor (self, paramdefault, paramtype):
 
-        if paramtype in ["color", "normal"]:
+        if paramtype in ["color", "normal", "vector"]:
             return tuple([float(i) for i in paramdefault.split(" ")])
 
         elif paramtype == "float":
@@ -237,6 +237,13 @@ class Manager (object):
                                         elif value[index] != valueDefault[index]:
                                                 collectAttibue = True
                                                 break
+                                    
+                                    if collectAttibue:
+                                        value = tuple(round(i, 4) for i in value)
+
+                            elif isinstance(value, float) and isinstance(valueDefault, float):
+                                exponent = len(str(valueDefault).split(".")[1])
+                                value = round(value, exponent)
 
                             elif value != valueDefault:
                                     collectAttibue = True
