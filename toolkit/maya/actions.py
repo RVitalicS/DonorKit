@@ -180,8 +180,9 @@ def loadMaterial (path):
             mayaCommand.setAttr(f"{nodeName}.dispAmount",
                 inputs.get("dispAmount").get("value") / units)
         elif nodeType == "PxrRoundCube":
-            mayaCommand.setAttr(f"{nodeName}.frequency",
-                inputs.get("frequency").get("value") * units)
+            value = inputs.get("frequency").get("value") * units
+            if round(value, 3) <= 0.001: value += 0.000001
+            mayaCommand.setAttr(f"{nodeName}.frequency", value)
 
 
     # connect shaders to network
