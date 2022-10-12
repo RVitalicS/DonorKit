@@ -140,6 +140,19 @@ def make (pathusd, data, comment="", documentation=""):
     Material = UsdShade.Material.Define(Stage, MaterialPath)
 
 
+    def getRefPath (name):
+        
+        for ID, scheme in dataReferences.items():
+            RefStage = Usd.Stage.Open(
+                scheme.get("path") )
+            for Prim in RefStage.Traverse():
+                if Prim.GetName() != name:
+                    continue
+                if not Prim.IsActive():
+                    continue
+                return Prim.GetPath().pathString
+
+
     # define material references and shader overrides
     for ID, scheme in dataReferences.items():
 
@@ -153,8 +166,10 @@ def make (pathusd, data, comment="", documentation=""):
         shaders = scheme.get("shaders", {})
         for refShader, shaderSpec in shaders.items():
 
-            OverPrimPath = Sdf.Path(
-                f"/{nameMaterial}/{refMaterial}/{refShader}" )
+            refPath = getRefPath(refShader)
+            if not refPath: continue
+
+            OverPrimPath = Sdf.Path(f"/{nameMaterial}{refPath}" )
             OverPrim = Stage.OverridePrim(OverPrimPath)
 
             if not shaderSpec:
@@ -191,25 +206,10 @@ def make (pathusd, data, comment="", documentation=""):
             path = f"{root}/{shader}"
             return Sdf.Path(path)
         
-        for ID, scheme in dataReferences.items():
-            shaders = scheme.get("shaders", {})
-            for shader in shaders:
-                if name != shader:
-                    continue
-                if not shaders.get(shader):
-                    continue
-
-                material = scheme.get("name")
-                path = f"{root}/{material}/{shader}"
-                return Sdf.Path(path)
-
-        for ID, scheme in dataReferences.items():
-            RefStage = Usd.Stage.Open(
-                scheme.get("path") )
-            for Prim in RefStage.Traverse():
-                if Prim.GetName() == name:
-                    path = Prim.GetPath().pathString
-                    return Sdf.Path(root + path)
+        pathRef = getRefPath(name)
+        if pathRef:
+            path = f"{root}{pathRef}"
+            return Sdf.Path(path)
 
 
     def makeConnections (data):
