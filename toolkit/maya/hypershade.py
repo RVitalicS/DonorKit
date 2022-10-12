@@ -222,6 +222,9 @@ class Manager (object):
 
                             collectAttibue = False
 
+                            if isinstance(value, float):
+                                value = round(value, 4)
+
                             if isinstance(value, tuple) and isinstance(valueDefault, tuple):
                                 if len(value) == len(valueDefault):
 
@@ -240,10 +243,6 @@ class Manager (object):
                                     
                                     if collectAttibue:
                                         value = tuple(round(i, 4) for i in value)
-
-                            elif isinstance(value, float) and isinstance(valueDefault, float):
-                                exponent = len(str(valueDefault).split(".")[1])
-                                value = round(value, exponent)
 
                             elif value != valueDefault:
                                     collectAttibue = True
