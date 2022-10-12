@@ -68,6 +68,7 @@ def Export (options=None, data=None):
         options.status       = "WIP"
         options.prman        = False
         options.hydra        = False
+        # options.inherit    = False
     """
 
 
@@ -100,7 +101,8 @@ def Export (options=None, data=None):
         Material = OpenMaya.MFnDependencyNode(MPlug.node())
     
         HypershadeManager = hypershade.Manager()
-        data = HypershadeManager.getUsdBuildScheme(Material)
+        data = HypershadeManager.getUsdBuildScheme(
+            Material, options.inherit)
 
 
     # get attributes

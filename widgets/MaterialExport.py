@@ -86,6 +86,7 @@ class Dialog (
     def connectUi (self):
         super(Dialog, self).connectUi()
         
+        self.ExportOptions.inheritButton.stateChanged.connect(self.inheritSettings)
         self.ExportOptions.renderOptions.prman.stateChanged.connect(self.prmanSettings)
         self.ExportOptions.renderOptions.hydra.stateChanged.connect(self.hydraSettings)
 
@@ -223,6 +224,10 @@ class Dialog (
 
 
 
+    def inheritSettings (self):
+        with Settings.Manager(self.theme.app, True) as settings:
+            settings["inherit"] = self.ExportOptions.inheritButton.checked
+
     def prmanSettings (self):
         with Settings.Manager(self.theme.app, True) as settings:
             settings["prman"] = self.ExportOptions.renderOptions.prman.checked
@@ -249,6 +254,11 @@ class Dialog (
                 self.ExportOptions.mayaButton.checked = True
             else:
                 self.ExportOptions.mayaButton.checked = False
+
+            if settings.get("inherit"):
+                self.ExportOptions.inheritButton.checked = True
+            else:
+                self.ExportOptions.inheritButton.checked = False
 
             if settings.get("prman"):
                 self.ExportOptions.renderOptions.prman.checked = True
@@ -295,6 +305,8 @@ class Dialog (
             options.version = int(self.ExportOptions.versionOptions.versionCombobox.getName())
             options.variant = self.ExportOptions.versionOptions.variantCombobox.getName()
             options.link = self.ExportOptions.versionOptions.linkButton.isChecked()
+
+            options.inherit = self.ExportOptions.inheritButton.checked
 
             options.maya = self.ExportOptions.mayaButton.checked
 

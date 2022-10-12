@@ -66,6 +66,7 @@ class ManagerData (object):
             filename = ".Settings_MaterialExport.json"
             self.defaults.update( dict(
                 link=True,
+                inherit=False,
                 prman=False,
                 hydra=False,
                 maya=False,
@@ -241,6 +242,7 @@ UIGlobals.Options.fontInfo      = toolkit.core.ui.makeFont(size=9)
 UIGlobals.Options.fontComment   = toolkit.core.ui.makeFont(size=9)
 UIGlobals.Options.fontOverwrite = toolkit.core.ui.makeFont(size=7)
 UIGlobals.Options.fontLink      = toolkit.core.ui.makeFont(size=9)
+UIGlobals.Options.fontInherit   = toolkit.core.ui.makeFont(size=6, weight=QtGui.QFont.Bold)
 
 UIGlobals.Options.Maya = DataClass()
 UIGlobals.Options.Maya.width  = 13

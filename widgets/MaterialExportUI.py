@@ -35,6 +35,90 @@ HEIGHT_THICK = UIGlobals.Options.thickHeight
 
 
 
+class InheritButton (QtWidgets.QPushButton):
+
+    stateChanged = Signal()
+
+
+    def __init__ (self, theme, prman=True):
+        super(InheritButton, self).__init__()
+
+        self.theme = theme
+        self.checked = False
+
+        self.setFixedSize(QtCore.QSize(44, 12))
+
+
+
+    def mousePressEvent (self, event):
+        super(InheritButton, self).mousePressEvent(event)
+
+        self.checked = not self.checked
+        self.repaint()
+
+        self.stateChanged.emit()
+
+
+    def paintEvent (self, event):
+
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+        buttonRect = self.contentsRect()
+        position = QtCore.QPoint(
+            buttonRect.x() ,
+            buttonRect.y() )
+
+        if self.checked:
+            color = QtGui.QColor(self.theme.color.optionButton)
+        else:
+            color = QtGui.QColor(self.theme.color.optionDisable)
+
+        path = QtGui.QPainterPath()
+        path.addRoundedRect(QtCore.QRectF(buttonRect), 6, 6 )
+        brush = QtGui.QBrush(color)
+
+        painter.fillPath(path, brush)
+
+        if not self.checked:
+            outlineArea = QtCore.QRect(
+                buttonRect.x()      +1,
+                buttonRect.y()      +1,
+                buttonRect.width()  -2,
+                buttonRect.height() -2)
+            throuColor = QtGui.QColor(self.theme.color.optionBackground)
+
+            path = QtGui.QPainterPath()
+            path.addRoundedRect(QtCore.QRectF(outlineArea), 5, 5 )
+            brush = QtGui.QBrush(throuColor)
+
+            painter.fillPath(path, brush)
+
+
+        textOption = QtGui.QTextOption()
+        textOption.setWrapMode(QtGui.QTextOption.NoWrap)
+        textOption.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
+        
+
+        if self.checked:
+            color = QtGui.QColor(self.theme.color.optionBackground)
+        else:
+            color = QtGui.QColor(self.theme.color.optionDisable)
+        painter.setFont(UIGlobals.Options.fontInherit)
+        painter.setPen(color)
+
+        painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
+        painter.drawText(
+            QtCore.QRectF(buttonRect),
+                "INHERIT", textOption)
+
+        painter.end()
+
+
+
+
+
+
 class RenderButton (QtWidgets.QPushButton):
 
     stateChanged = Signal()
@@ -219,6 +303,21 @@ class ExportOptions (QtWidgets.QWidget):
         self.versionOptions = BaseOption.VersionBlock(theme)
         self.versionOptions.setFixedWidth(WIDTH)
         self.optionLayout.addWidget(self.versionOptions)
+
+
+        self.inheritLayout = QtWidgets.QHBoxLayout()
+        self.inheritLayout.setContentsMargins(0, 0, 0, 0)
+        self.inheritLayout.setSpacing(0)
+        self.optionLayout.addLayout(self.inheritLayout)
+
+        self.inheritButton = InheritButton(theme)
+        self.inheritLayout.addWidget(self.inheritButton)
+
+        inheritSpacer = QtWidgets.QSpacerItem(
+            0, 0,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum)
+        self.inheritLayout.addItem(inheritSpacer)
 
 
         self.renderOptions = RenderOptions(theme)

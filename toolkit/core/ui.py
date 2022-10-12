@@ -10,7 +10,7 @@ from toolkit.core import calculate
 
 
 
-def makeFont (size=7, weight=QtGui.QFont.Normal):
+def makeFont (size=7, weight=QtGui.QFont.Normal, tracking=1.0):
 
     """
         QFont::Thin         0   0
@@ -37,7 +37,7 @@ def makeFont (size=7, weight=QtGui.QFont.Normal):
     font.setStretch(
         QtGui.QFont.Unstretched)
     font.setLetterSpacing(
-        QtGui.QFont.PercentageSpacing, 100)
+        QtGui.QFont.PercentageSpacing, tracking * 100)
 
     return font
 

@@ -834,13 +834,13 @@ class Manager (object):
 
 
 
-    def getUsdBuildScheme (self, shaderGroup):
+    def getUsdBuildScheme (self, shaderGroup, inherit=False):
 
         data = self.getBuildScheme(shaderGroup)
 
         prman = self.makeUsdScheme(
-            data.get("prman"), "prman")
+            data.get("prman"), "prman", inherit)
         hydra = self.makeUsdScheme(
-            data.get("hydra"), "hydra")
+            data.get("hydra"), "hydra", inherit)
 
         return dict(prman=prman, hydra=hydra)
