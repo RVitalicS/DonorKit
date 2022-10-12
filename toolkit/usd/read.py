@@ -62,6 +62,8 @@ def asUsdBuildScheme (path):
     material = dict()
     shaders = dict()
     for Prim in Stage.Traverse():
+        if not Prim.IsActive():
+            continue
 
         if Prim.GetTypeName() == "Material":
             MaterialName = Prim.GetName()

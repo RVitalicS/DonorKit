@@ -343,7 +343,7 @@ class Manager (object):
 
 
 
-    def makeUsdScheme (self, data, renderer):
+    def makeUsdScheme (self, data, renderer, inherit=False):
 
         data = self.applyUsdNaming(data)
         if renderer == "hydra":
@@ -354,7 +354,7 @@ class Manager (object):
                 data.get("shaders", {}))
 
 
-        # REFERENCE SWITCH
+        if not inherit: return data
         data = self.groupReferences(data)
 
 
@@ -416,10 +416,16 @@ class Manager (object):
                     valueRef = inputRef.get("value")
                     valueUsd = inputUsd.get("value")
 
-                    if type(valueRef) == tuple:
-                        valueRef = list(valueRef)
-                    elif type(valueRef) == type(valueUsd) == float:
+                    if type(valueRef) in [tuple, list]:
+                        if not connectionRef:
+                            valueRef = [round(i, 4) for i in valueRef]
+                    elif type(valueRef) == float:
                         valueRef = round(valueRef, 4)
+
+                    if type(valueUsd) in [tuple, list]:
+                        if not connectionUsd:
+                            valueUsd = [round(i, 4) for i in valueUsd]
+                    elif type(valueUsd) == float:
                         valueUsd = round(valueUsd, 4)
 
                     hasChanges = False
