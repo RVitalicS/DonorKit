@@ -214,46 +214,22 @@ class Manager (object):
                     elif prman:
                         data = shaderDefaults.get(attrName, None)
                         value = toolkit.maya.mplug.getAs( MPlug, asValue=True )
-
                         if data != None and value != None:
 
                             valueDefault = data["default"]
                             valueType    = data["type"]
+                            if not self.isValuesEqual(value, valueDefault):
 
-                            collectAttibue = False
+                                if type(value) == float:
+                                    value = round(value, 4)
+                                elif type(value) == tuple:
+                                    value = tuple(round(i, 4) for i in value)
+                                elif type(value) == list:
+                                    value = [round(i, 4) for i in value]
 
-                            if isinstance(value, float):
-                                value = round(value, 4)
-
-                            if isinstance(value, tuple) and isinstance(valueDefault, tuple):
-                                if len(value) == len(valueDefault):
-
-                                    for index in range( len(valueDefault) ):
-                                        defaultComponent = valueDefault[index]
-
-                                        if isinstance(defaultComponent, float):
-                                            exponent = len(str(defaultComponent).split(".")[1])
-                                            valueComponent = round(value[index], exponent)
-                                            if valueComponent != defaultComponent:
-                                                collectAttibue = True
-                                                break
-                                        elif value[index] != valueDefault[index]:
-                                                collectAttibue = True
-                                                break
-                                    
-                                    if collectAttibue:
-                                        value = tuple(round(i, 4) for i in value)
-
-                            elif value != valueDefault:
-                                    collectAttibue = True
-
-
-                            if collectAttibue:
                                 inputs[attrName] = dict(
-                                value=value,
-                                type=valueType,
-                                connection=False )
-
+                                    value=value, type=valueType,
+                                    connection=False )
 
 
                     elif attrName in [
@@ -363,7 +339,6 @@ class Manager (object):
         if not inherit: return data
         data = self.groupReferences(data)
 
-
         shaders = data.get("shaders", {})
         references = data.get("references", {})
 
@@ -416,41 +391,26 @@ class Manager (object):
                     if inplug in inputsUsd:
                         inputsUsd.pop(inplug)
 
-                    connectionRef = inputRef.get("connection")
-                    connectionUsd = inputUsd.get("connection")
-
                     valueRef = inputRef.get("value")
                     valueUsd = inputUsd.get("value")
 
-                    if type(valueRef) in [tuple, list]:
-                        if not connectionRef:
-                            valueRef = [round(i, 4) for i in valueRef]
-                    elif type(valueRef) == float:
-                        valueRef = round(valueRef, 4)
-
-                    if type(valueUsd) in [tuple, list]:
-                        if not connectionUsd:
-                            valueUsd = [round(i, 4) for i in valueUsd]
-                    elif type(valueUsd) == float:
-                        valueUsd = round(valueUsd, 4)
-
-                    hasChanges = False
-                    if connectionRef != connectionUsd:
-                        hasChanges = True
-                    elif valueRef != valueUsd:
-                        hasChanges = True
-
-                    if hasChanges:
+                    if not self.isValuesEqual(valueRef, valueUsd):
                         overrideInputs[inplug] = inputRef
 
 
                 # if attribute go back to its defaults
-                for usdInput in inputsUsd:
+                for usdInput, dataInput in inputsUsd.items():
+                    
                     mayaInput = nameMirror.mayaInput(idRef, usdInput)
                     MFnDependencyNode = toolkit.maya.find.shaderByName(nodeName)
 
                     MPlug = MFnDependencyNode.findPlug(mayaInput)
-                    overrideInputs[usdInput] = self.getMPlugSpec(MPlug)
+                    specInput = self.getMPlugSpec(MPlug)
+
+                    valueUsd = dataInput.get("value")
+                    valueMaya = specInput.get("value")
+                    if not self.isValuesEqual(valueUsd, valueMaya):
+                        overrideInputs[usdInput] = specInput
 
 
                 if overrideInputs:
@@ -492,6 +452,27 @@ class Manager (object):
 
 
         return data
+
+
+
+    def isValuesEqual (self, valueF, valueS):
+
+        def roundFloat (value):
+            if type(value) == float:
+                return round(value, 4)
+            return value
+
+        if type(valueF) in [tuple, list]:
+            valueF = [roundFloat(i) for i in valueF]
+        else:
+            valueF = roundFloat(valueF)
+
+        if type(valueS) in [tuple, list]:
+            valueS = [roundFloat(i) for i in valueS]
+        else:
+            valueS = roundFloat(valueS)
+
+        return valueF == valueS
 
 
 

@@ -57,33 +57,28 @@ def asUsdBuildScheme (path):
 
     Stage = Usd.Stage.Open(path)
     Layer = Stage.GetRootLayer()
-    DefaultPrim = Stage.GetDefaultPrim().GetName()
+    DefaultPrim = Stage.GetDefaultPrim()
+
 
     material = dict()
+    material["name"] = DefaultPrim.GetName()
+    data = material.get("inputs", {})
+
+    Material = UsdShade.Shader(DefaultPrim)
+    for Output in Material.GetOutputs():
+        if Output.HasConnectedSource():
+            OutputName = Output.GetBaseName()
+            InputName = Output.GetConnectedSource()[1]
+            ConnectableAPI = Output.GetConnectedSource()[0]
+            InputPrim = ConnectableAPI.GetPrim()
+            data[OutputName] = [
+                InputPrim.GetName(), InputName]
+    material["inputs"] = data
+
+
     shaders = dict()
     for Prim in Stage.Traverse():
         if not Prim.IsActive():
-            continue
-
-        if Prim.GetTypeName() == "Material":
-            MaterialName = Prim.GetName()
-            if DefaultPrim != MaterialName:
-                continue
-
-            Material = UsdShade.Shader(Prim)
-            material["name"] = MaterialName
-
-            data = material.get("inputs", {})
-            for Output in Material.GetOutputs():
-                if Output.HasConnectedSource():
-                    OutputName = Output.GetBaseName()
-                    InputName = Output.GetConnectedSource()[1]
-                    ConnectableAPI = Output.GetConnectedSource()[0]
-                    InputPrim = ConnectableAPI.GetPrim()
-                    data[OutputName] = [
-                        InputPrim.GetName(), InputName]
-                material["inputs"] = data
-
             continue
 
         if Prim.GetTypeName() != "Shader":

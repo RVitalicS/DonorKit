@@ -8,7 +8,7 @@ import re
 
 from pxr import Usd, UsdShade, Sdf, Gf
 
-import toolkit.usd.editor
+from toolkit.usd import editor
 
 
 
@@ -33,6 +33,17 @@ def pathEnvEncoder (path):
                 f"^{scope}", "${"+VARIABLE+"}", path)
 
     return path
+
+
+
+def pathEncoder (path, anchor):
+
+    envpath = pathEnvEncoder(path)
+    if path != envpath:
+        return envpath
+
+    else:
+        return editor.makeRelative(path, anchor)
 
 
 
@@ -127,82 +138,46 @@ def make (pathusd, data, comment="", documentation=""):
     # extract data
     dataMaterial   = data.get("material", {})
     dataShaders    = data.get("shaders", {})
+
     dataReferences = data.get("references", {})
+    StageStack     = dict()
 
     nameMaterial   = dataMaterial.get("name")
 
 
-    # create stage and define material
-    Stage = Usd.Stage.CreateNew(pathusd)
-    Layer = Stage.GetRootLayer()
-
-    MaterialPath = Sdf.Path(f"/{nameMaterial}")
-    Material = UsdShade.Material.Define(Stage, MaterialPath)
-
-
+    # define local functions
     def getRefPath (name):
-        
+
+        def getLogic (stage, name):
+            for prim in stage.Traverse():
+                if prim.GetName() != name:
+                    continue
+                if not prim.IsActive():
+                    continue
+                return prim.GetPath().pathString
+
+        if rootReference:
+            RefStage = Usd.Stage.Open(rootReference)
+            path = getLogic(RefStage, name)
+            if path:
+                defaultPrim = RefStage.GetDefaultPrim()
+                pattern = f"^/{defaultPrim.GetName()}"
+                return re.sub(pattern, "", path)
+
         for ID, scheme in dataReferences.items():
-            RefStage = Usd.Stage.Open(
-                scheme.get("path") )
-            for Prim in RefStage.Traverse():
-                if Prim.GetName() != name:
-                    continue
-                if not Prim.IsActive():
-                    continue
-                return Prim.GetPath().pathString
-
-
-    # define material references and shader overrides
-    for ID, scheme in dataReferences.items():
-
-        refMaterial = scheme.get("name")
-        refPath = pathEnvEncoder(scheme.get("path"))
-
-        RefMaterial = UsdShade.Material.Define(Stage, 
-            Sdf.Path(f"/{nameMaterial}/{refMaterial}") )
-        RefMaterial.GetPrim().GetReferences().AddReference(refPath)
-
-        shaders = scheme.get("shaders", {})
-        for refShader, shaderSpec in shaders.items():
-
-            refPath = getRefPath(refShader)
-            if not refPath: continue
-
-            OverPrimPath = Sdf.Path(f"/{nameMaterial}{refPath}" )
-            OverPrim = Stage.OverridePrim(OverPrimPath)
-
-            if not shaderSpec:
-                OverPrim.SetActive(False)
-                continue
-
-            Shader = UsdShade.Shader(OverPrim)
-            ShaderInputs = shaderSpec.get("inputs", {})
-            for inputName, inputData in ShaderInputs.items():
-                createInput(Shader, inputName, inputData)
-
-
-    # create new shader nodes
-    for nameShader, specShader in dataShaders.items():
-
-        ShaderPath = MaterialPath.AppendChild(nameShader)
-        Shader = UsdShade.Shader.Define(Stage, ShaderPath)
-
-        ShaderID = specShader.get("id")
-        Shader.CreateIdAttr(ShaderID)
-
-        inputs = specShader.get("inputs", {})
-        for inputName, inputData in inputs.items():
-            createInput(Shader, inputName, inputData)
+            if not ID in StageStack:
+                StageStack[ID] = Usd.Stage.Open(
+                    scheme.get("path") )
+            RefStage = StageStack.get(ID)
+            path = getLogic(RefStage, name)
+            if path: return path
 
 
     def getShaderPath (name):
-
         root = f"/{nameMaterial}"
 
         for shader in dataShaders:
             if name != shader: continue
-
             path = f"{root}/{shader}"
             return Sdf.Path(path)
         
@@ -210,6 +185,24 @@ def make (pathusd, data, comment="", documentation=""):
         if pathRef:
             path = f"{root}{pathRef}"
             return Sdf.Path(path)
+
+
+    def manageConnection (prim, name, data):
+        
+        NodeGraph = UsdShade.NodeGraph.Get(
+            prim.GetStage(), prim.GetPath())
+        ConnectableAPI = NodeGraph.ConnectableAPI()
+
+        name = f"inputs:{name}"
+        if not prim.HasAttribute(name):
+            return
+
+        Attribute = prim.GetAttribute(name)
+        if not ConnectableAPI.HasConnectedSource(Attribute):
+            return
+
+        if not data["connection"]:
+            ConnectableAPI.DisconnectSource(Attribute)
 
 
     def makeConnections (data):
@@ -234,7 +227,105 @@ def make (pathusd, data, comment="", documentation=""):
                     ShaderSource.ConnectableAPI(), sourcePlug)
 
 
+    # check if material
+    # has previous version reference
+    rootReference = None
+    justReference = False
+    overShaders = dict()
+    for ID, scheme in dataReferences.items():
+        if scheme.get("name") != nameMaterial:
+            continue
+        shaders = scheme.get("shaders", {})
+        useForRoot = True
+        for name in shaders:
+            if name in dataShaders:
+                useForRoot = False
+        if useForRoot:
+            rootReference = scheme.get("path")
+            overShaders = shaders
+            dataReferences.pop(ID)
+            break
+
+    if rootReference and not dataShaders:
+        if not dataReferences and not overShaders:
+            justReference = True
+
+
+    # create stage and define material
+    Stage = Usd.Stage.CreateNew(pathusd)
+    Layer = Stage.GetRootLayer()
+
+    MaterialPath = Sdf.Path(f"/{nameMaterial}")
+    Material = UsdShade.Material.Define(Stage, MaterialPath)
+
+    if rootReference:
+        Material.GetPrim().GetReferences().AddReference(
+            pathEncoder(rootReference, pathusd) )
+
+
+    # define material references and shader overrides
+    for ID, scheme in dataReferences.items():
+
+        refMaterial = scheme.get("name")
+        refUsdPath = pathEnvEncoder(scheme.get("path"))
+
+        RefMaterial = UsdShade.Material.Define(Stage, 
+            Sdf.Path(f"/{nameMaterial}/{refMaterial}") )
+        RefMaterial.GetPrim().GetReferences().AddReference(
+            pathEncoder(refUsdPath, pathusd) )
+
+        shaders = scheme.get("shaders", {})
+        for refShader, shaderSpec in shaders.items():
+
+            refStagePath = getRefPath(refShader)
+            if not refStagePath: continue
+
+            OverPrimPath = Sdf.Path(f"/{nameMaterial}{refStagePath}" )
+            OverPrim = Stage.OverridePrim(OverPrimPath)
+
+            if not shaderSpec:
+                OverPrim.SetActive(False)
+                continue
+
+            Shader = UsdShade.Shader(OverPrim)
+            ShaderInputs = shaderSpec.get("inputs", {})
+            for inputName, inputData in ShaderInputs.items():
+                manageConnection(OverPrim, inputName, inputData)
+                createInput(Shader, inputName, inputData)
+
+
+    # override shaders for root reference
+    for nameShader, specShader in overShaders.items():
+
+        refPath = getRefPath(nameShader)
+        if not refPath: continue
+
+        OverPath = Sdf.Path(f"/{nameMaterial}{refPath}" )
+        OverPrim = Stage.OverridePrim(OverPath)
+
+        Shader = UsdShade.Shader(OverPrim)
+        inputs = specShader.get("inputs", {})
+        for inputName, inputData in inputs.items():
+            manageConnection(OverPrim, inputName, inputData)
+            createInput(Shader, inputName, inputData)
+
+
+    # create new shader nodes
+    for nameShader, specShader in dataShaders.items():
+
+        ShaderPath = MaterialPath.AppendChild(nameShader)
+        Shader = UsdShade.Shader.Define(Stage, ShaderPath)
+
+        ShaderID = specShader.get("id")
+        Shader.CreateIdAttr(ShaderID)
+
+        inputs = specShader.get("inputs", {})
+        for inputName, inputData in inputs.items():
+            createInput(Shader, inputName, inputData)
+
+
     # connect shaders to network
+    makeConnections(overShaders)
     makeConnections(dataShaders)
     for ID, scheme in dataReferences.items():
         dataShadersRef = scheme.get("shaders", {})
@@ -242,16 +333,17 @@ def make (pathusd, data, comment="", documentation=""):
 
 
     # connect material with shaders
-    for inPlug, connection in dataMaterial.get("inputs", {}).items():
-        nodeName, outPlug = connection
+    if not justReference:
+        for inPlug, connection in dataMaterial.get("inputs", {}).items():
+            nodeName, outPlug = connection
 
-        ShaderPath = getShaderPath(nodeName)
-        ShaderOutput = UsdShade.NodeGraph.Get(Stage, ShaderPath)
+            ShaderPath = getShaderPath(nodeName)
+            ShaderOutput = UsdShade.NodeGraph.Get(Stage, ShaderPath)
 
-        MaterialOutput = Material.CreateOutput(
-            inPlug, Sdf.ValueTypeNames.Token)
-        MaterialOutput.ConnectToSource(
-            ShaderOutput.ConnectableAPI(), outPlug)
+            MaterialOutput = Material.CreateOutput(
+                inPlug, Sdf.ValueTypeNames.Token)
+            MaterialOutput.ConnectToSource(
+                ShaderOutput.ConnectableAPI(), outPlug)
 
 
     # save material
@@ -279,7 +371,7 @@ def weld (pathusd, name, references):
     MaterialPrim = Stage.GetPrimAtPath(Path)
 
     for path in references:
-        path = toolkit.usd.editor.makeRelative(path, pathusd)
+        path = editor.makeRelative(path, pathusd)
         MaterialPrim.GetReferences().AddReference(path)
 
     layer = Stage.GetRootLayer()
