@@ -40,6 +40,9 @@ class Donor (
                 root, "install", "icons", "store.svg" ) ))
         self.setObjectName("DonorManager")
 
+        self.exit = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+Q"), self)
+        self.exit.activated.connect(self.close)
+
 
 
 
