@@ -92,13 +92,14 @@ class Browser (QtWidgets.QListView):
 
         widgetWidth = self.width() - scrollWidth - margin
 
-        columnsAsset     = int(widgetWidth/assetWidth)
+        columnsAsset     = int(widgetWidth / assetWidth)
         offsetWidthAsset = int(widgetWidth / columnsAsset )
         offsetAsset      = int( (offsetWidthAsset-assetWidth)/2 )
+        offsetMaterial   = offsetAsset
 
 
-        columnsFolder     = int(widgetWidth/folderWidth)
-        offsetWidthFolder = int(widgetWidth / columnsFolder )
+        columnsFolder     = int(widgetWidth / folderWidth)
+        offsetWidthFolder = int(widgetWidth / columnsFolder)
         offsetFolder      = int( (offsetWidthFolder-folderWidth)/2 )
 
 
@@ -107,7 +108,8 @@ class Browser (QtWidgets.QListView):
 
 
         folderCount = int()
-        assetCount  = int()
+        assetCount = int()
+        materialCount = int()
         for index in range(model.rowCount()):
             item = model.item(index)
             data = item.data(QtCore.Qt.EditRole)
@@ -118,16 +120,21 @@ class Browser (QtWidgets.QListView):
                 folderCount += 1
 
             elif data["type"] in [
-                    "usdasset", "usdmaterial",
-                    "usdfile",
+                    "usdasset", "usdfile",
                     "colorguide", "color" ]:
                 assetCount  += 1
+
+            elif data["type"] == "usdmaterial":
+                materialCount += 1
 
         if folderCount <= columnsFolder:
             offsetFolder = 0
 
         if assetCount <= columnsAsset:
             offsetAsset = 0
+
+        if materialCount <= columnsAsset:
+            offsetMaterial = 0
 
 
 
@@ -352,7 +359,7 @@ class Browser (QtWidgets.QListView):
                 data = item.data(QtCore.Qt.EditRole)
 
                 if data["type"] == "usdmaterial":
-                    if positionX + assetWidth + offsetAsset*2 > widgetWidth + margin:
+                    if positionX + assetWidth + offsetMaterial*2 > widgetWidth + margin:
                         positionX  = margin
                         positionY += assetHeight
 
@@ -365,7 +372,7 @@ class Browser (QtWidgets.QListView):
                         QtCore.QPoint(positionX, positionY), 
                         model.index(index, 0) )
 
-                    positionX += assetWidth + offsetAsset
+                    positionX += assetWidth + offsetMaterial
 
 
 
