@@ -1,6 +1,8 @@
 {
-    "generation": 1,
+    "generation": 3,
     "info": "",
     "name": "Colors",
-    "type": "root"
+    "type": "root",
+    "usdmaterial": {},
+    "scantime": "12.11.2022 11.52"
 }
