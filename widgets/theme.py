@@ -2,9 +2,7 @@
 
 
 import os
-
-thisDir = os.path.dirname(__file__)
-rootDir = os.path.dirname(thisDir)
+import databank
 
 
 from toolkit.system import stream
@@ -26,14 +24,13 @@ class Theme (object):
     def __init__ (self, app="Manager"):
         self.app = app
 
-        self.name = "dark"
-        filename = "themedark.json"
-
         with Settings.Manager(self.app, False) as settings:
             self.name = settings.get("theme", "")
 
-        if self.name == "light":
-            filename = "themelight.json"
+        if self.name == "dark":
+            self.values = databank.themedark
+        else:
+            self.values = databank.themelight
 
 
         self.variables = {
@@ -58,11 +55,6 @@ class Theme (object):
             "browserHandle": "$BROWSER_HANDLE"
         }
 
-
-        path = os.path.join(
-            rootDir, "databank", filename)
-        self.values = stream.dataread(path)
-
         class Group: pass
         self.color = Group()
 
@@ -81,12 +73,7 @@ class Theme (object):
 
     def getStyleSheet (self):
 
-        path = os.path.join(
-            rootDir, "databank", "stylesheet.css")
-
-        stylesheet = ""
-        with open(path, "r") as file:
-            stylesheet = file.read()
+        stylesheet = databank.stylesheet
 
         for key, variable in self.variables.items():
             value = self.values.get(key, "#00ff00")

@@ -4,9 +4,7 @@
 import re
 import os
 
-thisDir = os.path.dirname(__file__)
-toolDir = os.path.dirname(thisDir)
-rootDir = os.path.dirname(toolDir)
+from databank import pathEnvmap
 
 
 import shutil
@@ -156,9 +154,7 @@ def recordAssetPreviews (
     scenepathDomeLight = "/DomeLight"
     DomeLight = UsdLux.DomeLight.Define(
         StageLight, Sdf.Path(scenepathDomeLight) )
-
-    pathTexture = os.path.join(rootDir, "databank", "envmap.exr")
-    DomeLight.CreateTextureFileAttr(pathTexture)
+    DomeLight.CreateTextureFileAttr(pathEnvmap)
 
     RotateYOp = DomeLight.AddRotateYOp()
     RotateYOp.Set(90)
@@ -227,8 +223,7 @@ def recordMaterialPreview ( usdpath,
 
     LightPath = Sdf.Path("/Light")
     Light = UsdLux.DomeLight.Define(Stage, LightPath)
-    texture = os.path.join(rootDir, "databank", "envmap.exr")
-    Light.CreateTextureFileAttr(texture)
+    Light.CreateTextureFileAttr(pathEnvmap)
     RotateYOp = Light.AddRotateYOp()
     RotateYOp.Set(90)
     FormatInput = Light.CreateInput(

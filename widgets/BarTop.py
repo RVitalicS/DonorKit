@@ -4,9 +4,6 @@
 import re
 import os
 
-thisDir = os.path.dirname(__file__)
-rootDir = os.path.dirname(thisDir)
-
 
 import toolkit.core.calculate
 import toolkit.core.graphics
@@ -529,6 +526,9 @@ class Bar (QtWidgets.QWidget):
         libraries = dict()
         
         if not os.getenv("ASSETLIBS", ""):
+
+            thisDir = os.path.dirname(__file__)
+            rootDir = os.path.dirname(thisDir)
 
             libsDir = os.path.join(
                 rootDir, "examples", "libraries" )

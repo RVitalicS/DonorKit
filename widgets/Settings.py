@@ -2,9 +2,7 @@
 
 
 import os
-
-thisDir = os.path.dirname(__file__)
-rootDir = os.path.dirname(thisDir)
+from databank import path as bankpath
 
 
 import toolkit.system.stream
@@ -79,8 +77,7 @@ class ManagerData (object):
                 folder="nautilus",
                 usd="usdview" )
 
-        self.path = os.path.join(
-            rootDir, "databank", filename )
+        self.path = os.path.join(bankpath, filename)
 
 
         if not os.path.exists(self.path):
