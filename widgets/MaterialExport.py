@@ -12,6 +12,7 @@ from toolkit.core import Metadata
 
 from toolkit.ensure.QtWidgets import *
 from toolkit.ensure.QtCore import *
+from toolkit.ensure.QtGui import *
 
 from . import BaseWidget
 from . import BaseExport
@@ -40,6 +41,10 @@ class BaseMain (QtWidgets.QDialog):
 
         self.setWindowTitle("USD Material Export")
         self.setObjectName("UsdMaterialExport")
+
+        self.exit = QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key_Escape), self)
+        self.exit.activated.connect(self.close)
 
 
 
