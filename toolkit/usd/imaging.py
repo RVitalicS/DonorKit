@@ -33,7 +33,8 @@ def recordCommand (
         imageWidth=None,
         complexity=None,
         colorCorrectionMode=None,
-        renderer=None ):
+        purposes=None,
+        renderer=None, ):
 
 
     command = ["usdrecord"]
@@ -61,6 +62,10 @@ def recordCommand (
     if colorCorrectionMode != None:
         command.append("--colorCorrectionMode")
         command.append(colorCorrectionMode)
+
+    if purposes != None:
+        command.append("--purposes")
+        command.append(purposes)
 
     if renderer != None:
         command.append("--renderer")
@@ -183,6 +188,7 @@ def recordAssetPreviews (
         imageWidth=width,
         complexity="high",
         colorCorrectionMode="sRGB",
+        purposes="render",
         renderer="GL" )
 
     command += ["&&", "rm", pathLight]
@@ -290,6 +296,7 @@ def recordMaterialPreview ( usdpath,
         imageWidth=width,
         complexity=complexity,
         colorCorrectionMode="sRGB",
+        purposes="render",
         renderer="GL" )
 
     command += ["&&", "rm", pathRender]

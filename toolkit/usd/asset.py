@@ -126,10 +126,10 @@ def bind (
 
 
 def make (
-        sourcePath,
         assetPath,
-        tree,
-        root,
+        sourcePath,
+        proxyPath,
+        tree, root,
         name = None ):
 
 
@@ -148,27 +148,20 @@ def make (
 
     ModelAPI = Usd.ModelAPI(Xform)
     ModelAPI.SetKind("assembly")
-    ModelAPI.SetAssetName( name )
+
+    TreeRootPath = RootPath.AppendChild(rootName)
+    overroot = assetStage.OverridePrim(TreeRootPath)
+
+    overroot.GetPayloads().AddPayload(
+        toolkit.usd.editor.makeRelative(sourcePath, assetPath) )
+
+    if os.path.exists(proxyPath):
+        overroot.GetPayloads().AddPayload(
+            toolkit.usd.editor.makeRelative(proxyPath, assetPath) )
 
 
-    RootPrim = assetStage.GetPrimAtPath(RootPath)
-    VariantSet = RootPrim.GetVariantSets().AddVariantSet("geo")
-
-    for variant in ["proxy", "render"]:
-        VariantSet.AddVariant(variant)
-        VariantSet.SetVariantSelection(variant)
-
-        with VariantSet.GetVariantEditContext():
-            TreeRootPath = RootPath.AppendChild(rootName)
-            overroot = assetStage.OverridePrim(TreeRootPath)
-
-            if variant == "render":
-                payloadPath = toolkit.usd.editor.makeRelative(sourcePath, assetPath)
-                overroot.GetPayloads().AddPayload(payloadPath)
-
-                bind( sourceStage, assetStage,
-                    tree,
-                    root=RootPath.pathString )
+    bind( sourceStage, assetStage,
+        tree, root=RootPath.pathString )
 
 
     if sourceStage.GetStartTimeCode() != sourceStage.GetEndTimeCode():

@@ -230,10 +230,8 @@ def editTexCoord (Prim):
 
 
 def copyStage (source, target,
-               root=None,
-               units=None,
-               children=None,
-               namingGeomSubset=None):
+               root=None, units=None, proxy=False,
+               children=None, namingGeomSubset=None):
 
 
     if root is None:
@@ -261,19 +259,25 @@ def copyStage (source, target,
 
 
     for ChildPrim in children:
+        typeName = ChildPrim.GetTypeName()
 
         childname = ChildPrim.GetName()
         childpath = ChildPrim.GetPath().pathString
         cutedpath = re.sub(scope, "", childpath)
 
-        if childname == "Looks":
-            if ChildPrim.GetTypeName() == "Scope":
-                continue
+        if childname == "Looks" and typeName == "Scope":
+            continue
 
-        if namingGeomSubset:
-            if ChildPrim.GetTypeName() == "GeomSubset":
-                parentpath = re.sub(childname+r"$", "",cutedpath)
-                cutedpath = parentpath + namingGeomSubset(childname)
+        elif typeName == "GeomSubset":
+            parentpath = re.sub(f"{childname}$", "", cutedpath)
+            if proxy:
+                parentpath = re.sub("Shape/$", "Proxy/", parentpath)
+            if namingGeomSubset:
+                childname = namingGeomSubset(childname)
+            cutedpath = parentpath + childname
+
+        elif proxy:
+            cutedpath = re.sub("Shape$", "Proxy", cutedpath)
 
         NewPath = Sdf.Path(cutedpath)
         NewPrim = target.DefinePrim(
@@ -284,12 +288,17 @@ def copyStage (source, target,
 
         copyAttrubutes(ChildPrim, NewPrim, units=units)
 
-        if ChildPrim.GetTypeName() == "Mesh":
+        if typeName == "Mesh":
             editTexCoord(NewPrim)
 
+            Mesh = UsdGeom.Mesh(NewPrim)
+            if not proxy:
+                Mesh.CreatePurposeAttr("render")
+            else:
+                Mesh.CreatePurposeAttr("proxy")
+
         copyStage(source, target,
-                  root=root,
-                  units=units,
+                  root=root, units=units, proxy=proxy,
                   children=ChildPrim.GetAllChildren(),
                   namingGeomSubset=namingGeomSubset)
 

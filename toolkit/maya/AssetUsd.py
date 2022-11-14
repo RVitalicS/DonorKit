@@ -19,6 +19,7 @@ import toolkit.system.ostree
 
 import toolkit.maya.camera
 import toolkit.maya.export
+import toolkit.maya.proxy
 import toolkit.maya.outliner
 import toolkit.maya.message
 import toolkit.maya.MaterialUsd
@@ -60,7 +61,8 @@ def Export (options=None):
         options.version = 1
         options.variant = ""
         options.link = True
-
+        
+        options.proxy = 1.0
         options.maya = True
 
         options.info = ""
@@ -82,6 +84,9 @@ def Export (options=None):
 
         options = dialog.getOptions()
         if not options: return
+
+        # MAKE UI FOR THIS
+        options.proxy = 1.0
 
 
 
@@ -123,6 +128,19 @@ def Export (options=None):
         options.assetPath,
         toolkit.system.ostree.SUBDIR_MODELLING,
         ModelFileName )
+
+    SourceProxyPath = os.path.join(
+        options.assetPath,
+        toolkit.system.ostree.SUBDIR_MODELLING,
+        "source.proxy.usd" )
+
+    ProxyFileName = "{}.{}.Proxy.usdc".format(
+        os.path.basename(mayaScene.root), version )
+
+    ProxyPath = os.path.join(
+        options.assetPath,
+        toolkit.system.ostree.SUBDIR_MODELLING,
+        ProxyFileName )
 
     AnimationFileName = "{}.{}.usdc".format(
         options.animationName, version)
@@ -178,8 +196,7 @@ def Export (options=None):
 
         Stage = Usd.Stage.CreateNew(ModelPath)
         toolkit.usd.editor.copyStage(
-            StageSource,
-            Stage,
+            StageSource, Stage,
             root=mayaScene.root, units=units,
             namingGeomSubset=rule_Material)
 
@@ -188,6 +205,27 @@ def Export (options=None):
             ModelPath, args=dict(format="usdc") )
 
         toolkit.maya.message.info(modelMessage + ModelFileName)
+
+
+        if options.proxy < 1.0:
+            if os.path.exists(ProxyPath):
+                proxyMessage = "Proxy Overwritten: "
+            else:
+                proxyMessage = "Proxy Saved: "
+
+            toolkit.maya.proxy.generate(
+                SourceProxyPath, threshold=options.proxy)
+            StageProxy = Usd.Stage.Open(SourceProxyPath)
+
+            Stage = Usd.Stage.CreateNew(ProxyPath)
+            toolkit.usd.editor.copyStage(
+                StageProxy, Stage, proxy=True,
+                root=mayaScene.root, units=units)
+
+            Stage.GetRootLayer().Export(
+                ProxyPath, args=dict(format="usdc") )
+
+            toolkit.maya.message.info(proxyMessage + ProxyFileName)
 
 
 
@@ -212,8 +250,11 @@ def Export (options=None):
         toolkit.maya.message.info(animationMessage + AnimationFileName)
 
 
+
     if os.path.exists(SourceModelPath):
         os.remove(SourceModelPath)
+    if os.path.exists(SourceProxyPath):
+        os.remove(SourceProxyPath)
 
 
 
@@ -268,8 +309,9 @@ def Export (options=None):
 
         if makeAsset:
             toolkit.usd.asset.make (
-                ReferencePath,
                 AssetPath,
+                ReferencePath,
+                ProxyPath,
                 mayaScene.tree,
                 mayaScene.root )
 
