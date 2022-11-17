@@ -31,24 +31,25 @@ def generate (path, threshold=0.8):
             exactType="mesh", selection=True, long=True):
 
         mayaCommand.select(shape)
-        mayaCommand.polyReduce(
-            version=1,
-            termination=0,
-            sharpness=0.0,
-            keepMapBorder=False,
-            keepColorBorder=False,
-            keepFaceGroupBorder=False,
-            keepHardEdge=False,
-            keepCreaseEdge=False,
-            keepBorder=True,
-            keepBorderWeight=1.0,
-            useVirtualSymmetry=0,
-            preserveTopology=True,
-            keepQuadsWeight=1.0,
-            cachingReduce=True,
-            constructionHistory=True,
-            percentage=(1-threshold)*100,
-            replaceOriginal=True)
+        if threshold < 1.0:
+            mayaCommand.polyReduce(
+                version=1,
+                termination=0,
+                sharpness=0.0,
+                keepMapBorder=False,
+                keepColorBorder=False,
+                keepFaceGroupBorder=False,
+                keepHardEdge=False,
+                keepCreaseEdge=False,
+                keepBorder=True,
+                keepBorderWeight=1.0,
+                useVirtualSymmetry=0,
+                preserveTopology=True,
+                keepQuadsWeight=1.0,
+                cachingReduce=True,
+                constructionHistory=True,
+                percentage=(1-threshold)*100,
+                replaceOriginal=True)
         mayaCommand.polySoftEdge(
             angle=0.0, constructionHistory=True )
         mayaCommand.delete(constructionHistory=True)
@@ -56,7 +57,6 @@ def generate (path, threshold=0.8):
     # export
     mayaCommand.select(copyDagPath, hierarchy=False)
     export.USD(path,
-        defaultUSDFormat="usda",
         exportUVs=0, exportColorSets=0,
         defaultMeshScheme="none",
         animation=0, shading=False )

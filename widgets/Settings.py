@@ -56,6 +56,8 @@ class ManagerData (object):
                 animationOverwrite=False,
                 rangeStart=1,
                 rangeEnd=1,
+                proxy=True,
+                reduceFactor=0.35,
                 link=True,
                 maya=False ))
 

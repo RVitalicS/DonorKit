@@ -94,6 +94,9 @@ class Dialog (
         self.ExportOptions.surfacingSwitch.released.connect(self.partitionExport)
         self.ExportOptions.animationSwitch.released.connect(self.partitionExport)
 
+        self.ExportOptions.proxyOptions.switch.released.connect(self.partitionExport)
+        self.ExportOptions.proxyOptions.factor.valueChanged.connect(self.setReduceFactor)
+
         self.ExportOptions.modelingOverwrite.released.connect(self.overwriteState)
         self.ExportOptions.surfacingOverwrite.released.connect(self.overwriteState)
         self.ExportOptions.animationOverwrite.released.connect(self.overwriteState)
@@ -140,6 +143,13 @@ class Dialog (
         if not hasCheckedName:
             self.checkedName = ""
             self.setOptions()
+
+
+
+    def setReduceFactor (self, value):
+
+        with Settings.Manager(self.theme.app, True) as settings:
+            settings["reduceFactor"] = value
 
 
 
@@ -336,7 +346,7 @@ class Dialog (
 
 
 
-    def getAssetName (self, final=False, extension="usda"):
+    def getAssetName (self, final=False):
 
         name = self.ExportOptions.nameEdit.text()
 
@@ -354,8 +364,7 @@ class Dialog (
             version=version,
             variant=variant,
             animation=animation,
-            final=final,
-            extension=extension )
+            final=final )
 
 
 
@@ -373,6 +382,7 @@ class Dialog (
             settings["modelling"] = self.ExportOptions.modelingSwitch.isChecked()
             settings["surfacing"] = self.ExportOptions.surfacingSwitch.isChecked()
             settings["animation"] = self.ExportOptions.animationSwitch.isChecked()
+            settings["proxy"] = self.ExportOptions.proxyOptions.switch.isChecked()
 
         self.applyUiSettings()
 
@@ -403,6 +413,8 @@ class Dialog (
 
             self.ExportOptions.animationOptions.range.start.setValue(settings.get("rangeStart"))
             self.ExportOptions.animationOptions.range.end.setValue(settings.get("rangeEnd"))
+
+            self.ExportOptions.proxyOptions.factor.setValue(settings.get("reduceFactor"))
 
             modelingOn  = settings.get("modelling")
             surfacingOn = settings.get("surfacing")
@@ -450,6 +462,17 @@ class Dialog (
                 self.ExportOptions.versionOptions.setVisible(True)
             else:
                 self.ExportOptions.versionOptions.setVisible(False)
+
+            if settings.get("proxy"):
+                self.ExportOptions.proxyOptions.switch.setChecked(True)
+            else:
+                self.ExportOptions.proxyOptions.switch.setChecked(False)
+            self.ExportOptions.proxyOptions.updateUI()
+
+            if modelingOn:
+                self.ExportOptions.proxyOptions.setVisible(True)
+            else:
+                self.ExportOptions.proxyOptions.setVisible(False)
 
             if settings.get("link"):
                 self.ExportOptions.versionOptions.linkButton.setChecked(True)
@@ -514,6 +537,9 @@ class Dialog (
 
             options.minTime = self.ExportOptions.animationOptions.range.start.value()
             options.maxTime = self.ExportOptions.animationOptions.range.end.value()
+
+            options.proxy = self.ExportOptions.proxyOptions.switch.isChecked()
+            options.reduceFactor = self.ExportOptions.proxyOptions.factor.value()
 
             options.assetPath = self.getBrowserPath()
             options.assetName = self.getAssetName()

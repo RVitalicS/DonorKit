@@ -54,6 +54,9 @@ def Export (options=None):
 
         options.minTime = 0
         options.maxTime = 0
+        
+        options.proxy = True
+        options.reduceFactor = 0.5
 
         options.assetPath = ""
         options.assetName = ""
@@ -61,8 +64,7 @@ def Export (options=None):
         options.version = 1
         options.variant = ""
         options.link = True
-        
-        options.proxy = 1.0
+
         options.maya = True
 
         options.info = ""
@@ -85,9 +87,6 @@ def Export (options=None):
         options = dialog.getOptions()
         if not options: return
 
-        # MAKE UI FOR THIS
-        options.proxy = 1.0
-
 
 
     version = "v{:02d}".format(options.version)
@@ -98,8 +97,7 @@ def Export (options=None):
 
 
 
-    mayaScene = toolkit.maya.scene.Manager(
-        getshaders=options.surfacing)
+    mayaScene = toolkit.maya.scene.Manager()
     mayaScene.applyMaterialNaming(rule_Material)
 
     if not mayaScene.tree:
@@ -121,7 +119,7 @@ def Export (options=None):
         toolkit.system.ostree.SUBDIR_MODELLING,
         "source.geo.usd" )
 
-    ModelFileName = "{}.{}.usdc".format(
+    ModelFileName = "{}.{}.usd".format(
         os.path.basename(mayaScene.root), version )
 
     ModelPath = os.path.join(
@@ -134,7 +132,7 @@ def Export (options=None):
         toolkit.system.ostree.SUBDIR_MODELLING,
         "source.proxy.usd" )
 
-    ProxyFileName = "{}.{}.Proxy.usdc".format(
+    ProxyFileName = "{}.{}.Proxy.usd".format(
         os.path.basename(mayaScene.root), version )
 
     ProxyPath = os.path.join(
@@ -142,7 +140,7 @@ def Export (options=None):
         toolkit.system.ostree.SUBDIR_MODELLING,
         ProxyFileName )
 
-    AnimationFileName = "{}.{}.usdc".format(
+    AnimationFileName = "{}.{}.usd".format(
         options.animationName, version)
 
     AnimationPath = os.path.join(
@@ -207,14 +205,14 @@ def Export (options=None):
         toolkit.maya.message.info(modelMessage + ModelFileName)
 
 
-        if options.proxy < 1.0:
+        if options.proxy:
             if os.path.exists(ProxyPath):
                 proxyMessage = "Proxy Overwritten: "
             else:
                 proxyMessage = "Proxy Saved: "
 
             toolkit.maya.proxy.generate(
-                SourceProxyPath, threshold=options.proxy)
+                SourceProxyPath, threshold=options.reduceFactor)
             StageProxy = Usd.Stage.Open(SourceProxyPath)
 
             Stage = Usd.Stage.CreateNew(ProxyPath)
@@ -295,25 +293,17 @@ def Export (options=None):
             options.assetPath,
             options.assetName )
 
-        makeAsset = True
-        if os.path.exists(AssetPath) and not options.surfacing:
-            if options.modelling and options.modellingOverride:
-                makeAsset = False
-            elif options.animation and options.animationOverride:
-                makeAsset = False
-
         if os.path.exists(AssetPath):
             assetMessage = "Asset Overwritten: "
         else:
             assetMessage = "Asset Saved: "
 
-        if makeAsset:
-            toolkit.usd.asset.make (
-                AssetPath,
-                ReferencePath,
-                ProxyPath,
-                mayaScene.tree,
-                mayaScene.root )
+        toolkit.usd.asset.make (
+            AssetPath,
+            ReferencePath,
+            ProxyPath,
+            mayaScene.tree,
+            mayaScene.root )
 
 
         # Create/Update Symbolic Link

@@ -364,7 +364,7 @@ def createAssetName (
         variant=None,
         animation=None,
         final=False,
-        extension="usda" ):
+        extension="usd" ):
     
     
     assetName = [name] if name else []

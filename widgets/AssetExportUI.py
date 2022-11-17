@@ -84,6 +84,52 @@ class SpinBoxLabel (QtWidgets.QSpinBox):
 
 
 
+class DoubleSpinBoxLabel (QtWidgets.QDoubleSpinBox):
+
+
+    def __init__ (self):
+        super(DoubleSpinBoxLabel, self).__init__()
+
+        self.setProperty("background", "transparent")
+        self.setProperty("border", "none")
+
+        self.fontValue = UIGlobals.Options.fontLabel
+        toolkit.core.ui.setFont(
+            self, self.fontValue)
+
+        self.setMinimum(0.0)
+        self.setMaximum(1.0)
+        self.setSingleStep(0.05)
+
+        self.setFrame(False)
+        self.setContentsMargins(0,0,0,0)
+
+        self.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+
+
+    def leaveEvent (self, event):
+
+        super(DoubleSpinBoxLabel, self).leaveEvent(event)
+        self.clearFocus()
+
+
+    def setEditable (self, flag):
+        self.setEnabled(flag)
+
+        if flag == True:
+            self.setProperty("textcolor", "on")
+        else:
+            self.setProperty("textcolor", "weak")
+
+        self.setStyleSheet("")
+
+
+
+
+
+
+
 class RangeOption (QtWidgets.QWidget):
 
 
@@ -229,6 +275,98 @@ class RefreshButton (QtWidgets.QPushButton):
     def leaveEvent (self, event):
         super(RefreshButton, self).leaveEvent(event)
         self.buttonPressed = False
+
+
+
+
+
+
+class ProxyButton (QtWidgets.QPushButton):
+
+
+    def __init__ (self, theme):
+        super(ProxyButton, self).__init__()
+
+        self.theme = theme
+
+        self.setCheckable(True)
+        self.setText("")
+
+        self.radius = 3
+        self.value = UIGlobals.Options.buttonHeight
+        self.setFixedSize(QtCore.QSize(self.value, self.value))
+
+
+    def paintEvent (self, event):
+
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+
+        buttonRect = self.contentsRect()
+
+        color = QtGui.QColor(self.theme.color.optionBackground)
+        painter.fillRect(buttonRect, color)
+
+        if self.isChecked():
+            color = QtGui.QColor(self.theme.color.optionButton)
+        else:
+            color = QtGui.QColor(self.theme.color.optionDisable)
+
+        offset = int(self.value/2) - self.radius
+
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.setBrush(QtGui.QBrush(color))
+        painter.drawEllipse(offset, offset, self.radius*2, self.radius*2)
+        painter.end()
+
+
+
+
+
+
+class ProxyOptions (QtWidgets.QWidget):
+
+    def __init__ (self, theme):
+        super(ProxyOptions, self).__init__()
+
+        self.mainLayout = QtWidgets.QHBoxLayout()
+        self.mainLayout.setContentsMargins(0, 0, 0, 3)
+        self.mainLayout.setSpacing(10)
+
+        self.proxyLabel = QtWidgets.QLabel("PROXY")
+        self.proxyLabel.setObjectName("proxyLabel")
+        self.proxyLabel.setProperty("textcolor", "weak")
+        self.proxyLabel.setFixedSize(
+            QtCore.QSize(UIGlobals.Options.labelWidth, UIGlobals.Options.rawHeight) )
+        toolkit.core.ui.setFont(
+            self.proxyLabel,
+            UIGlobals.IconDelegate.fontAssetLabel)
+        self.proxyLabel.setAlignment(
+            QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter )
+        self.mainLayout.addWidget(self.proxyLabel)
+
+        self.switch = ProxyButton(theme)
+        self.switch.released.connect(self.updateUI)
+        self.mainLayout.addWidget(self.switch)
+
+        self.factor = DoubleSpinBoxLabel()
+        self.mainLayout.addWidget(self.factor)
+
+        spacer = QtWidgets.QSpacerItem(
+            0, 0,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum)
+        self.mainLayout.addItem(spacer)
+
+        self.setLayout(self.mainLayout)
+
+
+    def updateUI (self):
+
+        if self.switch.isChecked():
+            self.factor.setEditable(True)
+        else:
+            self.factor.setEditable(False)
 
 
 
@@ -423,6 +561,12 @@ class ExportOptions (QtWidgets.QWidget):
         self.modelingLayout.addItem(modelingSpacer)
         self.optionLayout.addLayout(self.modelingLayout)
 
+
+        self.proxyOptions = ProxyOptions(theme)
+        self.proxyOptions.setFixedWidth(WIDTH)
+        self.optionLayout.addWidget(self.proxyOptions)
+
+
         self.surfacingLayout = QtWidgets.QHBoxLayout()
         self.surfacingLayout.setContentsMargins(0, 0, 0, 4)
         self.surfacingLayout.setSpacing(10)
@@ -456,6 +600,7 @@ class ExportOptions (QtWidgets.QWidget):
             QtWidgets.QSizePolicy.Minimum)
         self.surfacingLayout.addItem(surfacingSpacer)
         self.optionLayout.addLayout(self.surfacingLayout)
+
 
         self.animationLayout = QtWidgets.QHBoxLayout()
         self.animationLayout.setContentsMargins(0, 0, 0, 4)
@@ -591,6 +736,7 @@ class ExportOptions (QtWidgets.QWidget):
         self.line.setFixedWidth(value)
         self.infoEdit.setFixedWidth(value)
         self.infoEdit.skinnySize()
+        self.proxyOptions.setFixedWidth(value)
         self.animationOptions.setFixedWidth(value)
         self.versionOptions.setFixedWidth(value)
         self.commentEdit.setFixedWidth(value)

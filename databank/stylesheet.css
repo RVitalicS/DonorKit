@@ -183,6 +183,7 @@ QComboBox QAbstractItemView {
 
 QComboBox,
 QSpinBox,
+QDoubleSpinBox,
 QLineEdit,
 QTextEdit {
     selection-color: $SELECTION_COLOR;
