@@ -2,6 +2,7 @@
 
 
 
+import toolkit.core.calculate
 import toolkit.core.graphics
 
 from .BasePainterGeneral import (
@@ -81,7 +82,8 @@ class Base (object):
                 QtCore.Qt.RoundJoin) )
 
         offsetText = 1
-        self.painter.setFont( UIGlobals.IconDelegate.fontFolderName )
+        fontName = UIGlobals.IconDelegate.fontFolderName
+        self.painter.setFont(fontName)
 
         offsetName = folderImage.width() + folderOffset*2
         self.folderNameArea = QtCore.QRect(
@@ -96,6 +98,20 @@ class Base (object):
         textOption = QtGui.QTextOption()
         textOption.setWrapMode(QtGui.QTextOption.NoWrap)
         textOption.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignBottom)
+
+        nameWidth = toolkit.core.calculate.stringWidth(textName, fontName)
+        nameSpace = self.folderNameArea.width() - self.space
+
+        if nameWidth > nameSpace:
+
+            while nameWidth > nameSpace:
+                if not textName: break
+
+                textName = textName[:-1]
+                nameWidth = toolkit.core.calculate.stringWidth(
+                    textName + "...", fontName)
+
+            textName += "..."
 
         self.painter.drawText(
             QtCore.QRectF(self.folderNameArea),
