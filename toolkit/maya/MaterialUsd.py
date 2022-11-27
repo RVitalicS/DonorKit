@@ -227,7 +227,7 @@ def Export (options=None, data=None):
                 shutil.rmtree(previewsPath)
             os.mkdir(previewsPath)
 
-            if options.prman:
+            if options.prman and renderman.isDefined():
                 renderman.createShaderPreview(
                     previewsPath, periodic=periodic)
 

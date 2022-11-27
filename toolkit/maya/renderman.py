@@ -23,6 +23,17 @@ namePng = "Prman.f000.png"
 
 
 
+def isDefined():
+
+    if os.getenv("RMANTREE"):
+        return True
+    else:
+        return False
+
+
+
+
+
 def createShaderRIB (directory, filldisplay=True):
 
 
