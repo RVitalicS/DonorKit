@@ -162,7 +162,7 @@ def getAnimationList (path, version=None):
                 
                 animationList.append(animation)
 
-    return animationList
+    return sorted(animationList)
 
 
 
@@ -190,7 +190,7 @@ def getVariantList (path, version=None):
                 
                 variantList.append(variant)
 
-    return variantList
+    return sorted(variantList)
 
 
 
@@ -214,7 +214,7 @@ def getVersionList (path):
                 
                 versionList.append(version)
 
-    return versionList
+    return sorted(versionList)
 
 
 
