@@ -7,6 +7,7 @@ import os
 from . import theme
 
 import toolkit.core.naming
+import toolkit.system.ostree
 from toolkit.core import Metadata
 
 
@@ -147,21 +148,16 @@ class Dialog (
         self.ExportOptions.commentEdit.show()
 
 
-        path = os.path.join(materialpath, materialname)
-        if os.path.exists(path):
+        path = toolkit.system.ostree.getPathUSD(materialpath, materialname)
+        if path:
 
             variantPart = toolkit.core.naming.getVariantName(materialname)
             variantName = self.ExportOptions.versionOptions.variantCombobox.getName()
             if variantPart == variantName != "":
                 highlightVariant = True
 
-            finalname = toolkit.core.naming.makeFinal(materialname)
-            finalpath = os.path.join(materialpath, finalname)
-            if os.path.exists(finalpath):
-                realpath = os.path.realpath(finalpath)
-                realname = os.path.basename(realpath)
-                if realname == materialname:
-                    highlightLink = True
+            if toolkit.system.ostree.isFinal(path):
+                highlightLink = True
 
 
         if highlightVariant:

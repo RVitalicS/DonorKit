@@ -130,15 +130,53 @@ def getGroupCount (path):
 
 
 
+def getPathUSD (path, name, final=False):
+
+    if final:
+        name = toolkit.core.naming.makeFinal(name)
+    name = os.path.splitext(name)[0]
+
+    for extension in ["usd", "usdc", "usda"]:
+        pathUSD = os.path.join(
+            path, f"{name}.{extension}" )
+        if os.path.exists(pathUSD):
+            return pathUSD
+
+
+
+
+
+
+def isFinal (path):
+
+    result = False
+
+    root = os.path.dirname(path)
+    name = os.path.basename(path)
+
+    pathfinal = getPathUSD(root, name, final=True)
+    if pathfinal:
+        pathlink = os.path.realpath(pathfinal)
+
+        link = os.path.basename(pathlink)
+        if name == link:
+            result = True
+
+    return result
+
+
+
+
+
+
 def linkUpdate (path, name, create=True):
 
     os.chdir(path)
 
-    finalname = toolkit.core.naming.makeFinal(name)
-    finalpath = os.path.join(path, finalname)
-
-    if os.path.exists(finalpath):
+    finalpath = getPathUSD(path, name, final=True)
+    if finalpath:
         os.remove(finalpath)
 
     if create:
+        finalname = toolkit.core.naming.makeFinal(name)
         os.symlink(name, finalname)

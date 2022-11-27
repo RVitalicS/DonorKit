@@ -7,6 +7,7 @@ import os
 from . import theme
 
 import toolkit.core.naming
+import toolkit.system.ostree
 from toolkit.core import Metadata
 
 
@@ -245,8 +246,8 @@ class Dialog (
         self.ExportOptions.commentEdit.show()
 
 
-        path = os.path.join(assetpath, assetname)
-        if os.path.exists(path):
+        path = toolkit.system.ostree.getPathUSD(assetpath, assetname)
+        if path:
 
             animationPart = toolkit.core.naming.getAnimationName(assetname)
             animationName = self.ExportOptions.animationOptions.animationNameCombobox.getName()
@@ -258,13 +259,8 @@ class Dialog (
             if variantPart == variantName != "":
                 highlightVariant = True
 
-            finalname = toolkit.core.naming.makeFinal(assetname)
-            finalpath = os.path.join(assetpath, finalname)
-            if os.path.exists(finalpath):
-                realpath = os.path.realpath(finalpath)
-                realname = os.path.basename(realpath)
-                if realname == assetname:
-                    highlightLink = True
+            if toolkit.system.ostree.isFinal(path):
+                highlightLink = True
 
 
         if highlightAnimation:

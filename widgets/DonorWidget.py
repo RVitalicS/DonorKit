@@ -164,13 +164,17 @@ def Make (base):
             variant   = data.get("variant")
             animation = data.get("animation")
 
-            filename = toolkit.core.naming.createAssetName (
+            directory = self.BrowserPath.resolve()
+            assetname = toolkit.core.naming.createAssetName (
                 name=name if kind == "assembly" else None,
                 version=version,
                 variant=variant,
                 animation=animation )
 
-            directory = self.BrowserPath.resolve()
+            filepath = toolkit.system.ostree.getPathUSD(
+                directory, assetname)
+            filename = os.path.basename(filepath)
+
             toolkit.system.ostree.linkUpdate(
                 directory, filename,
                 create = data.get("token") )
@@ -204,15 +208,12 @@ def Make (base):
                     variant=variant,
                     animation=animation,
                     final=False )
-                finalname = toolkit.core.naming.makeFinal(filename)
 
                 token = False
-                finalpath = os.path.join(directory, finalname)
-                if os.path.exists(finalpath):
-                    realpath = os.path.realpath(finalpath)
-                    realname = os.path.basename(realpath)
-                    if realname == filename:
-                        token = True
+                filepath = toolkit.system.ostree.getPathUSD(
+                    directory, filename)
+                if toolkit.system.ostree.isFinal(filepath):
+                    token = True
 
                 if data.get("token") != token:
                     data["token"] = token
@@ -347,20 +348,10 @@ def Make (base):
                 variant   = toolkit.core.naming.getVariantName(filename)
                 animation = toolkit.core.naming.getAnimationName(filename)
 
-                finalname = toolkit.core.naming.createAssetName(
-                    name=name if kind == "assembly" else None,
-                    version=version,
-                    variant=variant,
-                    animation=animation,
-                    final=True )
-
                 token = False
-                finalpath = os.path.join(path, finalname)
-                if os.path.exists(finalpath):
-                    realpath = os.path.realpath(finalpath)
-                    realname = os.path.basename(realpath)
-                    if realname == filename:
-                        token = True
+                filepath = toolkit.system.ostree.getPathUSD(path, filename)
+                if toolkit.system.ostree.isFinal(filepath):
+                    token = True
 
                 filesize = toolkit.usd.reporter.getResolvedSize(
                     os.path.join(path, filename) )

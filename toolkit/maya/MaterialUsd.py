@@ -118,7 +118,7 @@ def Export (options=None, data=None):
         version += f"-{options.variant}"
 
     MaterialRoot = os.path.join(options.materialPath, options.materialName)
-    MaterialName = f"{version}.usda"
+    MaterialName = f"{version}.usd"
     MaterialPath = os.path.join(MaterialRoot, MaterialName)
 
 
@@ -142,9 +142,9 @@ def Export (options=None, data=None):
     for renderer, scheme in data.items():
 
         if renderer == "prman":
-            fileName = f"{version}.RenderMan.usda"
+            fileName = f"{version}.RenderMan.usd"
         elif renderer == "hydra":
-            fileName = f"{version}.Hydra.usda"
+            fileName = f"{version}.Hydra.usd"
         else: continue
 
         if not scheme.get("shaders"):
@@ -166,13 +166,7 @@ def Export (options=None, data=None):
 
     # create/update symbolic link
     if options.link:
-        FinalName = re.sub(r"^v\d+", "Final", MaterialName)
-        FinalPath = os.path.join(MaterialRoot, FinalName)
-
-        if os.path.exists(FinalPath):
-            os.remove(FinalPath)
-
-        os.symlink(MaterialName, FinalName)
+        ostree.linkUpdate(MaterialRoot, MaterialName)
 
 
     # create/update .metadata.json
