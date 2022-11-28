@@ -347,9 +347,20 @@ def chooseAssetItem (path):
 
 
 def makeFinal (name):
+    
+    """
+        Replace version with 'Final' tag
+        and make extension without varying 'a|c' prefixes
+        to use resulted name for symbolic link
+
+        :type  name: str
+        :param name: path to usd file
+    """
 
     name = re.sub(r"v\d+\.", "Final.", name)
     name = re.sub(r"v\d+-" , "Final-", name)
+
+    name = re.sub(r"\.usd[ac]*" , ".usd", name)
 
     return name
 
