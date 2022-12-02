@@ -189,7 +189,7 @@ class Dialog (
 
             self.ExportOptions.versionOptions.variantCombobox.stealth = True
             self.ExportOptions.versionOptions.variantCombobox.clear()
-            variantList = toolkit.core.naming.getVariantList(path, version=version)
+            variantList = toolkit.core.naming.getVariantList(path, version)
             for variant in variantList:
                 self.ExportOptions.versionOptions.variantCombobox.addItem(
                      variant )

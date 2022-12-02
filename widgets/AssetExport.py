@@ -304,7 +304,7 @@ class Dialog (
 
             self.ExportOptions.animationOptions.animationNameCombobox.stealth = True
             self.ExportOptions.animationOptions.animationNameCombobox.clear()
-            animationList = toolkit.core.naming.getAnimationList(path, version=version)
+            animationList = toolkit.core.naming.getAnimationList(path, version)
             for animation in animationList:
                 self.ExportOptions.animationOptions.animationNameCombobox.addItem(
                      animation )
@@ -314,7 +314,7 @@ class Dialog (
 
             self.ExportOptions.versionOptions.variantCombobox.stealth = True
             self.ExportOptions.versionOptions.variantCombobox.clear()
-            variantList = toolkit.core.naming.getVariantList(path, version=version)
+            variantList = toolkit.core.naming.getVariantList(path, version)
             for variant in variantList:
                 self.ExportOptions.versionOptions.variantCombobox.addItem(
                      variant )
