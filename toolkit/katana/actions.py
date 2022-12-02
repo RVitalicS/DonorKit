@@ -1,61 +1,44 @@
 #!/usr/bin/env python
 
+"""Functions to load assets to Katana."""
 
 from toolkit.core import message
 
 
+def loadUsdFile (path: str) -> None:
+    """The placeholder function.
+    Need definition to act on input argument
 
-
-
-def loadUsdFile (path):
-    
-    """
-        Placeholder function
-        Need definition to act on input argument
-
-        :type  path: str
-        :param path: path to usd file
+    Arguments:
+        path: The path of the usd file
     """
 
-
-    # erase this
+    # TODO: erase this and make you happy
     message.defaultDefinition(
         "loadUsdFile", __file__, mode="katana")
 
 
+def loadMaterial (path: str) -> None:
+    """The placeholder function.
+    Need definition to act on input argument
 
-
-
-def loadMaterial (path):
-    
-    """
-        Placeholder function
-        Need definition to act on input argument
-
-        :type  path: str
-        :param path: path to usd file
+    Arguments:
+        path: The path of the usd file
     """
 
-
-    # erase this
+    # TODO: erase this and make you happy
     message.defaultDefinition(
         "loadMaterial", __file__, mode="katana")
 
 
+def loadColor (data: list) -> None:
+    """The placeholder function.
+    Need definition to act on input argument
 
-
-
-def loadColor (data):
-    
-    """
-        Placeholder function
-        Need definition to act on input argument
-
-        :type  data: list
-        :param data: RGB color channels
+    Arguments:
+        data: The list of RGB color channels
     """
 
-
-    # erase this
+    # TODO: erase this and make you happy
     message.defaultDefinition(
         "loadColor", __file__, mode="katana")
