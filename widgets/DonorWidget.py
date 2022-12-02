@@ -338,7 +338,7 @@ def Make (base):
 
             for filename in os.listdir(path):
 
-                if toolkit.core.naming.ignoreRule(filename):
+                if toolkit.core.naming.rule_Ignore(filename):
                     continue
 
                 dataTime = data["items"][filename]["published"]
@@ -797,8 +797,6 @@ def Make (base):
                 if statusdata == 1:
 
                     data = item.data(QtCore.Qt.EditRole)
-                    state = self.UsdLoadOptions.link.isChecked()
-
                     kind      = data.get("kind")
                     name      = data.get("name")
                     version   = data.get("version")
@@ -810,8 +808,10 @@ def Make (base):
                         version=version,
                         variant=variant,
                         animation=animation,
-                        final=state )
-                    filepath = os.path.join(directory, filename)
+                        final=False )
+                    filepath = toolkit.system.ostree.getPathUSD(
+                        directory, filename,
+                        final=self.UsdLoadOptions.link.isChecked() )
                     break
 
             if os.path.exists(filepath):
