@@ -19,7 +19,8 @@ def asDefaultPrim (path):
     Resolver = Ar.GetResolver()
     path = Resolver.Resolve(path)
 
-    Stage = Usd.Stage.Open(path)
+    Stage = Usd.Stage.Open(
+        path, load=Usd.Stage.LoadNone)
     DefaultPrim = Stage.GetDefaultPrim()
     
     if DefaultPrim.IsValid():
@@ -39,13 +40,17 @@ def asReferences (path):
     root = os.path.dirname(path)
     os.chdir(root)
 
-    Stage = Usd.Stage.Open(path)
+    Stage = Usd.Stage.Open(
+        path, load=Usd.Stage.LoadNone)
     Layer = Stage.GetRootLayer()
-    References = Layer.GetExternalReferences()
 
-    References = [Resolver.Resolve(i) for i in References]
-    References = [os.path.realpath(i) for i in References]
-    
+    References = []
+    for path in Layer.GetExternalReferences():
+        realpath = os.path.realpath(path)
+        if os.path.exists(realpath):
+            resolved = Resolver.Resolve(realpath)
+            References.append(os.path.realpath(resolved))
+
     return References
 
 
@@ -55,7 +60,8 @@ def asReferences (path):
 
 def asUsdBuildScheme (path):
 
-    Stage = Usd.Stage.Open(path)
+    Stage = Usd.Stage.Open(
+        path, load=Usd.Stage.LoadNone)
     Layer = Stage.GetRootLayer()
     DefaultPrim = Stage.GetDefaultPrim()
 
