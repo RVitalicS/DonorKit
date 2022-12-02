@@ -7,6 +7,7 @@ import os
 import maya.cmds as mayaCommand
 
 from toolkit.system import stream
+from toolkit.system import run
 from toolkit.maya import export
 from toolkit.maya import hypershade
 from toolkit.maya import message
@@ -246,7 +247,7 @@ def createShaderPreview (directory, periodic=True, echo=False):
         message.info("Work On RenderMan Preview")
 
         command = ["prman", path_RenderRib]
-        stream.terminal(command, echo=True)
+        run.terminal(command, echo=True)
         os.remove(path_RenderRib)
 
     outputPng = os.path.join(directory, namePng)

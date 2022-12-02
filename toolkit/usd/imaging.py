@@ -9,7 +9,7 @@ from databank import pathEnvmap
 
 import shutil
 
-import toolkit.system.stream
+from toolkit.system import run
 from toolkit.system.ostree import SUBDIR_PREVIEWS
 from toolkit.core.timing import isAnimation
 import toolkit.core.geometry as geometry
@@ -192,7 +192,7 @@ def recordAssetPreviews (
         renderer="GL" )
 
     command += ["&&", "rm", pathLight]
-    toolkit.system.stream.terminal(command)
+    run.terminal(command)
 
 
 
@@ -300,4 +300,4 @@ def recordMaterialPreview ( usdpath,
         renderer="GL" )
 
     command += ["&&", "rm", pathRender]
-    toolkit.system.stream.terminal(command)
+    run.terminal(command)

@@ -3,11 +3,11 @@
 
 import re
 
-import toolkit.system.ostree
-import toolkit.system.stream
+from toolkit.system import ostree
+from toolkit.system import run
 
-import toolkit.core.naming
-import toolkit.core.timing
+from toolkit.core import naming
+from toolkit.core import timing
 from toolkit.core import Metadata
 
 from toolkit.ensure.QtCore import *
@@ -288,13 +288,13 @@ class Browser (object):
                         folderPath, update=False) as metadata:
                     data = metadata
 
-                chosenItem = toolkit.core.naming.chooseAssetItem(folderPath)
+                chosenItem = naming.chooseAssetItem(folderPath)
 
-                versionCount = toolkit.core.naming.getVersionList(folderPath)
+                versionCount = naming.getVersionList(folderPath)
                 versionCount = len(versionCount)
 
                 dataTime = data.get("items").get(chosenItem).get("published")
-                publishedTime = toolkit.core.timing.getTimeDifference(dataTime)
+                publishedTime = timing.getTimeDifference(dataTime)
 
                 favorite = False
                 pathUI = os.path.join(self.BrowserPath.getUI(), name)
@@ -307,11 +307,11 @@ class Browser (object):
                 library.append(dict(
                     type=dataType,
                     name=name,
-                    previews=toolkit.core.naming.getUsdPreviews(folderPath, chosenItem),
-                    version=toolkit.core.naming.getVersion(chosenItem),
+                    previews=naming.getUsdPreviews(folderPath, chosenItem),
+                    version=naming.getVersion(chosenItem),
                     count=versionCount,
-                    variant=toolkit.core.naming.getVariantName(chosenItem),
-                    animation=toolkit.core.naming.getAnimationName(chosenItem),
+                    variant=naming.getVariantName(chosenItem),
+                    animation=naming.getAnimationName(chosenItem),
                     published=publishedTime,
                     status=data.get("status"),
                     favorite=favorite ))
@@ -330,7 +330,7 @@ class Browser (object):
                 library.append(dict(
                     type=dataType,
                     name=name,
-                    items=toolkit.system.ostree.getGroupCount(folderPath) ))
+                    items=ostree.getGroupCount(folderPath) ))
 
 
             elif os.path.exists(folderPath):
@@ -340,7 +340,7 @@ class Browser (object):
                     library.append(dict(
                         type="folder",
                         name=name,
-                        items=toolkit.system.ostree.getItemCount(folderPath) ))
+                        items=ostree.getItemCount(folderPath) ))
 
 
         return library
@@ -590,14 +590,14 @@ class Browser (object):
                 self.BrowserPath.resolve(),
                 data.get("name") )
             if os.path.exists(path):
-                toolkit.system.stream.openFolder(path)
+                run.openFolder(path)
         
         elif dataType == "usdfile":
             path = os.path.join(
                 self.BrowserPath.resolve(),
                 data.get("filename") )
             if os.path.exists(path):
-                toolkit.system.stream.openUsd(path)
+                run.openUsd(path)
 
 
 
