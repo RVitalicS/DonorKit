@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-"""Functions to load assets to Maya."""
+"""
+Maya Actions
+
+Functions to load assets to Maya.
+"""
 
 import mayaUsd
 import ufe
@@ -8,22 +12,22 @@ import os
 import maya.cmds as mayaCommand
 import maya.mel as mayaMEL
 from pxr import UsdGeom
-from toolkit.maya import find
-from toolkit.maya import outliner
-from toolkit.maya import attribute
-from toolkit.maya import stage as outlinerStage
+import toolkit.maya.find as findCommand
+import toolkit.maya.outliner as outlinerCommand
+import toolkit.maya.attribute as attributeCommand
+import toolkit.maya.stage as stageCommand
 import toolkit.maya.message as mayaMessage
 from toolkit.core import naming
 from toolkit.core import message
 from toolkit.core import Metadata
-from toolkit.usd import read
+import toolkit.usd.read as readUSD
 
 
 def loadUsdFile (path: str) -> None:
-    """Creates a reference to the usd asset as {mayaUsdProxyShape}
+    """Creates a reference to the USD Asset as {mayaUsdProxyShape}
 
     Arguments:
-        path: The path of the usd file
+        path: The path of the USD file
     """
 
     # get asset name
@@ -31,8 +35,7 @@ def loadUsdFile (path: str) -> None:
     assetName = naming.getAssetName(fileName)
 
     # get scene stage
-    mayaStagePath = ( "|world"
-        + outlinerStage.getPathAnyway() )
+    mayaStagePath = ("|world" + stageCommand.getPathAnyway())
     Stage = mayaUsd.ufe.getStage(mayaStagePath)
     stagePath = ""
     for SceneItem in list(ufe.GlobalSelection.get()):
@@ -55,20 +58,20 @@ def loadUsdFile (path: str) -> None:
     RefPrim.GetReferences().AddReference(path)
 
     # update maya outliner "shape display"
-    outliner.refresh()
+    outlinerCommand.refresh()
 
 
 def loadMaterial (path: str) -> None:
-    """Creates a maya material network from the usd file
+    """Creates a maya material network from the USD file
 
     Arguments:
-        path: The path of the usd file
+        path: The path of the USD file
     """
     units = 0.01           # UNIT DEPEND
 
     # get selected meshes
     selection = mayaCommand.ls(selection=True)
-    meshes = find.selectionMeshes()
+    meshes = findCommand.selectionMeshes()
 
     # get asset data
     path = os.path.realpath(path)
@@ -76,7 +79,7 @@ def loadMaterial (path: str) -> None:
     directory = os.path.dirname(path)
 
     ID = Metadata.getID(directory, filename)
-    data = read.asMayaBuildScheme(path)
+    data = readUSD.asMayaBuildScheme(path)
     material = data.get("material")
     materialName = material.get("name")
 
@@ -91,7 +94,7 @@ def loadMaterial (path: str) -> None:
     shadingGroup = mayaCommand.sets(
         renderable=True,
         noSurfaceShader=True,
-        name=materialName )
+        name=materialName)
     for mesh in meshes:
         mayaCommand.select(mesh, replace=True)
         mayaMEL.eval(f"sets -e -forceElement {shadingGroup}")
@@ -110,14 +113,11 @@ def loadMaterial (path: str) -> None:
         nodeType = nodeSpec.get("id")
         mayatype = nodeSpec.get("mayatype")
         if mayatype == "shader":
-            mayaCommand.shadingNode(nodeType,
-                asShader=True, name=nodeName)
+            mayaCommand.shadingNode(nodeType, asShader=True, name=nodeName)
         elif mayatype == "texture":
-            mayaCommand.shadingNode(nodeType,
-                asTexture=True, name=nodeName)
+            mayaCommand.shadingNode(nodeType, asTexture=True, name=nodeName)
         else:
-            mayaCommand.shadingNode(nodeType,
-                asUtility=True, name=nodeName)
+            mayaCommand.shadingNode(nodeType, asUtility=True, name=nodeName)
 
         inputs = nodeSpec.get("inputs")
         for attr, spec in inputs.items():
@@ -134,14 +134,13 @@ def loadMaterial (path: str) -> None:
             elif spec.get("type") in ["float", "int"]:
                 mayaCommand.setAttr(attrName, value)
             elif spec.get("type") == "string":
-                mayaCommand.setAttr(attrName, value,
-                    type=spec.get("type"))
+                mayaCommand.setAttr(attrName, value, type=spec.get("type"))
             else:
-                mayaCommand.setAttr(attrName, *value,
-                    type=spec.get("type"))
+                mayaCommand.setAttr(attrName, *value, type=spec.get("type"))
 
         if nodeType == "PxrDisplace":
-            mayaCommand.setAttr(f"{nodeName}.dispAmount",
+            mayaCommand.setAttr(
+                f"{nodeName}.dispAmount",
                 inputs.get("dispAmount").get("value") / units)
         elif nodeType == "PxrRoundCube":
             value = inputs.get("frequency").get("value") * units
@@ -153,8 +152,8 @@ def loadMaterial (path: str) -> None:
         mayaCommand.connectAttr(*pair)
 
     # add ID attribute
-    MFnDependencyNode = find.shaderByName(shadingGroup)
-    attribute.assignNetworkID(MFnDependencyNode, ID)
+    MFnDependencyNode = findCommand.shaderByName(shadingGroup)
+    attributeCommand.assignNetworkID(MFnDependencyNode, ID)
 
     # restore selection
     mayaCommand.select(selection, replace=True)

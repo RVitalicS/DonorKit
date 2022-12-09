@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
+"""
+Universal Scene Description (Core)
 
+Import Usd module if it exists.
+"""
 
 try:
     from pxr import Usd

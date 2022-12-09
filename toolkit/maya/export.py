@@ -1,77 +1,71 @@
 #!/usr/bin/env python
 
+"""
+Export
+
+This module defines functions to export objects from a Maya scene.
+"""
 
 import maya.api.OpenMaya as OpenMayaAPI
 
 
+def USD (file: str, exportUVs: int = 1,
+         exportSkels: str = "none",
+         exportSkin: str = "none",
+         exportBlendShapes: int = 0,
+         exportDisplayColor: int = 0,
+         exportColorSets: int = 1,
+         defaultMeshScheme: str = "none",
+         defaultUSDFormat: str = "usdc",
+         animation: int = 0,
+         eulerFilter: int = 0,
+         staticSingleSample: int = 0,
+         startTime: int = 1,
+         endTime: int = 1,
+         frameStride: int = 1,
+         frameSample: float = 0.0,
+         parentScope: str = "",
+         shading: bool = False,
+         exportInstances: int = 1,
+         exportVisibility: int = 0,
+         mergeTransformAndShape: int = 0,
+         stripNamespaces: int = 1) -> None:
+    """Run MEL command to export selected objects to USD file
 
-
-
-def USD (
-        file,
-        exportUVs=1,
-        exportSkels="none",
-        exportSkin="none",
-        exportBlendShapes=0,
-        exportDisplayColor=0,
-        exportColorSets=1,
-        defaultMeshScheme="none",
-        defaultUSDFormat="usdc",
-        animation=0,
-        eulerFilter=0,
-        staticSingleSample=0,
-        startTime=1,
-        endTime=1,
-        frameStride=1,
-        frameSample=0.0,
-        parentScope="",
-        shading=False,
-        exportInstances=1,
-        exportVisibility=0,
-        mergeTransformAndShape=0,
-        stripNamespaces=1 ):
-
+    Arguments:
+        file: The path to save a USD file
+    Keyword Arguments:
+        **kwargs: The optional export arguments
     """
-        Runs MEL command to export
-        selected objects to "USD" file
-    """
-
-
     if shading:
         shadingOptions = (
-            "shadingMode=useRegistry;" +
-            "convertMaterialsTo=[" +
-                "UsdPreviewSurface," +
-                "rendermanForMaya]")
+            "shadingMode=useRegistry;"
+          + "convertMaterialsTo=["
+              + "UsdPreviewSurface,rendermanForMaya]")
     else:
         shadingOptions = ("shadingMode=none")
-
-
-    # create export options
     options = ';'.join([
-        'exportUVs={}'.format( exportUVs ),
-        'exportSkels={}'.format( exportSkels ),
-        'exportSkin={}'.format( exportSkin ),
-        'exportBlendShapes={}'.format( exportBlendShapes ),
-        'exportDisplayColor={}'.format( exportDisplayColor ),
-        'exportColorSets={}'.format( exportColorSets ),
-        'defaultMeshScheme={}'.format( defaultMeshScheme ),
-        'defaultUSDFormat={}'.format( defaultUSDFormat ),
-        'animation={}'.format( animation ),
-        'eulerFilter={}'.format( eulerFilter ),
-        'staticSingleSample={}'.format( staticSingleSample ),
-        'startTime={}'.format( startTime ),
-        'endTime={}'.format( endTime ),
-        'frameStride={}'.format( frameStride ),
-        'frameSample={}'.format( frameSample ),
-        'parentScope={}'.format( parentScope ),
+        'exportUVs={}'.format(exportUVs),
+        'exportSkels={}'.format(exportSkels),
+        'exportSkin={}'.format(exportSkin),
+        'exportBlendShapes={}'.format(exportBlendShapes),
+        'exportDisplayColor={}'.format(exportDisplayColor),
+        'exportColorSets={}'.format(exportColorSets),
+        'defaultMeshScheme={}'.format(defaultMeshScheme),
+        'defaultUSDFormat={}'.format(defaultUSDFormat),
+        'animation={}'.format(animation),
+        'eulerFilter={}'.format(eulerFilter),
+        'staticSingleSample={}'.format(staticSingleSample),
+        'startTime={}'.format(startTime),
+        'endTime={}'.format(endTime),
+        'frameStride={}'.format(frameStride),
+        'frameSample={}'.format(frameSample),
+        'parentScope={}'.format(parentScope),
         shadingOptions,
-        'exportInstances={}'.format( exportInstances ),
-        'exportVisibility={}'.format( exportVisibility ),
-        'mergeTransformAndShape={}'.format( mergeTransformAndShape ),
-        'stripNamespaces={}'.format( stripNamespaces ) ])
-
-    # create export command
+        'exportInstances={}'.format(exportInstances),
+        'exportVisibility={}'.format(exportVisibility),
+        'mergeTransformAndShape={}'.format(mergeTransformAndShape),
+        'stripNamespaces={}'.format(stripNamespaces) ])
     command = ' '.join([
         'file',
         '-force',
@@ -80,23 +74,17 @@ def USD (
         '-preserveReferences',
         '-exportSelected',
         '"{}"'.format(file) ])
-
-    # run export command
     OpenMayaAPI.MGlobal.executeCommandStringResult(command)
 
 
+def Maya (file: str, binary: bool = True) -> None:
+    """Runs MEL command to export selected objects to a Maya file
 
-
-
-def Maya (file, binary=True):
-
+    Arguments:
+        file: The path to save a Maya file 
+    Keyword Arguments:
+        binary: The type of Maya file
     """
-        Runs MEL command to export
-        selected objects to "Maya" file
-    """
-
-
-    # create export command
     command = ' '.join([
         'file',
         '-force',
@@ -106,31 +94,21 @@ def Maya (file, binary=True):
         '-preserveReferences',
         '-exportUnloadedReferences',
         '-exportSelected',
-        '"{}"'.format(file) ])
-
-    # run export command
+        '"{}"'.format(file)])
     OpenMayaAPI.MGlobal.executeCommandStringResult(command)
 
 
+def RIB (file: str) -> None:
+    """Runs MEL command to export selected objects to a RIB file
 
-
-
-def RIB (file):
-
+    Arguments:
+        file: The path to save a RIB file 
     """
-        Runs MEL command to export
-        selected objects to "RIB" file
-    """
-
-
-    # create export options
     options = ';'.join([
         'rmanExportRIBFormat=0' ,
         'rmanExportMultipleFrames=0' ,
         'rmanExportByFrame=1' ,
         'rmanExportRIBArchive=0' ])
-
-    # create export command
     command = ' '.join([
         'file',
         '-force',
@@ -140,6 +118,4 @@ def RIB (file):
         '-exportUnloadedReferences',
         '-exportSelected',
         '"{}"'.format(file) ])
-
-    # run export command
     OpenMayaAPI.MGlobal.executeCommandStringResult(command)

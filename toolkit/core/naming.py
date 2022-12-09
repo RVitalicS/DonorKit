@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-"""Functions to work with the asset name and its components."""
+"""
+Naming Convention
+
+Functions to work with the asset name and its components.
+"""
 
 import os
 import re
@@ -195,7 +199,7 @@ def makeFinal (name: str) -> str:
     to use a formatted name for a symbolic link
 
     Arguments:
-        name: A name or a path of the usd file
+        name: A name or a path of the USD file
     Returns:
         A formatted name
     """
@@ -209,8 +213,7 @@ def createAssetName (
         name: str = None, version: int = 1,
         variant: str = None, animation: str = None,
         final: bool = False, extension: str = "usd" ) -> str:
-    """
-    Creates a name for a file that describe version of the asset
+    """Creates a name for a file that describe version of the asset
 
     Keyword Arguments:
         name:      The name of the asset

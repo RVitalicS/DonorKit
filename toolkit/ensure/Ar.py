@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
+"""
+Asset Resolution
 
+Import Ar module if it exists.
+"""
 
 try:
     from pxr import Ar

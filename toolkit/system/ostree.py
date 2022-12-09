@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-"""Functions to manage the library items."""
+"""
+Operating System Tree for the Library
+
+Functions to manage the library items.
+"""
 
 import os
 import re
@@ -131,7 +135,7 @@ def isFinal (path: str) -> bool:
     """Check that the given file is the final version of the asset
 
     Arguments:
-        path: The path of the usd file
+        path: The path of the USD file
     Returns:
         A result of the check
     """

@@ -1,27 +1,34 @@
 #!/usr/bin/env python
 
+"""
+Message
+
+Prepare the data to be printed in a more informative form.
+"""
 
 import os
+from typing import Optional
 
 
+def defaultDefinition (
+        name: str, module: str,
+        mode: Optional[str] = None) -> None:
+    """Print that this function is not defined yet
 
-
-
-def defaultDefinition (name, module, mode=None):
-
+    Arguments:
+        name: The function name
+        module: The module path
+    Keyword Arguments:
+        mode: The application dependent representation (Maya, Katana, etc.)
+    """
     thisdir  = os.path.dirname(module)
-
-    message  = ""
     if mode == "katana":
-        message += "[INFO actions.{}]: "
-        message += 'function is not defined in directory: "{}"'
-
+        message = (f"[INFO actions.{name}]: "
+                 + f'function is not defined in directory: "{thisdir}"')
     elif mode == "maya":
-        message += "# [actions.{}] INFO: "
-        message += 'function is not defined in directory: "{}"'
-
+        message = (f"# [actions.{name}] INFO: "
+                 + f'function is not defined in directory: "{thisdir}"')
     else:
-        message += "INFO <actions.{}>: "
-        message += 'function is not defined in directory: "{}"'
-
-    print( message.format(name, thisdir) )
+        message = (f"INFO <actions.{name}>: "
+                 + f'function is not defined in directory: "{thisdir}"')
+    print(message)

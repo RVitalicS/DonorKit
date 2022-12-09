@@ -1,16 +1,13 @@
+/* The template file for UI customization.
+Replace variables with colors depending on theme */
 
-
-
-
-
+/* property colors and values */
 *[background="transparent"] { background: transparent; }
 *[background="browser"] { background: $BROWSER_BACKGROUND; }
 *[background="options"] { background: $OPTION_BACKGROUND; }
 *[background="black"] { background: $BLACK_COLOR; }
-
 *[border="none"] { border: none; }
 *[border="round"] { border-radius: 4px; }
-
 *[textcolor="kicker"] { color: $KICKER; }
 *[textcolor="white"] { color: $WHITE_COLOR; }
 *[textcolor="on"] { color: $TEXT_ON; }
@@ -20,7 +17,6 @@
 *[textcolor="weak"] { color: $TEXT_LOCK; }
 *[textcolor="violet"] { color: $VIOLET_COLOR; }
 *[textcolor="error"] { color: $TEXT_ERROR; }
-
 *[fontsize="6"] { font-size: 6px; }
 *[fontsize="7"] { font-size: 7px; }
 *[fontsize="8"] { font-size: 8px; }
@@ -36,59 +32,39 @@
 *[fontsize="18"] { font-size: 18px; }
 *[fontsize="19"] { font-size: 19px; }
 *[fontsize="20"] { font-size: 20px; }
-
 *[fontfamily="cantarell"] { font-family: "Cantarell"; }
 
-
-
-
+/* a scroll bar widget */
 QSlider::groove:horizontal {
     border: none;
     height: 12px;
     background: $HANDLE_SOCKET;
     margin: 0px 0;
-    border-radius: 6px;
-}
-
+    border-radius: 6px; }
 QSlider::handle:horizontal {
     background: $BROWSER_HANDLE;
     border: none;
     width: 12px;
     margin: 0px 0;
-    border-radius: 6px;
-}
-
-
-
-
-
+    border-radius: 6px; }
 QScrollBar:horizontal,
 QScrollBar:vertical {
     background: $BROWSER_BACKGROUND;
     border: none;
-    border-radius: 3px;
-}
-
+    border-radius: 3px; }
 QScrollBar:horizontal {
     height:0px;
-    margin-bottom: 0px;
-}
-
+    margin-bottom: 0px; }
 QScrollBar:vertical {
     width:9px;
-    margin-right: 3px;
-}
-
+    margin-right: 3px; }
 QScrollBar::handle:horizontal { min-width:45px; }
 QScrollBar::handle:vertical { min-height:45px; }
-
 QScrollBar::handle:horizontal,
 QScrollBar::handle:vertical {
     background: $BROWSER_HANDLE;
     border: none;
-    border-radius: 3px;
-}
-
+    border-radius: 3px; }
 QScrollBar:left-arrow:horizontal,
 QScrollBar::right-arrow:horizontal,
 QScrollBar::add-line:horizontal,
@@ -97,41 +73,23 @@ QScrollBar:left-arrow:vertical,
 QScrollBar::right-arrow:vertical,
 QScrollBar::add-line:vertical,
 QScrollBar::sub-line:vertical  {
-    background: transparent;
-}
-
+    background: transparent; }
 QScrollBar::add-page:horizontal,
 QScrollBar::sub-page:horizontal,
 QScrollBar::add-page:vertical,
 QScrollBar::sub-page:vertical {
-    background: none;
-}
+    background: none; }
 
-
-
-
-
-QPushButton[objectName~="rootButton"] {
-    color: $TEXT_ON;
-}
-
-QPushButton::pressed[objectName~="rootButton"] {
-    color: $KICKER;
-}
-
-
-
-
-
+/* a button widget */
+QPushButton[objectName~="rootButton"] { color: $TEXT_ON; }
+QPushButton::pressed[objectName~="rootButton"] { color: $KICKER; }
 QPushButton:checked[objectName~="modelingOverwrite"],
 QPushButton:checked[objectName~="surfacingOverwrite"],
 QPushButton:checked[objectName~="animationOverwrite"] {
     color: $WHITE_COLOR;
     background: $BLACK_COLOR;
     border-radius: 8px;
-    border: none;
-}
-
+    border: none; }
 QPushButton[objectName~="modelingOverwrite"],
 QPushButton[objectName~="surfacingOverwrite"],
 QPushButton[objectName~="animationOverwrite"],
@@ -141,51 +99,35 @@ QPushButton:disabled[objectName~="animationOverwrite"] {
     color: $TEXT_OVER;
     background: $OPTION_DISABLE;
     border-radius: 8px;
-    border: none;
-}
+    border: none; }
 
-
-
-
-
+/* a combobox widget */
 QComboBox:editable[textcolor="violet"] {
     color: $VIOLET_COLOR;
     background: transparent;
-    border: none;
-}
-
+    border: none; }
 QComboBox:editable[textcolor="error"] {
     color: $TEXT_ERROR;
     background: transparent;
-    border: none;
-}
-
+    border: none; }
 QComboBox:editable {
     color: $TEXT_ON;
     background: transparent;
-    border: none;
-}
-
+    border: none; }
 QComboBox::drop-down {
     border: none;
-    background: transparent;
-}
-
+    background: transparent; }
 QComboBox QAbstractItemView {
     border: none;
     color: $TEXT_ON;
     background: transparent;
-    selection-background-color: $BLACK_COLOR;
-}
+    selection-background-color: $BLACK_COLOR; }
 
-
-
-
+/* a selection color */
 QComboBox,
 QSpinBox,
 QDoubleSpinBox,
 QLineEdit,
 QTextEdit {
     selection-color: $SELECTION_COLOR;
-    selection-background-color: $SELECTION_BACKGROUND;
-}
+    selection-background-color: $SELECTION_BACKGROUND; }

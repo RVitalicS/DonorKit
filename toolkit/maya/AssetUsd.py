@@ -1,159 +1,112 @@
 #!/usr/bin/env python
 
+"""
+Asset Export
 
+Define an interface to create USD Asset with version control.
+"""
 
 import re
 import os
-import importlib
-
-
 from pxr import Usd
-
 from widgets import AssetExport
-
 from toolkit.core import Metadata
 from toolkit.core.naming import rule_Material
-
-import toolkit.core.timing
-import toolkit.system.ostree
-
-import toolkit.maya.camera
-import toolkit.maya.export
-import toolkit.maya.proxy
-import toolkit.maya.outliner
-import toolkit.maya.message
-import toolkit.maya.MaterialUsd
-
-import toolkit.maya.scene
-importlib.reload(toolkit.maya.scene)
-
-import toolkit.usd.material
-import toolkit.usd.editor
-import toolkit.usd.asset
-import toolkit.usd.imaging
-
+from toolkit.core import timing
+from toolkit.system import ostree
+import toolkit.maya.camera as cameraCommand
+import toolkit.maya.export as exportCommand
+import toolkit.maya.proxy as proxyCommand
+import toolkit.maya.outliner as outlinerCommand
+import toolkit.maya.message as messageCommand
+from toolkit.maya import MaterialUsd
+import toolkit.usd.editor as editorUSD
+import toolkit.usd.asset as assetUSD
+import toolkit.usd.imaging as imagingUSD
 import maya.OpenMayaAnim as OpenMayaAnim
+import toolkit.maya.scene as sceneCommand
 
 
+def Export (options: object = None) -> None:
+    """Create USD Asset from a Maya selection
 
+    Keyword Arguments:
+        options: The options of the export dialog
+                 that returns DataClass object
+                 with the attributes listed below
 
-def Export (options=None):
-
-
+        options.modelling         : bool
+        options.modellingOverride : bool
+        options.surfacing         : bool
+        options.surfacingOverride : bool
+        options.animation         : bool
+        options.animationOverride : bool
+        options.animationName     : str
+        options.minTime           : int
+        options.maxTime           : int
+        options.proxy             : bool
+        options.reduceFactor      : float
+        options.assetPath         : str
+        options.assetName         : str
+        options.version           : int
+        options.variant           : str
+        options.link              : bool
+        options.maya              : bool
+        options.info              : str
+        options.comment           : str
+        options.status            : str
     """
-        options.modelling = True
-        options.modellingOverride = True
-
-        options.surfacing = True
-        options.surfacingOverride = True
-
-        options.animation = True
-        options.animationOverride = True
-
-        options.animationName = ""
-
-        options.minTime = 0
-        options.maxTime = 0
-        
-        options.proxy = True
-        options.reduceFactor = 0.5
-
-        options.assetPath = ""
-        options.assetName = ""
-
-        options.version = 1
-        options.variant = ""
-        options.link = True
-
-        options.maya = True
-
-        options.info = ""
-        options.comment = ""
-        options.status = "WIP"
-    """
-
-
     if not options:
-        selection = toolkit.maya.outliner.getSelectionName()
+        selection = outlinerCommand.getSelectionName()
         if not selection:
             text = "Select Any Object"
-            toolkit.maya.message.warning(text)
-            toolkit.maya.message.viewport(text)
+            messageCommand.warning(text)
+            messageCommand.viewport(text)
             return
-        
         dialog = AssetExport.Dialog(initname=selection)
         dialog.exec()
-
         options = dialog.getOptions()
-        if not options: return
-
-
-
-    version = "v{:02d}".format(options.version)
-    if options.variant:
-        version += "-{}".format(options.variant)
-    
-    units = 0.01           # UNIT DEPEND
-
-
-
-    mayaScene = toolkit.maya.scene.Manager()
+        if not options:
+            return
+    mayaScene = sceneCommand.Manager()
     mayaScene.applyMaterialNaming(rule_Material)
-
     if not mayaScene.tree:
         text = "Wrong Selection"
-        toolkit.maya.message.warning(text)
-        toolkit.maya.message.viewport(text)
+        messageCommand.warning(text)
+        messageCommand.viewport(text)
         return
 
-
-
+    # naming
+    version = f"v{options.version:02d}"
+    if options.variant:
+        version += f"-{options.variant}"
+    SourceModelPath = os.path.join(
+        options.assetPath, ostree.SUBDIR_MODELLING, "source.geo.usd")
+    ModelFileName = "{}.{}.usd".format(
+        os.path.basename(mayaScene.root), version)
+    ModelPath = os.path.join(
+        options.assetPath, ostree.SUBDIR_MODELLING, ModelFileName)
+    SourceProxyPath = os.path.join(
+        options.assetPath, ostree.SUBDIR_MODELLING, "source.proxy.usd")
+    ProxyFileName = "{}.{}.Proxy.usd".format(
+        os.path.basename(mayaScene.root), version)
+    ProxyPath = os.path.join(
+        options.assetPath, ostree.SUBDIR_MODELLING, ProxyFileName)
+    AnimationFileName = "{}.{}.usd".format(
+        options.animationName, version)
+    AnimationPath = os.path.join(
+        options.assetPath, ostree.SUBDIR_ANIMATION, AnimationFileName)
+    AssetPath = os.path.join(
+        options.assetPath, options.assetName)
     if not os.path.exists(options.assetPath):
         os.mkdir(options.assetPath)
     os.chdir(options.assetPath)
 
-
-
-    SourceModelPath = os.path.join(
-        options.assetPath,
-        toolkit.system.ostree.SUBDIR_MODELLING,
-        "source.geo.usd" )
-
-    ModelFileName = "{}.{}.usd".format(
-        os.path.basename(mayaScene.root), version )
-
-    ModelPath = os.path.join(
-        options.assetPath,
-        toolkit.system.ostree.SUBDIR_MODELLING,
-        ModelFileName )
-
-    SourceProxyPath = os.path.join(
-        options.assetPath,
-        toolkit.system.ostree.SUBDIR_MODELLING,
-        "source.proxy.usd" )
-
-    ProxyFileName = "{}.{}.Proxy.usd".format(
-        os.path.basename(mayaScene.root), version )
-
-    ProxyPath = os.path.join(
-        options.assetPath,
-        toolkit.system.ostree.SUBDIR_MODELLING,
-        ProxyFileName )
-
-    AnimationFileName = "{}.{}.usd".format(
-        options.animationName, version)
-
-    AnimationPath = os.path.join(
-        options.assetPath,
-        toolkit.system.ostree.SUBDIR_ANIMATION,
-        AnimationFileName )
-
-
-
+    # export decision
     export = False
     extractModel = False
     extractAnimation = False
-
+    units = 0.01           # UNIT DEPEND
     if options.modelling:
         if not os.path.exists(ModelPath):
             export = True
@@ -161,7 +114,6 @@ def Export (options=None):
         elif options.modellingOverride:
             export = True
             extractModel = True
-
     if options.animation:
         if not os.path.exists(AnimationPath):
             export = True
@@ -169,106 +121,85 @@ def Export (options=None):
         elif options.animationOverride:
             export = True
             extractAnimation = True
-
-
-
     if export:
-        toolkit.system.ostree.buildUsdRoot(
+        ostree.buildUsdRoot(
             options.assetPath, modelling=True)
-        toolkit.maya.export.USD(
+        exportCommand.USD(
             SourceModelPath,
             defaultMeshScheme = mayaScene.defaultMeshScheme,
             animation= 1 if options.animation else 0,
             startTime=options.minTime,
             endTime=options.maxTime,
-            shading=True )
-        StageSource = Usd.Stage.Open(SourceModelPath)
+            shading=True)
+        StageSource = Usd.Stage.Open(
+            SourceModelPath, load=Usd.Stage.LoadNone)
 
-
-
+    # create geometry layer
     if extractModel:
         if os.path.exists(ModelPath):
+            # TODO: delete existing ones
             modelMessage = "Model Overwritten: "
         else:
             modelMessage = "Model Saved: "
-
         Stage = Usd.Stage.CreateNew(ModelPath)
-        toolkit.usd.editor.copyStage(
+        editorUSD.copyStage(
             StageSource, Stage,
             root=mayaScene.root, units=units,
             namingGeomSubset=rule_Material)
-
-        toolkit.usd.editor.addMayaAttributes(Stage, mayaScene.tree)
+        editorUSD.addMayaAttributes(Stage, mayaScene.tree)
         Stage.GetRootLayer().Export(
-            ModelPath, args=dict(format="usdc") )
-
-        toolkit.maya.message.info(modelMessage + ModelFileName)
-
+            ModelPath, args=dict(format="usdc"))
+        messageCommand.info(modelMessage + ModelFileName)
 
         if options.proxy:
             if os.path.exists(ProxyPath):
                 proxyMessage = "Proxy Overwritten: "
             else:
                 proxyMessage = "Proxy Saved: "
-
-            toolkit.maya.proxy.generate(
+            proxyCommand.generate(
                 SourceProxyPath, threshold=options.reduceFactor)
-            StageProxy = Usd.Stage.Open(SourceProxyPath)
-
+            StageProxy = Usd.Stage.Open(
+                SourceProxyPath, load=Usd.Stage.LoadNone)
             Stage = Usd.Stage.CreateNew(ProxyPath)
-            toolkit.usd.editor.copyStage(
+            editorUSD.copyStage(
                 StageProxy, Stage, proxy=True,
                 root=mayaScene.root, units=units)
-
             Stage.GetRootLayer().Export(
-                ProxyPath, args=dict(format="usdc") )
+                ProxyPath, args=dict(format="usdc"))
+            messageCommand.info(proxyMessage + ProxyFileName)
 
-            toolkit.maya.message.info(proxyMessage + ProxyFileName)
-
-
-
+    # create animation layer
     if extractAnimation:
-        toolkit.system.ostree.buildUsdRoot(
+        ostree.buildUsdRoot(
             options.assetPath, animation=True)
-
         if os.path.exists(AnimationPath):
             animationMessage = "Animation Overwritten: "
         else:
             animationMessage = "Animation Saved: "
-
         Stage = Usd.Stage.CreateNew(AnimationPath)
-        toolkit.usd.editor.copyAnimation(
-            StageSource,
-            Stage,
-            root=mayaScene.root, reference=ModelPath, units=units )
-
+        editorUSD.copyAnimation(
+            StageSource, Stage, root=mayaScene.root,
+            reference=ModelPath, units=units)
         Stage.GetRootLayer().Export(
-            AnimationPath, args=dict(format="usdc") )
-
-        toolkit.maya.message.info(animationMessage + AnimationFileName)
-
-
+            AnimationPath, args=dict(format="usdc"))
+        messageCommand.info(animationMessage + AnimationFileName)
 
     if os.path.exists(SourceModelPath):
         os.remove(SourceModelPath)
     if os.path.exists(SourceProxyPath):
         os.remove(SourceProxyPath)
 
-
-
+    # create material layers
     if options.surfacing and mayaScene.shaders:
-        toolkit.system.ostree.buildUsdRoot(
+        ostree.buildUsdRoot(
             options.assetPath, surfacing=True)
-
         MaterialPath = os.path.join(
             options.assetPath,
-            toolkit.system.ostree.SUBDIR_SURFACING )
+            ostree.SUBDIR_SURFACING)
 
+        class DataClass: pass
         for MaterialName, data in mayaScene.shaders.items():
-
-            class DataClass: pass
             uishadow = DataClass()
-
             uishadow.library      = None
             uishadow.materialPath = MaterialPath
             uishadow.materialName = MaterialName
@@ -281,89 +212,66 @@ def Export (options=None):
             uishadow.status       = options.status
             uishadow.prman        = False
             uishadow.hydra        = False
+            MaterialUsd.Export(options=uishadow, data=data)
 
-            toolkit.maya.MaterialUsd.Export(options=uishadow, data=data)
-
-
-
+    # create asset
     ReferencePath = AnimationPath if options.animation else ModelPath
     if os.path.exists(ReferencePath):
-
-        AssetPath = os.path.join(
-            options.assetPath,
-            options.assetName )
-
         if os.path.exists(AssetPath):
             assetMessage = "Asset Overwritten: "
         else:
             assetMessage = "Asset Saved: "
+        assetUSD.make(
+            AssetPath, ReferencePath, ProxyPath,
+            mayaScene.tree, mayaScene.root)
 
-        toolkit.usd.asset.make (
-            AssetPath,
-            ReferencePath,
-            ProxyPath,
-            mayaScene.tree,
-            mayaScene.root )
-
-
-        # Create/Update Symbolic Link
+        # create/update a symbolic link
         if options.link:
-            toolkit.system.ostree.linkUpdate(
+            ostree.linkUpdate(
                 options.assetPath,
-                options.assetName )
+                options.assetName)
 
-
-        # Create/Update .metadata.json
+        # create/update .metadata.json
         with Metadata.MetadataManager(
                 options.assetPath,
                 metatype="usdasset") as data:
-
             data["info"] = options.info
             data["status"] = options.status
             data["items"][options.assetName] = dict(
-                published = toolkit.core.timing.getTimeCode(),
-                comment   = options.comment )
+                published = timing.getTimeCode(),
+                comment   = options.comment)
 
-
-        # Create Preview Image
+        # create a preview image
         if os.path.exists(AssetPath):
-            toolkit.system.ostree.buildUsdRoot(
+            ostree.buildUsdRoot(
                 options.assetPath, previews=True)
-
             minTime = OpenMayaAnim.MAnimControl().currentTime().value()
             maxTime = minTime
             if options.animation:
                 minTime = options.minTime
                 maxTime = options.maxTime
-
-            camera = toolkit.maya.camera.getCurrent()
-            animation = toolkit.maya.camera.getAnimation(
+            camera = cameraCommand.getCurrent()
+            animation = cameraCommand.getAnimation(
                 camera, minTime, maxTime)
-            timedata = toolkit.maya.camera.getSettings(camera)
+            timedata = cameraCommand.getSettings(camera)
             timedata.update(animation)
+            imagingUSD.recordAssetPreviews(AssetPath, timedata)
 
-            toolkit.usd.imaging.recordAssetPreviews(AssetPath, timedata)
-
-
-        # Export Selected as Maya File
+        # export selected as a Maya file
         if options.maya:
-            toolkit.system.ostree.buildUsdRoot(
+            ostree.buildUsdRoot(
                 options.assetPath, sources=True)
-
-            MayaFileName = re.sub(r"usd[ac]{0,1}$", "mb", options.assetName)
+            MayaFileName = re.sub(r"usd[ac]?$", "mb", options.assetName)
             MayaPath = os.path.join(
                 options.assetPath,
-                toolkit.system.ostree.SUBDIR_SOURCES,
-                MayaFileName )
-
+                ostree.SUBDIR_SOURCES,
+                MayaFileName)
             if os.path.exists(MayaPath):
                 mayaMessage = "Source Overwritten: "
             else:
                 mayaMessage = "Source Saved: "
+            exportCommand.Maya(MayaPath)
+            messageCommand.info(mayaMessage + MayaFileName)
 
-            toolkit.maya.export.Maya(MayaPath)
-
-            toolkit.maya.message.info(mayaMessage + MayaFileName)
-
-
-        toolkit.maya.message.info(assetMessage + options.assetName)
+        # a summary message
+        messageCommand.info(assetMessage + options.assetName)

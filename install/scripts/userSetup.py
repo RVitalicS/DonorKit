@@ -1,28 +1,34 @@
 #!/usr/bin/env python
 
+"""
+Startup Script
 
-import maya.cmds as cmds
-import maya.mel as mel
+Create the new Maya shelf.
+"""
+
+import maya.cmds as mayaCommand
+import maya.mel as mayaMEL
 
 
+def addSeparator (shelfName: str) -> None:
+    """Create a separator widget in the specified shelf
 
-
-def addSeparator (shelfName):
-    for itemUI in cmds.lsUI(controlLayouts=True):
-
+    Arguments:
+        shelfName: The name of a shelf
+    """
+    for itemUI in mayaCommand.lsUI(controlLayouts=True):
         if itemUI == shelfName:
-            cmds.separator(
+            mayaCommand.separator(
                 parent = shelfName,
                 horizontal = False,
                 style = "single")
-
             break
 
 
-
-
+# shelf item collector
 buttons = []
 
+# add the launcher for the Asset Manager widget
 buttons.append(dict(
     label="DonorManager",
     annotation="Manage and Load Asset",
@@ -38,10 +44,10 @@ from toolkit.maya import DonorManager
 DonorManager.show()
 """))
 
-
+# add separator
 buttons.append(dict(label="Separator"))
 
-
+# add the launcher for the Material Export dialog
 buttons.append(dict(
     label="UsdMaterialExport",
     annotation="Export selected as USD material",
@@ -53,14 +59,11 @@ buttons.append(dict(
 # define libraries to export assets
 # os.environ["ASSETLIBS"]=/server/library
 
-import importlib
 from toolkit.maya import MaterialUsd
-
-importlib.reload(MaterialUsd)
 MaterialUsd.Export()
 """))
 
-
+# add the launcher for the Asset Export dialog
 buttons.append(dict(
     label="UsdExport",
     annotation="Export selected to USD asset",
@@ -72,46 +75,35 @@ buttons.append(dict(
 # define libraries to export assets
 # os.environ["ASSETLIBS"]=/server/library
 
-import importlib
 from toolkit.maya import AssetUsd
-
-importlib.reload(AssetUsd)
 AssetUsd.Export()
 """))
 
 
+def createButton () -> None:
+    """Create the new Maya shelf"""
 
+    # get shelves
+    gShelfTopLevel = mayaMEL.eval("$tmpVar=$gShelfTopLevel")
+    shelves = mayaCommand.tabLayout(gShelfTopLevel, query=1, ca=1)
 
-def createButton ():
-
-    # get top shelf
-    gShelfTopLevel = mel.eval("$tmpVar=$gShelfTopLevel")
-
-    # get top shelf names
-    shelves = cmds.tabLayout(gShelfTopLevel, query=1, ca=1)
-
-    # create shelf if not exists
+    # create new shelf
     shelfName = "DonorKit"
     if shelfName not in shelves:
-        cmds.shelfLayout(shelfName, parent=gShelfTopLevel)
-    else: return
-
-
-    # get existing members
-    names = cmds.shelfLayout(shelfName, query=True, childArray=True) or []
-    labels = [cmds.shelfButton(n, query=True, label=True) for n in names]
-
+        mayaCommand.shelfLayout(shelfName, parent=gShelfTopLevel)
+    else:
+        return
 
     # add buttons
+    names = mayaCommand.shelfLayout(shelfName, query=True, childArray=True) or []
+    labels = [mayaCommand.shelfButton(n, query=True, label=True) for n in names]
     for button in buttons:
         buttonName = button.get("label")
-
-        if buttonName == "Separator":
-            addSeparator(shelfName)
-            continue
-
         if buttonName not in labels:
-            cmds.shelfButton(
+            if buttonName == "Separator":
+                addSeparator(shelfName)
+                continue
+            mayaCommand.shelfButton(
                 label=buttonName,
                 annotation=button.get("annotation"),
                 enableBackground=button.get("enableBackground"),
@@ -122,7 +114,5 @@ def createButton ():
                 command=button.get("command"))
 
 
-
-
-# Runs this code automatically at the start of Maya
-cmds.evalDeferred( "createButton()" )
+# runs this code automatically at the start of Maya
+mayaCommand.evalDeferred("createButton()")

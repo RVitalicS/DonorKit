@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-"""Functions to load assets to Katana."""
+"""
+Katana Actions
+
+Functions to load assets to Katana.
+"""
 
 from toolkit.core import message
 

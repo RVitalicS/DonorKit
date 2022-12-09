@@ -1,39 +1,30 @@
 #!/usr/bin/env python
 
+"""
+Calculations
 
+Collect common calculations.
+"""
 
 from toolkit.ensure.QtGui import *
 
 
+def stringWidth (string: str, font: QtGui.QFont) -> int:
+    """Calculates the string width in pixels for the specified font
 
-
-
-
-def stringWidth (string, font):
-
+    Arguments:
+        string: The text to find out width
+        font: The font for calculation
+    Returns:
+        Width in pixels
     """
-        Calculates string width in pixels
-        for the specific font
-
-        :type  string: str
-        :param string: name to find out width
-
-        :type    font: QFont
-        :param   font: font for calculation
-
-        :rtype : int
-        :return: width in pixels
-    """
-
 
     # scale font for accuracy
     scale = 1000
     font = QtGui.QFont(font)
     font.setPointSize(
         font.pointSize() * scale )
-
     metrics = QtGui.QFontMetrics(font)
-
     # get width and scale back
     width = metrics.horizontalAdvance(string)
     width = int(round(width/scale))
@@ -41,33 +32,22 @@ def stringWidth (string, font):
     return width
 
 
+def fontSizeStyle (font: QtGui.QFont) -> int:
+    """Calculates height in pixels for the specified font
+    to match 'pointSize' attribute with 'font-size' in styleSheet
 
-
-
-
-def fontSizeStyle (font):
-
+    Arguments:
+        font: The font for calculation
+    Returns:
+        Height in pixels
     """
-        Calculates font height in pixels
-        to match pointPize attibute
-        with font-size in styleSheet
-
-        :type    font: QFont
-        :param   font: font for calculation
-
-        :rtype : int
-        :return: height in pixels
-    """
-
 
     # scale font for accuracy
     scale = 1000
     font = QtGui.QFont(font)
     font.setPointSize(
         font.pointSize() * scale )
-
     metrics = QtGui.QFontMetrics(font)
-
     # get height and scale back
     height = metrics.ascent()
     height = int(round(height/scale))

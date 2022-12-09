@@ -1,38 +1,25 @@
 #!/usr/bin/env python
 
+"""
+"""
 
-import os
 import databank
-
-
-from toolkit.system import stream
-
 from toolkit.ensure.QtGui import *
+from widgets import Settings
 
-from . import Settings
 UIGlobals = Settings.UIGlobals
-
-
-
-
-
 
 
 class Theme (object):
 
-
     def __init__ (self, app="Manager"):
         self.app = app
-
         with Settings.Manager(self.app, False) as settings:
             self.name = settings.get("theme", "")
-
         if self.name == "dark":
             self.values = databank.themedark
         else:
             self.values = databank.themelight
-
-
         self.variables = {
             "kicker": "$KICKER",
             "white": "$WHITE_COLOR",
@@ -52,31 +39,20 @@ class Theme (object):
             "browserBackground": "$BROWSER_BACKGROUND",
             "browserSocket": "$BROWSER_SOCKET",
             "browserHandleSocket": "$HANDLE_SOCKET",
-            "browserHandle": "$BROWSER_HANDLE"
-        }
+            "browserHandle": "$BROWSER_HANDLE" }
 
         class Group: pass
         self.color = Group()
-
         for attribute, variable in self.values.items():
             value = self.values.get(attribute, "#00ff00")
             setattr(self.color, attribute, value)
-
-
         database = QtGui.QFontDatabase()
-        for font in [
-            ":/fonts/Cantarell-Regular.otf" ,
-            ":/fonts/Cantarell-Bold.otf"    ]:
+        for font in [":/fonts/Cantarell-Regular.otf", ":/fonts/Cantarell-Bold.otf"]:
             database.addApplicationFont(font)
 
-
-
     def getStyleSheet (self):
-
         stylesheet = databank.stylesheet
-
         for key, variable in self.variables.items():
             value = self.values.get(key, "#00ff00")
             stylesheet = stylesheet.replace(variable, value)
-
         return stylesheet

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
+"""
+USD Shading Schema 
 
+Import UsdShade module if it exists.
+"""
 
 try:
     from pxr import UsdShade
