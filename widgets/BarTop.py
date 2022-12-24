@@ -24,8 +24,8 @@ MARGIN = UIGlobals.Browser.margin
 
 class BackButton (QtWidgets.QPushButton):
 
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(BackButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(BackButton, self).__init__(parent)
         self.theme = theme
         self.image = QtGui.QImage(":/icons/back.png")
         self.setFixedSize(
@@ -73,8 +73,8 @@ class BackButton (QtWidgets.QPushButton):
 
 class BookmarkButton (QtWidgets.QPushButton):
     
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(BookmarkButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(BookmarkButton, self).__init__(parent)
         self.theme = theme
         self.image = QtGui.QImage(":/icons/bookmark.png")
         self.offset = UIGlobals.Path.bookmarkOffset

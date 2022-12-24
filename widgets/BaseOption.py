@@ -87,8 +87,8 @@ class TextBlock (QtWidgets.QTextEdit):
 class StatusButton (QtWidgets.QPushButton):
     statusHover = Signal(str)
     
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(StatusButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(StatusButton, self).__init__(parent)
         self.theme = theme
         self.setCheckable(True)
         self.setText("")
@@ -357,8 +357,8 @@ class Status (QtWidgets.QWidget):
 class MayaButton (QtWidgets.QPushButton):
     stateChanged = Signal()
 
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(MayaButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(MayaButton, self).__init__(parent)
         self.theme = theme
         self.setFixedSize(QtCore.QSize(
             UIGlobals.Options.Maya.width,
@@ -394,8 +394,8 @@ class MayaButton (QtWidgets.QPushButton):
 
 class ExportButton (QtWidgets.QPushButton):
 
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(ExportButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(ExportButton, self).__init__(parent)
         self.theme = theme
         self.setFixedHeight(HEIGHT_THICK)
         self.buttonPressed = False
@@ -538,8 +538,8 @@ class ExportButton (QtWidgets.QPushButton):
 class ResizeButton (QtWidgets.QPushButton):
     moveStart = Signal(int)
     
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(ResizeButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(ResizeButton, self).__init__(parent)
         self.theme = theme
         self.buttonPressed = False
         self.setFixedWidth(3)
@@ -579,8 +579,8 @@ class ResizeButton (QtWidgets.QPushButton):
 
 class LinkToken (QtWidgets.QPushButton):
     
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(LinkToken, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(LinkToken, self).__init__(parent)
         self.theme = theme
         self.fontText = UIGlobals.Options.fontLink
         self.buttonPressed = False
@@ -625,8 +625,8 @@ class LinkToken (QtWidgets.QPushButton):
 
 class LinkButton (QtWidgets.QPushButton):
     
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(LinkButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(LinkButton, self).__init__(parent)
         self.theme = theme
         self.setCheckable(True)
         self.setText("")
@@ -817,8 +817,8 @@ class FlatComboBox (QtWidgets.QComboBox):
 
 class DropdownButton (QtWidgets.QPushButton):
     
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(DropdownButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(DropdownButton, self).__init__(parent)
         self.theme = theme
         self.setCheckable(False)
         self.setText("")

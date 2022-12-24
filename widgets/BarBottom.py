@@ -19,8 +19,8 @@ MARGIN = UIGlobals.Browser.margin
 
 class FavoriteButton (QtWidgets.QPushButton):
 
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(FavoriteButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(FavoriteButton, self).__init__(parent)
         self.setCheckable(True)
         self.theme = theme
         self.image = QtGui.QImage(":/icons/star.png")
@@ -60,8 +60,8 @@ class FavoriteButton (QtWidgets.QPushButton):
 
 class BookmarkButton (QtWidgets.QPushButton):
     
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(BookmarkButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(BookmarkButton, self).__init__(parent)
         self.theme = theme
         self.image = QtGui.QImage(":/icons/bookmark.png")
         self.setMinimumWidth(self.image.width())
@@ -112,8 +112,8 @@ class BookmarkButton (QtWidgets.QPushButton):
 
 class ThemeButton (QtWidgets.QPushButton):
     
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(ThemeButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(ThemeButton, self).__init__(parent)
         self.theme = theme
         if theme.name == "dark":
             self.dark = True

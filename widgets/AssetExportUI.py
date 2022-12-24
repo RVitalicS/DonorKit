@@ -110,8 +110,8 @@ class RangeOption (QtWidgets.QWidget):
 
 class SwitchButton (QtWidgets.QPushButton):
     
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(SwitchButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(SwitchButton, self).__init__(parent)
         self.theme = theme
         self.setCheckable(True)
         self.setText("")
@@ -137,8 +137,8 @@ class SwitchButton (QtWidgets.QPushButton):
 
 class RefreshButton (QtWidgets.QPushButton):
     
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(RefreshButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(RefreshButton, self).__init__(parent)
         self.theme = theme
         self.setCheckable(False)
         self.setText("")
@@ -183,8 +183,8 @@ class RefreshButton (QtWidgets.QPushButton):
 
 class ProxyButton (QtWidgets.QPushButton):
     
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(ProxyButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(ProxyButton, self).__init__(parent)
         self.theme = theme
         self.setCheckable(True)
         self.setText("")

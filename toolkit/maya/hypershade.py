@@ -149,7 +149,7 @@ class Manager (object):
         return shaderData
 
     def getNetworkGroup (self, shader: OpenMaya.MFnDependencyNode,
-                    prman: bool = True, collector: Union[None, dict] = None) -> dict:
+                         prman: bool = True, collector: Union[None, dict] = None) -> dict:
         """For the specified shader node create a data that describes
         a network group of connected nodes for a particular renderer
 

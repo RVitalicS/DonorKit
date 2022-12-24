@@ -25,8 +25,8 @@ HEIGHT_THICK = UIGlobals.Options.thickHeight
 class InheritButton (QtWidgets.QPushButton):
     stateChanged = Signal()
 
-    def __init__ (self, theme, icon=None, text=None, parent=None):
-        super(InheritButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, parent=None):
+        super(InheritButton, self).__init__(parent)
         self.theme = theme
         self.checked = False
         self.setFixedSize(QtCore.QSize(44, 12))
@@ -77,8 +77,8 @@ class InheritButton (QtWidgets.QPushButton):
 class RenderButton (QtWidgets.QPushButton):
     stateChanged = Signal()
 
-    def __init__ (self, theme, prman=True, icon=None, text=None, parent=None):
-        super(RenderButton, self).__init__(icon, text, parent)
+    def __init__ (self, theme, prman=True, parent=None):
+        super(RenderButton, self).__init__(parent)
         self.theme = theme
         value = UIGlobals.Options.buttonHeight
         self.setFixedSize(QtCore.QSize(value, value))
