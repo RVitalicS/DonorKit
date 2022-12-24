@@ -325,7 +325,7 @@ def Make (Base):
                 data.sort(key=lambda item : item.get("name"))
             for data in [usdfile]:
                 data.sort(
-                    key=lambda item : "{}{}{}{}".format(
+                    key=lambda item : (
                         item.get("name"),
                         item.get("version"),
                         item.get("variant"),
