@@ -41,6 +41,8 @@ def getMaterialList (stage: Usd.Stage, name: str) -> list:
 
     searchPath = os.path.join(
         os.path.dirname(stagePath), SUBDIR_SURFACING, name)
+    if not os.path.exists(searchPath):
+        return materialList
     for shaderName in os.listdir(searchPath):
         if re.match(r"{}\.usd[ac]?$".format(version), shaderName):
             shaderPath = os.path.join(searchPath, shaderName)
