@@ -115,4 +115,5 @@ def createButton () -> None:
 
 
 # runs this code automatically at the start of Maya
-mayaCommand.evalDeferred("createButton()")
+if not mayaCommand.about(batch=True):
+    mayaCommand.evalDeferred("createButton()")
