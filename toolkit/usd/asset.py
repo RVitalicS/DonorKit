@@ -95,13 +95,16 @@ def bind (source: Usd.Stage, target: Usd.Stage, tree: list,
             # define materials and make bindings
             isSubset = len(materials) > 1
             for name in materials:
+                pathlist = getMaterialList(target, name)
+                if not pathlist:
+                    continue
                 MaterialPath = ScopePath.AppendChild(name)
                 if target.GetPrimAtPath(MaterialPath).IsValid():
                     Material = UsdShade.Material.Get(target, MaterialPath)
                 else:
                     Material = UsdShade.Material.Define(target, MaterialPath)
                     MaterialPrim = target.GetPrimAtPath(MaterialPath)
-                    for relpath in getMaterialList(target, name):
+                    for relpath in pathlist:
                         MaterialPrim.GetPayloads().AddPayload(relpath)
                 if isSubset:
                     GeomSubsetPath = OverPrimPath.AppendChild(name)
